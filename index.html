@@ -1612,7 +1612,7 @@ function P(i){ return G.players[i]; }
 /* ================= AIの強さ（Lv.1〜Lv.5） =================
    Lv.1＝従来の「よわい」、Lv.3＝従来の「ふつう」、Lv.5＝従来の「つよい」と全く同じ値。
    Lv.2はLv.1とLv.3の中間、Lv.4はLv.3とLv.5の中間で、各要素を線形に補間する。 */
-const APP_VERSION = 'v20';   // ホーム画面版の sw.js の VERSION（raigou-v20）とそろえる
+const APP_VERSION = 'v21';   // ホーム画面版の sw.js の VERSION（raigou-v21）とそろえる
 const DIFF_LEVELS = ['lv1','lv2','lv3','lv4','lv5','lv6','lv7'];
 let AI_SEAT = 1;   // 今判断しているAIの席（通常は1）
 function withSeat(pi, fn){ const s = AI_SEAT; AI_SEAT = pi; try{ return fn(); } finally { AI_SEAT = s; } }
@@ -2207,6 +2207,26 @@ function roleOf(ws){
   }
   return null;
 }
+/* 雷神役：6段の塔（下から順）の駒の名前で判定する。言霊は言霊、音無は音無として見る */
+const RAIJIN_ROLES = [
+  { name:'時雨蓮花',   base:10, seqs:[['g浄','g瞬','g霧','g轟','g陣','g斬']] },
+  { name:'霞・双頭蓮', base:11, seqs:[['g浄','g瞬','g霧','g轟','g轟','g轟']] },
+  { name:'桜花乱舞',   base:11, seqs:[['g轟','o五','g轟','o五','g轟','o五'], ['o五','g轟','o五','g轟','o五','g轟']] },
+  { name:'霧幻輪廻',   base:12, seqs:[['g霧','o六','g霧','o六','g霧','o六'], ['o六','g霧','o六','g霧','o六','g霧']] },
+  { name:'毘沙門櫓',   base:12, seqs:[['g斬','g斬','g斬','g斬','g斬','g斬']] },
+  { name:'六花白雪',   base:12, seqs:[['g瞬','g瞬','g霧','g霧','o六','o六']] }
+];
+function raijinRoleOf(tiles){
+  if(!tiles || tiles.length !== 6) return null;
+  const key = tiles.map(function(t){ return (t.kind === 'gen' ? 'g' : 'o') + t.name; });
+  let best = null;
+  RAIJIN_ROLES.forEach(function(r){
+    if(r.seqs.some(function(sq){ return sq.every(function(k, i){ return key[i] === k; }); })){
+      if(!best || r.base > best.base) best = r;
+    }
+  });
+  return best;
+}
 function scoreTower(tiles){
   const n = tiles.length;
   if(n < 3) return { pts:0, role:'', base:0, height:0, dye:0 };
@@ -2243,6 +2263,10 @@ function scoreTower(tiles){
       const pts = base + height + dye;
       cands.push({ rank:RANK_COMBO, pts:pts, role:nm, base:base, height:height, dye:dye });
     }
+  }
+  if(n === 6){
+    const rj = raijinRoleOf(tiles);
+    if(rj) cands.push({ rank:4, pts:rj.base, role:rj.name, base:rj.base, height:0, dye:0 });
   }
   if(!cands.length) return { pts:0, role:'', base:0, height:0, dye:0 };
   cands.sort(function(a,b){ return (b.rank - a.rank) || (b.pts - a.pts); });
@@ -6411,7 +6435,13 @@ const YAKU_GUIDE = [
     { name:'椿', pts:'基礎6点', cond:'同じ駒2枚ずつのペアが3組ある塔。', ex:['霧','霧','陣','陣','雷','雷'], exNote:'同じ言霊のペアが3組（霧・陣・雷）ある例です。' }
   ]},
   { group:'雷神役', note:'必ず6段の塔で成立します。追加点は付きません。', items:[
-    { name:'雷神役（各種）', pts:'基礎10〜12点', cond:'決められた駒6個の組み合わせで成立する最上位の役。時雨蓮花、霞・双頭蓮、霧幻軸廻、桜花乱舞、六花白雪などがあり、基礎点は役ごとに10〜12点。' }
+    { name:'時雨蓮花', yomi:'しぐれれんげ', pts:'基礎10点', cond:'上から斬・陣・轟・霧・瞬・浄の6段。', ex:['浄','瞬','霧','轟','陣','斬'], exNote:'言霊6種が1つずつ、重い順に並びます。' },
+    { name:'霞・双頭蓮', yomi:'かすみ・そうとうれん', pts:'基礎11点', cond:'上から轟・轟・轟・霧・瞬・浄の6段。', ex:['浄','瞬','霧','轟','轟','轟'] },
+    { name:'桜花乱舞', yomi:'おうからんぶ', pts:'基礎11点', cond:'轟3個と五3個が交互に重なった6段（轟と五のどちらが一番下でもよい）。', ex:['轟','五','轟','五','轟','五'], exNote:'どれも重さ5なので、交互に積んでも不穏の塔にはなりません。' },
+    { name:'霧幻輪廻', yomi:'むげんりんね', pts:'基礎12点', cond:'霧3個と六3個が交互に重なった6段（霧と六のどちらが一番下でもよい）。', ex:['霧','六','霧','六','霧','六'] },
+    { name:'毘沙門櫓', yomi:'びしゃもんやぐら', pts:'基礎12点', cond:'斬6個の6段。', ex:['斬','斬','斬','斬','斬','斬'] },
+    { name:'六花白雪', yomi:'りっかしらゆき', pts:'基礎12点', cond:'上から六・六・霧・霧・瞬・瞬の6段。', ex:['瞬','瞬','霧','霧','六','六'], exNote:'2人戦では瞬は2個しかないので、2個とも集める必要があります。' },
+    { name:'雷神役の決まり', pts:'', cond:'決められた駒6個がそろった6段の塔だけで成立する、最上位の役です。高さ加点・染め加点は付きません。ほかの役にも当てはまる時は、雷神役が優先されます。狙って作るのは難しいですが、引き次第では届くこともあります。' }
   ]},
   { group:'追加点', note:'', items:[
     { name:'高さ加点', pts:'最大+3点', cond:'塔が4段以上の時、4段目から1段ごとに+1点（最大+3点）。基本役と組み合わせ役に付く。' },
