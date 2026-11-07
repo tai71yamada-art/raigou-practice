@@ -1316,6 +1316,7 @@
       .house-pick .set-opt .so-check{ margin-left:0; width:100%; text-align:center; }
       .house-pick .set-opt.on .house-ico.big{ color:#101114; }
       .house-pick-note{ text-align:center; margin:0 0 10px; }
+      .set-ver{ text-align:center; font-family:var(--num); font-size:.75rem; letter-spacing:.12em; color:var(--ink-soft); margin:10px 0 0; }
       .house-pick .set-opt:disabled{ opacity:.42; cursor:default; }
       .house-pick .set-opt.chara-tile{ position:relative; overflow:hidden; display:block; padding:0; min-height:118px; text-align:left; }
       .chara-tile .house-ico.ct-mon{ position:absolute; left:8px; top:8px; width:34px; height:34px; margin:0; color:#ffd23f; z-index:2; }
@@ -1609,9 +1610,13 @@ function P(i){ return G.players[i]; }
 /* ================= AIの強さ（Lv.1〜Lv.5） =================
    Lv.1＝従来の「よわい」、Lv.3＝従来の「ふつう」、Lv.5＝従来の「つよい」と全く同じ値。
    Lv.2はLv.1とLv.3の中間、Lv.4はLv.3とLv.5の中間で、各要素を線形に補間する。 */
-const DIFF_LEVELS = ['lv1','lv2','lv3','lv4','lv5'];
-function diffLevel(){ const i = DIFF_LEVELS.indexOf(G.difficulty); return i < 0 ? 3 : i + 1; }
-function diffName(){ return 'Lv.' + diffLevel(); }
+const APP_VERSION = 'v18';   // ホーム画面版の sw.js の VERSION（raigou-v18）とそろえる
+const DIFF_LEVELS = ['lv1','lv2','lv3','lv4','lv5','lv6','lv7'];
+let AI_SEAT = 1;   // 今判断しているAIの席（通常は1）
+function withSeat(pi, fn){ const s = AI_SEAT; AI_SEAT = pi; try{ return fn(); } finally { AI_SEAT = s; } }
+function rawDiffLevel(){ const d = (G.seatDiff && G.seatDiff[AI_SEAT]) || G.difficulty; const i = DIFF_LEVELS.indexOf(d); return i < 0 ? 3 : i + 1; }
+function diffLevel(){ return Math.min(5, rawDiffLevel()); }
+function diffName(){ return 'Lv.' + rawDiffLevel(); }
 /* v1=Lv.1の値, v3=Lv.3の値, v5=Lv.5の値として、現在のレベルの値を返す */
 function dLerp(v1, v3, v5){
   const lv = diffLevel();
@@ -1620,7 +1625,7 @@ function dLerp(v1, v3, v5){
 }
 function diffParams(){
   const lv = diffLevel();
-  return {
+  const dp = {
     lv: lv,
     miss: dLerp(0.5, 0, 0),          // 合戦・雷轟解放への応じ損ね確率（Lv.1:0.5 → Lv.2:0.25 → Lv.3〜:0）
     goMiss: dLerp(0.35, 0, 0),       // 轟の移し替えの見落とし確率
@@ -1637,9 +1642,20 @@ function diffParams(){
     goDesire: dLerp(0.4, 0.4, 0.75),   // 轟を手に持ちたい度合い
     jinDesire: dLerp(0.35, 0.35, 0.6), // 陣を手に持ちたい度合い
     guardPenalty: dLerp(0, 0, 0.65),   // 陣・轟を積んで消費することへの抵抗（Lv.4:0.325, Lv.5:0.65）
-    maxActs: lv === 1 ? 5 : (lv === 2 ? 10 : 14) // 1手番の行動回数上限（Lv.2は5と14の中間）
+    maxActs: lv === 1 ? 5 : (lv === 2 ? 10 : 14), // 1手番の行動回数上限（Lv.2は5と14の中間）
+    stackBase: 0.35, sixBonus: 0.4, fullBonus: 0.25, ownHouNeed: 3, raigouBase: 1.1, raigouMul: 0.55, denyMul: 0.85,
+    lookahead: 0, lookRel: false
   };
+  const raw = rawDiffLevel();
+  if(raw >= 6) Object.assign(dp, LV6_TUNE);
+  if(raw >= 7) Object.assign(dp, LV7_TUNE);
+  if(G.tuneSeat && G.tuneSeat[AI_SEAT]) Object.assign(dp, G.tuneSeat[AI_SEAT]);
+  return dp;
 }
+/* Lv.6：AI同士の対戦で詰めた調整値（Lv.5の値に上書き） */
+const LV6_TUNE = {};
+/* Lv.7：Lv.6＋相手の返し手を読む */
+const LV7_TUNE = { lookahead: 1.0 };
 function cur(){ return P(G.turn); }
 function opp(i){ return 1-i; }
 function totalInner(p){ return p.body.length + p.hand.filter(Boolean).length; }
@@ -2894,13 +2910,13 @@ async function resolveRaiDefense(attacker, defender, mode, targetGi, opt){
   /* ---- AIが守る側：今まで通り自動で判断する ---- */
   if(goOnly){
     if(!goUsable) return { type:'none' };
-    const choice = aiGoChoiceSelfTarget(attacker, defender, mode, targetGi, cands);
+    const choice = withSeat(defender, function(){ return aiGoChoiceSelfTarget(attacker, defender, mode, targetGi, cands); });
     if(choice) return { type:'go', slot: goSlot >= 0 ? goSlot : kiriSlot, prefGi: choice.gi };
     return { type:'none' };
   }
   if(goSlot >= 0 || kiriSlot >= 0){
     if(cands.length){
-      const choice = aiGoChoice(defender, mode, targetGi, cands, jinSlot>=0);
+      const choice = withSeat(defender, function(){ return aiGoChoice(defender, mode, targetGi, cands, jinSlot>=0); });
       if(choice && choice.type==='redirect'){
         /* 轟を使う宣言だけを返す（消費は primRai 側。撃った側が応じれば合戦になる） */
         const useSlot = goSlot >= 0 ? goSlot : kiriSlot;
@@ -3096,7 +3112,7 @@ async function attackerCounterGo(actor, raiSlot){
     bestPts = Math.max(bestPts, scoreTower(tw).pts);
     bestTop = Math.max(bestTop, tw[tw.length-1].w);
   });
-  const dpCounter = diffParams();
+  const dpCounter = withSeat(actor, diffParams);
   let want = bestPts >= 3 || (dpCounter.lv === 5 && bestTop >= 6 && bestPts >= 1) || (dpCounter.lv === 4 && bestTop >= 6 && bestPts >= 2);
   if(Math.random() < dpCounter.miss) want = false;
   if(want) log(p.name + 'は轟で応じて、雷轟合戦を望みました。', 'sys');
@@ -3129,7 +3145,7 @@ async function resolveRaigouResponse(attacker, defender, gi, modeOpt){
     let want = mode === 'hou'
       ? (bestPts >= 3 || atkPts >= 4 || bestTop >= 6)
       : (P(attacker).gates[gi].length >= 4 && bestTop >= 6); // 雷停：相手が高い塔を守ろうとしていて、合戦に勝てそうな時だけ
-    if(Math.random() < diffParams().miss) want = false;
+    if(Math.random() < withSeat(defender, diffParams).miss) want = false;
     if(!want) return { type:'accept' };
     log(d.name + 'は雷轟解放に対して、轟で受けることを選びました。', 'sys');
     return { type:'go', slot: goCandSlot };
@@ -5103,11 +5119,11 @@ function humanJoFlow(handSlot){
 /* ================= AI ================= */
 function availFor(){
   const lv = diffLevel();
-  if(lv >= 5) return unknownAvail(1); // Lv.5（従来のつよい）：常に峡谷を数えて残りを考える
+  if(lv >= 5) return unknownAvail(AI_SEAT); // Lv.5（従来のつよい）：常に峡谷を数えて残りを考える
   if(lv === 4){
     // Lv.4はLv.3（数えない）とLv.5（常に数える）の中間：手番ごとに半々の確率で数える（手番内では一貫させる）
     if(G._availTurn !== G.turnNo){ G._availTurn = G.turnNo; G._availUse = Math.random() < 0.5; }
-    return G._availUse ? unknownAvail(1) : null;
+    return G._availUse ? unknownAvail(AI_SEAT) : null;
   }
   return null;
 }
@@ -5258,10 +5274,11 @@ function aiGoChoice(defender, mode, targetGi, cands, hasJin){
 }
 
 async function aiTurn(){
-  const p = P(1);
+  const me = G.turn;
+  const p = P(me);
   await aiWait(650);
   if(G.over) return;
-  { const b0 = p.body.length; aiGen(); const mv = b0 - p.body.length;
+  { const b0 = p.body.length; withSeat(me, aiGen); const mv = b0 - p.body.length;
     aiBand(mv > 0 ? '現：体内の駒を' + mv + '個、手に移した' : '現：0現（手に移さない）'); }
   // 現で残った体内（裏向き）が詰まる動きを、プレイヤーが追える速さで見せる
   await render();
@@ -5269,24 +5286,24 @@ async function aiTurn(){
   if(G.over) return;
   if(!(G.finalRound || G.deck.length === 0)){
     if(totalInner(p) >= innerCap(p)){
-      const ok = await applyTaboo(1, function(pp){ return Promise.resolve(aiPickDiscards(pp)); });
+      const ok = await applyTaboo(me, function(pp){ return Promise.resolve(withSeat(me, function(){ return aiPickDiscards(pp); })); });
       if(!ok || G.over) return;
     }
-    { const d0 = G.deck.length; aiSen(); const n = d0 - G.deck.length;
+    { const d0 = G.deck.length; withSeat(me, aiSen); const n = d0 - G.deck.length;
       if(n > 0) aiBand('選：雷山から' + n + '個引いた（' + (n === 2 ? '二選' : '一選') + '）'); }
     // 選で引いた駒が体内で重さ順に整列する動き（裏向きのまま）を見せる
     await render();
     await aiWait(350);
   }
   let guard = 0;
-  const maxActs = diffParams().maxActs;
+  const maxActs = withSeat(me, diffParams).maxActs;
   while(guard++ < maxActs){
     if(G.over) return;
-    const act = aiChooseAction();
+    const act = withSeat(me, aiChooseAction);
     if(!act) break;
-    aiBand(aiActText(act));
+    aiBand(withSeat(me, function(){ return aiActText(act); }));
     await aiWait(450);
-    await aiExecute(act);
+    await aiExecute(act, me);
     render();
     await aiWait(520);
   }
@@ -5295,7 +5312,7 @@ async function aiTurn(){
   endTurn();
 }
 function aiGen(){
-  const p = P(1);
+  const p = P(AI_SEAT);
   let moves = 0;
   while(moves < 2){
     const slot = p.hand.indexOf(null);
@@ -5313,14 +5330,14 @@ function aiGen(){
   }
 }
 function aiSen(){
-  const p = P(1);
+  const p = P(AI_SEAT);
   const cap = innerCap(p) - totalInner(p);
   let n = Math.min(2, cap, G.deck.length);
   const dpSen = diffParams();
   if(Math.random() < dpSen.senOneProb) n = Math.min(1, cap, G.deck.length); // Lv.1は半々、Lv.2は1/4の確率で1枚だけ引く
   // 終盤に負けている時は山を残す：Lv.5は残り10枚から、Lv.4は中間として残り6枚から
   const endgameDeck = dpSen.lv === 5 ? 10 : (dpSen.lv === 4 ? 6 : -1);
-  if(endgameDeck > 0 && G.deck.length <= endgameDeck && p.score < P(0).score){
+  if(endgameDeck > 0 && G.deck.length <= endgameDeck && p.score < P(1-AI_SEAT).score){
     n = Math.min(1, cap, G.deck.length); // 負けている時は山を残す
   }
   // 手の駒がどれも積めない時は、引く数を抑えて満杯を先送りする
@@ -5342,12 +5359,12 @@ function aiSen(){
   sortBody(p);
 }
 function aiHebiTarget(){
-  const human = P(0), p = P(1);
+  const human = P(1-AI_SEAT), p = P(AI_SEAT);
   const locs = [];
-  human.body.forEach(function(t, i){ locs.push({ pi:0, where:'body', idx:i }); });
-  human.hand.forEach(function(t, i){ if(t) locs.push({ pi:0, where:'hand', idx:i }); });
+  human.body.forEach(function(t, i){ locs.push({ pi:1-AI_SEAT, where:'body', idx:i }); });
+  human.hand.forEach(function(t, i){ if(t) locs.push({ pi:1-AI_SEAT, where:'hand', idx:i }); });
   if(!locs.length){
-    if(p.body.length) return { pi:1, where:'body', idx:Math.floor(Math.random()*p.body.length) };
+    if(p.body.length) return { pi:AI_SEAT, where:'body', idx:Math.floor(Math.random()*p.body.length) };
     return null;
   }
   // 狙いの正確さ：Lv.5は的確に狙い、Lv.4はその半分ほどの確率で的確に狙う。Lv.3以下はランダム
@@ -5362,7 +5379,7 @@ function aiHebiTarget(){
   return locs[Math.floor(Math.random()*locs.length)];
 }
 function aiChooseAction(){
-  const p = P(1), human = P(0);
+  const p = P(AI_SEAT), human = P(1-AI_SEAT);
   const dp = diffParams();
   const lvl = dp.lv; // 1〜5の数値レベル
   const avail = availFor();
@@ -5378,9 +5395,9 @@ function aiChooseAction(){
       const before = towerValue(p.gates[gi], avail);
       const nt = p.gates[gi].concat([t]);
       let gain;
-      if(nt.length === 6) gain = scoreTower(nt).pts - before + 0.4;
-      else gain = towerValue(nt, avail) - before + 0.35; // 積むこと自体が前進（内駒も減る）
-      if(totalInner(p) >= 4) gain += 0.25; // 満杯が近い時は消費を優先
+      if(nt.length === 6) gain = scoreTower(nt).pts - before + dp.sixBonus;
+      else gain = towerValue(nt, avail) - before + dp.stackBase; // 積むこと自体が前進（内駒も減る）
+      if(totalInner(p) >= 4) gain += dp.fullBonus; // 満杯が近い時は消費を優先
       if(dp.guardPenalty > 0 && t.kind==='gen' && (t.name==='陣' || t.name==='轟') && nt.length < 6) gain -= (totalInner(p) >= 4 ? dp.guardPenalty * (0.15 / 0.65) : dp.guardPenalty);
       if(nt.length < 6 && scoreTower(nt).pts === 0){
         // 重い駒を受けられる門（空き門・上が重い門）を、軽い駒で塞がない
@@ -5412,15 +5429,15 @@ function aiChooseAction(){
           const tw = P(tg.pi).gates[tg.gi];
           const curPts = scoreTower(tw).pts;
           const val = towerValue(tw, avail);
-          if(tg.pi === 1){
+          if(tg.pi === AI_SEAT){
             // 自分の塔：雷放で得点に変える
-            if(canHou && curPts >= 3 && !G.finalRound) acts.push({ kind:'rai', hand:s, via:via, mode:'hou', target:tg, gain: curPts * dp.ownRaiFactor });
+            if(canHou && curPts >= dp.ownHouNeed && !G.finalRound) acts.push({ kind:'rai', hand:s, via:via, mode:'hou', target:tg, gain: curPts * dp.ownRaiFactor });
             const ownTeiNeed = lvl === 5 ? 4 : (lvl === 4 ? 5 : 99); // 雷停で守るのはLv.5が4点から、Lv.4は中間として5点から
             if(canTei && curPts >= ownTeiNeed && !G.finalRound) acts.push({ kind:'rai', hand:s, via:via, mode:'tei', target:tg, gain: 0.8 }); // 雷停で守る
           } else {
             // 相手の塔：育ちきる前に解放して伸びを止める／封印して遅らせる
             if(canHou && isFuon(tw)) acts.push({ kind:'rai', hand:s, via:via, mode:'hou', target:tg, gain: dp.fuonRaiGain }); // 不穏の塔を解放させれば相手は-1点
-            const deny = (val - curPts) * 0.85;
+            const deny = (val - curPts) * dp.denyMul;
             if(canHou && deny > 0.4) acts.push({ kind:'rai', hand:s, via:via, mode:'hou', target:tg, gain: deny * dp.denyFactor });
             let teiGain = Math.min(1.2, val * 0.3);
             if(lvl === 5 && tw.length >= 4 && tw.length <= 5 && curPts < completionBest(tw, avail)) teiGain = 1.15;
@@ -5437,7 +5454,7 @@ function aiChooseAction(){
           ['top','bottom'].forEach(function(end){
             const after = end==='top' ? tw.slice(0,-1) : tw.slice(1);
             const loss = towerValue(tw, avail) - towerValue(after, avail) + (G.finalRound ? (scoreTower(tw).pts - scoreTower(after).pts) * 0.5 : 0);
-            if(loss > 0.3) acts.push({ kind:'zan', hand:s, via:via, target:{ pi:0, gi:gi, end:end }, gain: loss * dp.zanFactor });
+            if(loss > 0.3) acts.push({ kind:'zan', hand:s, via:via, target:{ pi:1-AI_SEAT, gi:gi, end:end }, gain: loss * dp.zanFactor });
           });
         }
         // 非常時：積める先が無い時は、自分の塔の軽い一番上を斬って積み口を開ける
@@ -5449,7 +5466,7 @@ function aiChooseAction(){
           for(let gi=0; gi<3; gi++){
             const tw = p.gates[gi];
             if(tw.length >= 2 && !p.seals[gi] && tw[tw.length-1].w <= 2){
-              acts.push({ kind:'zan', hand:s, via:via, target:{ pi:1, gi:gi, end:'top' }, gain: 0.62 });
+              acts.push({ kind:'zan', hand:s, via:via, target:{ pi:AI_SEAT, gi:gi, end:'top' }, gain: 0.62 });
             }
           }
         }
@@ -5471,7 +5488,7 @@ function aiChooseAction(){
           if(gain > (lvl === 2 ? 0.9 : 0.55)){ // Lv.2は中間として、はっきり得な時だけ瞬を使う
             let junkIdx = -1, junkU = 0.35;
             p.body.forEach(function(bt, bi){ const u = aiTileDesire(bt, p); if(u < junkU){ junkU = u; junkIdx = bi; } });
-            if(junkIdx >= 0) acts.push({ kind:'shun', hand:s, locA:{ zone:'canyon', idx:ci }, locB:{ zone:'body', pi:1, idx:junkIdx }, gain: gain - 0.15 });
+            if(junkIdx >= 0) acts.push({ kind:'shun', hand:s, locA:{ zone:'canyon', idx:ci }, locB:{ zone:'body', pi:AI_SEAT, idx:junkIdx }, gain: gain - 0.15 });
           }
         }
       });
@@ -5503,7 +5520,7 @@ function aiChooseAction(){
       if(!tw.length || p.seals[gi] || isFuon(tw)) continue;
       const curPts = scoreTower(tw).pts;
       if(curPts <= 0) continue;
-      let gain = curPts * 0.55 + 1.1; // 雷轟解放の+2点の価値を織り込む
+      let gain = curPts * dp.raigouMul + dp.raigouBase; // 雷轟解放の+2点の価値を織り込む
       gain *= dp.raigouFactor;
       if(G.finalRound) gain += 1.0;
       acts.push({ kind:'raigou', hand:raiSlot, via:via, gi:gi, gain:gain, partner:goSlot });
@@ -5533,6 +5550,7 @@ function aiChooseAction(){
     if(a.partner !== undefined && a.partner !== null && !canActPair(p, a.hand, a.partner)) acts.splice(k, 1);
   }
   if(!acts.length) return fuonFallback();
+  if(dp.lookahead > 0) aiApplyLookahead(acts, p, P(1-AI_SEAT), avail, dp.lookahead, dp.lookRel);
   acts.sort(function(a,b){ return b.gain - a.gain; });
   // 内駒が多い時は、多少損でも駒を消費して満杯（禁忌）を避ける。
   // 特に5個のまま手番を終えると次の選で必ず禁忌になるので、1個は必ず消費する
@@ -5553,6 +5571,75 @@ function aiChooseAction(){
   if(normalChoice) return normalChoice;
   return fuonFallback();
 }
+/* ---- Lv.7：相手の次の手番で受けそうな斬・雷放による損失の見込み ----
+   見えていない駒（雷山・相手の内駒・除外）から、相手の内駒（次の選で+2）に斬・雷（霧はどちらにもなる）が
+   含まれる確率を出し、自分の塔ごとに「一番上か下を斬られた時」「雷放で早く解放された時」の損を見積もる。 */
+function aiUnseenByName(me){
+  const cnt = {};
+  GEN_DEF.forEach(function(d){ cnt[d.name] = d.n; });
+  let total = 0; Object.keys(cnt).forEach(function(k){ total += cnt[k]; });
+  ON_DEF.forEach(function(d){ total += 4; });
+  const sub = function(t){ if(t && cnt[t.name] !== undefined) cnt[t.name]--; if(t) total--; };
+  G.canyon.forEach(sub);
+  G.released.forEach(function(e){ e.tiles.forEach(sub); });
+  for(let pi=0; pi<2; pi++) P(pi).gates.forEach(function(g){ g.forEach(sub); });
+  me.body.forEach(sub); me.hand.filter(Boolean).forEach(sub);
+  return { cnt:cnt, total:Math.max(1, total) };
+}
+function probHasAny(k, n, U){
+  /* U枚の中にk枚の当たり。n枚引いて1枚以上当たる確率 */
+  if(k <= 0 || n <= 0) return 0;
+  if(n >= U) return 1;
+  let miss = 1;
+  for(let i = 0; i < n; i++){ miss *= Math.max(0, (U - k - i)) / (U - i); }
+  return 1 - miss;
+}
+function aiThreatLoss(gates, seals, avail, pZan, pHou){
+  let zanLoss = 0, houLoss = 0;
+  for(let gi=0; gi<3; gi++){
+    const tw = gates[gi];
+    if(!tw.length || seals[gi] || isFuon(tw)) continue;
+    const v = towerValue(tw, avail);
+    ['top','bottom'].forEach(function(end){
+      const after = end === 'top' ? tw.slice(0,-1) : tw.slice(1);
+      zanLoss = Math.max(zanLoss, v - towerValue(after, avail));
+    });
+    houLoss = Math.max(houLoss, (v - scoreTower(tw).pts) * 0.85);
+  }
+  return pZan * zanLoss + pHou * houLoss;
+}
+function aiApplyLookahead(acts, p, o, avail, lambda, rel){
+  if(G.finalRound) return;
+  const un = aiUnseenByName(p);
+  const n = Math.min(innerCap(o), totalInner(o) + Math.min(2, G.deck.length));
+  const kiri = un.cnt['霧'] || 0;
+  const pZan = probHasAny((un.cnt['斬'] || 0) + kiri, n, un.total);
+  const pHou = probHasAny((un.cnt['雷'] || 0) + kiri, n, un.total);
+  const base = aiThreatLoss(p.gates, p.seals, avail, pZan, pHou);
+  acts.forEach(function(a){
+    let gates = p.gates, seals = p.seals;
+    if(a.kind === 'stack'){
+      gates = p.gates.slice(); gates[a.gi] = p.gates[a.gi].concat([p.hand[a.hand]]);
+      if(gates[a.gi].length >= 6) gates[a.gi] = [];
+    } else if((a.kind === 'rai' && a.target.pi === AI_SEAT && a.mode === 'hou') || a.kind === 'raigou'){
+      const gi = a.kind === 'raigou' ? a.gi : a.target.gi;
+      gates = p.gates.slice(); gates[gi] = [];
+    } else if(a.kind === 'rai' && a.target.pi === AI_SEAT && a.mode === 'tei'){
+      seals = p.seals.slice(); seals[a.target.gi] = { old:false };
+    } else if(a.kind === 'zan' && a.target.pi === AI_SEAT){
+      gates = p.gates.slice(); gates[a.target.gi] = p.gates[a.target.gi].slice(0, -1);
+    } else return;
+    a._risk = aiThreatLoss(gates, seals, avail, pZan, pHou) - base;
+  });
+  if(rel){
+    /* 同じ駒をどの塔に積むかの比べ合いだけに使う（積む・積まないの判断は変えない） */
+    const minBy = {};
+    acts.forEach(function(a){ if(a.kind === 'stack' && a._risk !== undefined){ const k = a.hand; minBy[k] = Math.min(minBy[k] === undefined ? 1e9 : minBy[k], a._risk); } });
+    acts.forEach(function(a){ if(a.kind === 'stack' && a._risk !== undefined) a.gain -= lambda * (a._risk - minBy[a.hand]); else if(a._risk !== undefined && a._risk < 0) a.gain -= lambda * a._risk; });
+  } else {
+    acts.forEach(function(a){ if(a._risk !== undefined) a.gain -= lambda * a._risk; });
+  }
+}
 /* AIの行動を上部の帯で知らせる */
 let _aiBandTimer = null;
 function aiBand(text){
@@ -5564,10 +5651,10 @@ function aiBand(text){
   _aiBandTimer = setTimeout(function(){ el.classList.remove('show'); }, 1500 * aiSpeedFactor() + 500);
 }
 function aiActText(act){
-  const who = function(pi){ return pi === 1 ? '自分' : 'あなた'; };
+  const who = function(pi){ return pi === AI_SEAT ? '自分' : 'あなた'; };
   const kiri = function(){ return act.via === '霧' ? '（霧でまねる）' : ''; };
   switch(act.kind){
-    case 'stack':  return '積：桜門' + (act.gi + 1) + 'に積む（' + (P(1).gates[act.gi].length + 1) + '段目）';
+    case 'stack':  return '積：桜門' + (act.gi + 1) + 'に積む（' + (P(AI_SEAT).gates[act.gi].length + 1) + '段目）';
     case 'rai':    return (act.mode === 'hou' ? '雷放' : '雷停') + kiri() + '：' + who(act.target.pi) + 'の桜門' + (act.target.gi + 1) + 'の塔へ';
     case 'raigou': return '雷轟解放：自分の桜門' + (act.gi + 1) + 'の塔へ';
     case 'zan':    return '斬' + kiri() + '：' + who(act.target.pi) + 'の桜門' + (act.target.gi + 1) + 'の塔の' + (act.target.end === 'top' ? '一番上' : '一番下') + 'を狙う';
@@ -5577,18 +5664,19 @@ function aiActText(act){
   }
   return '行動中';
 }
-async function aiExecute(act){
+async function aiExecute(act, me){
+  if(me === undefined) me = 1;
   switch(act.kind){
-    case 'stack': await primStack(1, act.hand, act.gi); break;
-    case 'raigou': G.used.add('雷放'); await primRaigou(1, act.hand, act.gi, act.partner); break;
-    case 'rai': G.used.add(act.mode === 'hou' ? '雷放' : '雷停'); await primRai(1, act.hand, act.mode, act.target); break;
-    case 'zan': G.used.add('斬'); await primZan(1, act.hand, act.target); break;
-    case 'hebi': G.used.add('蛇'); await primHebi(1, act.hand, act.targetLoc); break;
-    case 'shun': G.used.add('瞬'); await primShun(1, act.hand, act.locA, act.locB); break;
+    case 'stack': await primStack(me, act.hand, act.gi); break;
+    case 'raigou': G.used.add('雷放'); await primRaigou(me, act.hand, act.gi, act.partner); break;
+    case 'rai': G.used.add(act.mode === 'hou' ? '雷放' : '雷停'); await primRai(me, act.hand, act.mode, act.target); break;
+    case 'zan': G.used.add('斬'); await primZan(me, act.hand, act.target); break;
+    case 'hebi': G.used.add('蛇'); await primHebi(me, act.hand, act.targetLoc); break;
+    case 'shun': G.used.add('瞬'); await primShun(me, act.hand, act.locA, act.locB); break;
     case 'jo': {
-      const res = await joDraw(1, act.hand, act.discards);
-      const handTiles = res.pool.slice().sort(function(a,b){ return aiTileDesire(b, P(1)) - aiTileDesire(a, P(1)); }).slice(0, P(1).hand.length);
-      await joArrange(1, act.hand, handTiles, res.pool, res);
+      const res = await joDraw(me, act.hand, act.discards);
+      const handTiles = withSeat(me, function(){ return res.pool.slice().sort(function(a,b){ return aiTileDesire(b, P(me)) - aiTileDesire(a, P(me)); }).slice(0, P(me).hand.length); });
+      await joArrange(me, act.hand, handTiles, res.pool, res);
       break;
     }
   }
@@ -5929,6 +6017,7 @@ function openSettings(){
        '<p class="sub set-desc">「これでいいですか？」や、積む前の仮置きの確認を省きます。不穏の塔になる積み方だけは確認します。</p></div>';
   h += '<div class="set-sec"><div class="set-title">BGM</div>' + seg('bgmMode', [{ v:'off', label:'オフ' }, { v:'small', label:'小' }, { v:'mid', label:'中' }, { v:'large', label:'大' }]) + '</div>';
   h += '<div class="set-sec"><div class="set-title">効果音</div>' + seg('sound', [{ v:'false', label:'オフ' }, { v:'true', label:'オン' }]) + '</div>';
+  h += '<p class="set-ver">バージョン ' + APP_VERSION + '</p>';
   h += '<div class="btn-row"><button type="button" class="btn primary" data-guide-close>閉じる</button></div>';
   h += '</div></div>';
   const root = document.getElementById('guideRoot');
