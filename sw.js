@@ -1,7 +1,7 @@
 /* 雷轟 練習アプリ：オフライン用のサービスワーカー
    アプリ本体はキャッシュ優先、Google Fonts は使ったときに保存して次回からオフラインでも使う。
    アプリを更新したら VERSION を変えると、古いキャッシュが入れ替わる。 */
-const VERSION = 'raigou-v29';
+const VERSION = 'raigou-v30';
 const CORE = ['./', './index.html', './manifest.webmanifest', './apple-touch-icon.png', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './bgm.mp3', './bgm_title.mp3'];
 self.addEventListener('install', function(e){
   e.waitUntil(caches.open(VERSION).then(function(c){ return c.addAll(CORE); }).then(function(){ return self.skipWaiting(); }));
