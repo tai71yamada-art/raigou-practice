@@ -16,9 +16,19 @@ const G = {
   finalRound:false,
   raigouCounts:[0,0],    // 雷轟解放した回数（自分の組み合わせ＋相手の雷を轟で受けて解放した場合）
   penaltyCounts:[0,0],   // 禁忌・不穏で陽玉を失った回数
+  tally:null,            // 戦績用の集計（newTally）。席ごと [あなた, AI]
   finalRevealStarted:false
 };
 function P(i){ return G.players[i]; }
 function cur(){ return P(G.turn); }
 function opp(i){ return 1-i; }
 function totalInner(p){ return p.body.length + p.hand.filter(Boolean).length; }
+/* 戦績用の1対局の集計。席ごとに [席0, 席1]。ルールの進み方には使わない */
+function newTally(){
+  return {
+    fuon:[0,0], taboo:[0,0],                 // 不穏の塔・禁忌になった回数
+    gassen:[[0,0,0],[0,0,0]],                // 雷轟合戦の [勝ち, 負け, 引き分け]（重い駒を出した方が勝ち）
+    attacked:[0,0], blocked:[0,0], goResp:[0,0], // 相手の雷・蛇・斬に狙われた回数／陣（霧）で防いだ回数／轟で応じた回数
+    bestTower:[null,null]                    // その対局でいちばん点の高かった塔 { role, pts }
+  };
+}

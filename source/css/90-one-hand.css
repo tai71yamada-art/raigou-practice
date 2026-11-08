@@ -150,6 +150,34 @@
       }
       #resultScreen[data-res="lose"] .result-hero img{ opacity:1; }
       #resultScreen[data-res="win"] .result-hero img{ right:-1%; top:10px; height:136%; } /* 両手を上げた絵は横に広いので、拳が切れないよう少し小さく */
+      /* 戦績（v36 で追加した項目） */
+      .stats-kpis.k3{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+      .kpi small{ font-size:.6rem; color:var(--ink-soft); font-weight:700; margin:0 1px; }
+      .kpi span small{ display:block; }
+      .st-recent{ display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:6px 0 2px; }
+      .st-recent-label{ font-size:.68rem; color:var(--ink-soft); font-weight:700; margin-right:4px; }
+      .st-recent i{ font-style:normal; width:22px; height:22px; display:grid; place-items:center; font-size:.72rem; font-weight:700; background:var(--panel2); color:var(--ink-soft); }
+      .st-recent i.w{ background:var(--main); color:#101114; }
+      .st-recent i.l{ background:#3a2026; color:#ff6b78; }
+      .st-best{ display:flex; align-items:baseline; gap:10px; background:var(--panel2); padding:8px 10px; }
+      .st-best b{ font-family:var(--num); font-size:1.4rem; color:var(--main); }
+      .stats-box h4 small{ font-family:var(--num); color:var(--main); margin-left:6px; }
+      .zk-title{ margin:8px 0 4px; font-size:.72rem; color:var(--ink-soft); font-weight:700; }
+      .zk-grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:4px; }
+      .zk{ display:flex; justify-content:space-between; align-items:center; padding:6px 8px; background:var(--panel2); opacity:.45; }
+      .zk span{ font-family:'Zen Antique', serif; }
+      .zk b{ font-family:var(--num); font-size:.72rem; color:var(--ink-soft); }
+      .zk.on{ opacity:1; box-shadow:inset 3px 0 0 var(--main); }
+      .zk.on b{ color:var(--main); }
+      .zk-grid.raijin .zk.on{ background:linear-gradient(90deg, rgba(var(--main-rgb),.28), var(--panel2)); box-shadow:inset 0 0 0 1px var(--main), 0 0 10px rgba(var(--main-rgb),.45); }
+      /* 途中保存：メニューの「保存して終了」とスタート画面の「対戦再開」 */
+      .mid-dock .menu-pop .save-quit-btn{ margin-top:7px; background:var(--panel2); color:var(--main); border:1px solid var(--main); font-weight:900; }
+      .mid-dock .menu-pop .save-quit-btn:disabled{ opacity:.4; }
+      .save-quit-note{ margin:4px 0 2px; font-size:.72rem; color:#a9a7a0; text-align:center; }
+      .resume-row{ flex-basis:100%; display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; font-size:.76rem; color:#101114; }
+      .resume-row[hidden]{ display:none; }
+      .resume-discard{ border:none; background:none; padding:2px 4px; font:inherit; color:#101114; text-decoration:underline; cursor:pointer; }
+      .resume-discard.armed{ color:#c4142b; font-weight:700; }
       /* キャラごとの見た目の調整（build.py が assets/chara/<id>/chara.json の css から作る） */
 {{chara_css}}
       .hero-img, #startScreen .hero-img{ width:auto; max-width:100%; height:clamp(220px, 38vh, 320px); object-fit:contain; }

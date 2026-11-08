@@ -1214,6 +1214,34 @@
       }
       #resultScreen[data-res="lose"] .result-hero img{ opacity:1; }
       #resultScreen[data-res="win"] .result-hero img{ right:-1%; top:10px; height:136%; } /* 両手を上げた絵は横に広いので、拳が切れないよう少し小さく */
+      /* 戦績（v36 で追加した項目） */
+      .stats-kpis.k3{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+      .kpi small{ font-size:.6rem; color:var(--ink-soft); font-weight:700; margin:0 1px; }
+      .kpi span small{ display:block; }
+      .st-recent{ display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:6px 0 2px; }
+      .st-recent-label{ font-size:.68rem; color:var(--ink-soft); font-weight:700; margin-right:4px; }
+      .st-recent i{ font-style:normal; width:22px; height:22px; display:grid; place-items:center; font-size:.72rem; font-weight:700; background:var(--panel2); color:var(--ink-soft); }
+      .st-recent i.w{ background:var(--main); color:#101114; }
+      .st-recent i.l{ background:#3a2026; color:#ff6b78; }
+      .st-best{ display:flex; align-items:baseline; gap:10px; background:var(--panel2); padding:8px 10px; }
+      .st-best b{ font-family:var(--num); font-size:1.4rem; color:var(--main); }
+      .stats-box h4 small{ font-family:var(--num); color:var(--main); margin-left:6px; }
+      .zk-title{ margin:8px 0 4px; font-size:.72rem; color:var(--ink-soft); font-weight:700; }
+      .zk-grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:4px; }
+      .zk{ display:flex; justify-content:space-between; align-items:center; padding:6px 8px; background:var(--panel2); opacity:.45; }
+      .zk span{ font-family:'Zen Antique', serif; }
+      .zk b{ font-family:var(--num); font-size:.72rem; color:var(--ink-soft); }
+      .zk.on{ opacity:1; box-shadow:inset 3px 0 0 var(--main); }
+      .zk.on b{ color:var(--main); }
+      .zk-grid.raijin .zk.on{ background:linear-gradient(90deg, rgba(var(--main-rgb),.28), var(--panel2)); box-shadow:inset 0 0 0 1px var(--main), 0 0 10px rgba(var(--main-rgb),.45); }
+      /* 途中保存：メニューの「保存して終了」とスタート画面の「対戦再開」 */
+      .mid-dock .menu-pop .save-quit-btn{ margin-top:7px; background:var(--panel2); color:var(--main); border:1px solid var(--main); font-weight:900; }
+      .mid-dock .menu-pop .save-quit-btn:disabled{ opacity:.4; }
+      .save-quit-note{ margin:4px 0 2px; font-size:.72rem; color:#a9a7a0; text-align:center; }
+      .resume-row{ flex-basis:100%; display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; font-size:.76rem; color:#101114; }
+      .resume-row[hidden]{ display:none; }
+      .resume-discard{ border:none; background:none; padding:2px 4px; font:inherit; color:#101114; text-decoration:underline; cursor:pointer; }
+      .resume-discard.armed{ color:#c4142b; font-weight:700; }
       /* キャラごとの見た目の調整（build.py が assets/chara/<id>/chara.json の css から作る） */
       /* 敗北の絵（しゃがんだ絵）は顔が大きく出て「敗北」の文字に重なるので、小さめにして右へ */
       html[data-chara="shigure"] #resultScreen[data-res="lose"] .result-hero img{ right:-16%; top:34px; height:108%; }
@@ -1360,6 +1388,7 @@
               <button type="button" class="start-act-btn" id="diffBtn" aria-haspopup="dialog" disabled><span class="sa-label">AIの強さ</span><span class="sa-value" id="diffBtnVal">Lv.3</span></button>
               <button type="button" class="start-act-btn" id="orderBtn" aria-haspopup="dialog" disabled><span class="sa-label">先手 / 後手</span><span class="sa-value" id="orderBtnVal">先手</span></button>
               <button type="button" class="start-act-btn start-go" id="startGoBtn" disabled><span class="sa-value">対戦開始</span></button>
+              <div class="resume-row" id="resumeRow" hidden><span id="resumeInfo"></span><button type="button" class="resume-discard" id="resumeDiscardBtn">消して新しく始める</button></div>
             </div>
           </div>
           <h1 class="serif">雷轟 練習アプリ</h1>
@@ -1426,6 +1455,8 @@
                   <button class="ghost-btn" id="menuSettingsBtn" type="button">設定</button>
                   <button class="ghost-btn" id="menuStatsBtn" type="button">戦績</button>
                 </div>
+                <button class="ghost-btn save-quit-btn" id="saveQuitBtn" type="button">保存して終了</button>
+                <p class="save-quit-note" id="saveQuitNote" hidden>あなたの手番の積・発の時に保存できます</p>
                 <button class="ghost-btn end-game-btn" id="restartBtn" type="button">対戦終了</button>
                 <div class="menu-guide">
                   <button class="ghost-btn" id="menuKomaBtn" type="button">駒一覧</button>
@@ -1540,12 +1571,22 @@ const G = {
   finalRound:false,
   raigouCounts:[0,0],    // 雷轟解放した回数（自分の組み合わせ＋相手の雷を轟で受けて解放した場合）
   penaltyCounts:[0,0],   // 禁忌・不穏で陽玉を失った回数
+  tally:null,            // 戦績用の集計（newTally）。席ごと [あなた, AI]
   finalRevealStarted:false
 };
 function P(i){ return G.players[i]; }
 function cur(){ return P(G.turn); }
 function opp(i){ return 1-i; }
 function totalInner(p){ return p.body.length + p.hand.filter(Boolean).length; }
+/* 戦績用の1対局の集計。席ごとに [席0, 席1]。ルールの進み方には使わない */
+function newTally(){
+  return {
+    fuon:[0,0], taboo:[0,0],                 // 不穏の塔・禁忌になった回数
+    gassen:[[0,0,0],[0,0,0]],                // 雷轟合戦の [勝ち, 負け, 引き分け]（重い駒を出した方が勝ち）
+    attacked:[0,0], blocked:[0,0], goResp:[0,0], // 相手の雷・蛇・斬に狙われた回数／陣（霧）で防いだ回数／轟で応じた回数
+    bestTower:[null,null]                    // その対局でいちばん点の高かった塔 { role, pts }
+  };
+}
 /* ================= ルールと画面のつなぎ目（VIEW） =================
    engine/ と ai/ のファイルは画面（DOM）を直接さわらず、表示・演出・あなたへの質問はすべて VIEW を通す。
    ここにあるのは「画面がないとき」の動き（何もしない／すぐ終わる）。
@@ -1807,7 +1848,7 @@ function newGame(humanSente, difficulty, opts){
   G.difficulty = difficulty;
   G.turn = G.sente; G.turnNo = 0; G.over = false; G.started = true;
   G.endIn = null; G.lastDrawer = null; G.finalTurnActive = false; G.isFinalTurn = false; G.finalRound = false; G.busy = false;
-  G.raigouCounts = [0,0]; G.penaltyCounts = [0,0]; G.finalRevealStarted = false; G.finishing = false;
+  G.raigouCounts = [0,0]; G.penaltyCounts = [0,0]; G.tally = newTally(); G.finalRevealStarted = false; G.finishing = false;
   G.revealedTopIds = new Set();
   G.kn = [new Set(), new Set()]; G.cutHints = [[[],[],[]],[[],[],[]]];
   G.hatsuGame = {}; G.statsSaved = false;
@@ -1923,6 +1964,7 @@ function releaseTower(pi, gi, bonus){
   if(isFuon(tiles)){
     p.score -= 1;
     if(G.penaltyCounts) G.penaltyCounts[pi]++;
+    if(G.tally) G.tally.fuon[pi]++;
     if(!G.finishing) VIEW.fxFuonBanner(pi, gi, tiles.slice());
     tiles.forEach(function(t){ G.canyon.push(t); });
     p.gates[gi] = []; p.seals[gi] = null;
@@ -1942,6 +1984,7 @@ function releaseTower(pi, gi, bonus){
   if(G.cutHints) G.cutHints[pi][gi] = [];
   if(!G.finishing) VIEW.fxReleaseBanner(pi, gi, snapshot, s, pts, (s.pts > 0 ? (bonus||0) : 0));
   if(s.pts > 0){
+    if(G.tally && (!G.tally.bestTower[pi] || pts > G.tally.bestTower[pi].pts)) G.tally.bestTower[pi] = { role:s.role, pts:pts };
     // 役になった塔の駒は峡谷へは行かず、「解放された役」の置き場へ置く
     G.released.push({ pi:pi, gi:gi, role:s.role, pts:pts, base:s.base, height:s.height, dye:s.dye,
                       bonus:(bonus||0), tiles:snapshot });
@@ -2099,6 +2142,7 @@ async function applyTaboo(pi, chooseDiscards){
   const p = P(pi);
   p.score -= 1;
   if(G.penaltyCounts) G.penaltyCounts[pi]++;
+  if(G.tally) G.tally.taboo[pi]++;
   log(p.name + 'は満杯のまま選を迎えたので禁忌です。陽玉-1点（残り' + p.score + '点）。内駒を2個捨てます。', 'bad');
   VIEW.render();
   await VIEW.fxTabooBanner(pi);
@@ -2200,6 +2244,7 @@ async function resolveRaiDefense(attacker, defender, mode, targetGi, opt){
   /* opt.goOnly：撃った側が自分の塔を対象にした雷。受け手は狙われていないので陣は使えず、
      轟（霧を轟として使う場合も含む）で「雷の対象を自分の塔に変える」ことだけができる */
   const goOnly = !!(opt && opt.goOnly);
+  if(!goOnly && G.tally) G.tally.attacked[defender]++;
   const goSlot = handHas(d, '轟');
   const kiriSlot = handHas(d, '霧');
   const jinSlot = goOnly ? -1 : handHas(d, '陣');
@@ -2228,12 +2273,14 @@ async function resolveRaiDefense(attacker, defender, mode, targetGi, opt){
       if(usedName === '霧') log(d.name + 'は「霧」を陣として使って防ぎました。', 'sys');
       else log(d.name + 'は「陣」で防ぎました。', 'sys');
       VIEW.render();
+      if(G.tally) G.tally.blocked[defender]++;
       return { type:'blocked' };
     }
     if(pick.action === 'go'){
       /* 轟／霧（轟として）を使う宣言だけを返す。消費と移し先／合戦の決定は primRai 側で行う
          （撃った側が轟で応じれば雷轟合戦になり、「やっぱり防がない」余地も残すため） */
       log(d.name + 'は轟として使える駒で受けることを選びました。', 'sys');
+      if(G.tally) G.tally.goResp[defender]++;
       return { type:'go', slot: pick.slot, prefGi: undefined };
     }
     return { type:'none' };
@@ -2243,7 +2290,7 @@ async function resolveRaiDefense(attacker, defender, mode, targetGi, opt){
   if(goOnly){
     if(!goUsable) return { type:'none' };
     const choice = withSeat(defender, function(){ return aiGoChoiceSelfTarget(attacker, defender, mode, targetGi, cands); });
-    if(choice) return { type:'go', slot: goSlot >= 0 ? goSlot : kiriSlot, prefGi: choice.gi };
+    if(choice){ if(G.tally) G.tally.goResp[defender]++; return { type:'go', slot: goSlot >= 0 ? goSlot : kiriSlot, prefGi: choice.gi }; }
     return { type:'none' };
   }
   if(goSlot >= 0 || kiriSlot >= 0){
@@ -2252,12 +2299,14 @@ async function resolveRaiDefense(attacker, defender, mode, targetGi, opt){
       if(choice && choice.type==='redirect'){
         /* 轟を使う宣言だけを返す（消費は primRai 側。撃った側が応じれば合戦になる） */
         const useSlot = goSlot >= 0 ? goSlot : kiriSlot;
+        if(G.tally) G.tally.goResp[defender]++;
         return { type:'go', slot: useSlot, prefGi: choice.gi };
       }
       if(choice && choice.type==='jin' && jinSlot>=0){
         consumeHand(d, jinSlot);
         log(d.name + 'は「陣」で防ぎました。', 'sys');
         VIEW.render();
+        if(G.tally) G.tally.blocked[defender]++;
         return { type:'blocked' };
       }
       if(choice && choice.type==='accept') return { type:'none' };
@@ -2267,12 +2316,14 @@ async function resolveRaiDefense(attacker, defender, mode, targetGi, opt){
     consumeHand(d, jinSlot);
     log(d.name + 'は「陣」で防ぎました。', 'sys');
     VIEW.render();
+    if(G.tally) G.tally.blocked[defender]++;
     return { type:'blocked' };
   }
   if(kiriSlot >= 0){
     consumeHand(d, kiriSlot);
     log(d.name + 'は「霧」を陣として使って防ぎました。', 'sys');
     VIEW.render();
+    if(G.tally) G.tally.blocked[defender]++;
     return { type:'blocked' };
   }
   return { type:'none' };
@@ -2284,6 +2335,7 @@ async function resolveRaiDefense(attacker, defender, mode, targetGi, opt){
    防いだら相手の効果アニメーションを五芒星で打ち消す */
 async function resolveJinDefense(defender, attackName, targetDesc){
   const d = P(defender);
+  if(G.tally) G.tally.attacked[defender]++;
   const jinSlot = handHas(d, '陣');
   const kiriSlot = handHas(d, '霧');
   if(jinSlot < 0 && kiriSlot < 0) return false;
@@ -2299,6 +2351,7 @@ async function resolveJinDefense(defender, attackName, targetDesc){
     else log(d.name + 'は「陣」で防ぎました。', 'sys');
     VIEW.render();
     await VIEW.playJinFx(defender);
+    if(G.tally) G.tally.blocked[defender]++;
     return true;
   }
   /* AIが守る側：自動 */
@@ -2307,12 +2360,14 @@ async function resolveJinDefense(defender, attackName, targetDesc){
     log(d.name + 'は「陣」で防ぎました。', 'sys');
     VIEW.render();
     await VIEW.playJinFx(defender);
+    if(G.tally) G.tally.blocked[defender]++;
     return true;
   }
   consumeHand(d, kiriSlot);
   log(d.name + 'は「霧」を陣として使って防ぎました。', 'sys');
   VIEW.render();
   await VIEW.playJinFx(defender);
+  if(G.tally) G.tally.blocked[defender]++;
   return true;
 }
 
@@ -2535,6 +2590,10 @@ async function resolveRaigouBattle(o){
     log('雷轟合戦の判定はA：重い方が単独なので、' + P(winnerPi).name + 'の選んだ塔に雷が落ちます。' + (mode === 'hou' ? '雷轟解放として解放され、役が成立すれば+2点です。' : '雷停が適用されます。'), 'score');
   } else {
     log('雷轟合戦の判定はC：重さが同点なので、どちらの選んだ塔にも落ちず、雷を撃った' + P(atk).name + 'が最初に指定した塔に当初の雷の効果が適用されます。+2点は付きません。', 'sys');
+  }
+  if(G.tally){
+    if(pattern === 'A'){ G.tally.gassen[winnerPi][0]++; G.tally.gassen[1 - winnerPi][1]++; }
+    else { G.tally.gassen[0][2]++; G.tally.gassen[1][2]++; }
   }
   await VIEW.showBattleRevealModal(o, picks, tops, pattern, winnerPi);
   G.inGassen = false; // 合戦の判定が出たら終了。条件を満たした受動奥義はここから後で処理する
@@ -2774,6 +2833,85 @@ async function joArrange(actor, handSlot, handTiles, pool, counts){
   log(p.name + 'の浄：内駒を' + counts.discardCount + '個捨てて、' + counts.drawnCount + '個引き直し、置き直しました。');
   await VIEW.render();
   return true;
+}
+/* ================= 対局の途中保存 =================
+   G（盤面・山・峡谷・手番・AIの見込みなど）をまるごと文字にして保存し、あとで同じ状態に戻す。
+   駒は同じ駒が何か所からも指されている（例：合戦で開示された駒の記録）ので、
+   駒は番号（id）で書き出し、戻す時に同じ1つの駒につなぎ直す。Set・Map もそのまま戻る。 */
+const SAVE_FORMAT = 1;
+
+function isTileObj(v){
+  return v && typeof v === 'object' && typeof v.id === 'number' && (v.kind === 'gen' || v.kind === 'on') && typeof v.name === 'string';
+}
+/* 今の対局に出てくる駒を全部集める（id → 駒） */
+function collectTiles(){
+  const map = {};
+  const seen = new Set();
+  (function walk(v){
+    if(!v || typeof v !== 'object' || seen.has(v)) return;
+    seen.add(v);
+    if(isTileObj(v)){ if(!map[v.id]) map[v.id] = v; return; }
+    if(v instanceof Set || v instanceof Map){ v.forEach(function(x, k){ walk(x); walk(k); }); return; }
+    if(Array.isArray(v)){ v.forEach(walk); return; }
+    Object.keys(v).forEach(function(k){ walk(v[k]); });
+  })(G);
+  return map;
+}
+function encodeValue(v, tiles){
+  if(v === undefined) return { $u:1 };
+  if(v === null || typeof v !== 'object') return v;
+  if(isTileObj(v)){
+    // 同じ番号の「本物の駒」ならその番号だけ、写し（別の物）なら中身ごと
+    if(tiles[v.id] === v) return { $t: v.id };
+    return { $tc: Object.assign({}, v) };
+  }
+  if(v instanceof Set) return { $set: Array.from(v).map(function(x){ return encodeValue(x, tiles); }) };
+  if(v instanceof Map) return { $map: Array.from(v).map(function(kv){ return [encodeValue(kv[0], tiles), encodeValue(kv[1], tiles)]; }) };
+  if(Array.isArray(v)) return v.map(function(x){ return encodeValue(x, tiles); });
+  const o = {};
+  Object.keys(v).forEach(function(k){
+    if(typeof v[k] === 'function') return;
+    o[k.charAt(0) === '$' ? '$$' + k : k] = encodeValue(v[k], tiles);
+  });
+  return o;
+}
+function decodeValue(v, tiles){
+  if(v === null || typeof v !== 'object') return v;
+  if(Array.isArray(v)) return v.map(function(x){ return decodeValue(x, tiles); });
+  if(v.$u) return undefined;
+  if('$t' in v) return tiles[v.$t];
+  if(v.$tc) return Object.assign({}, v.$tc);
+  if(v.$set) return new Set(v.$set.map(function(x){ return decodeValue(x, tiles); }));
+  if(v.$map) return new Map(v.$map.map(function(kv){ return [decodeValue(kv[0], tiles), decodeValue(kv[1], tiles)]; }));
+  const o = {};
+  Object.keys(v).forEach(function(k){ o[k.indexOf('$$') === 0 ? k.slice(2) : k] = decodeValue(v[k], tiles); });
+  return o;
+}
+/* 今の対局を保存用の物にする */
+function serializeGame(){
+  const tiles = collectTiles();
+  const g = {};
+  Object.keys(G).forEach(function(k){ g[k] = encodeValue(G[k], tiles); });
+  return {
+    format: SAVE_FORMAT,
+    uid: _uid,
+    tiles: Object.keys(tiles).map(function(id){ return Object.assign({}, tiles[id]); }),
+    G: g
+  };
+}
+/* 保存した物から対局を戻す（G の中身を入れ替える） */
+function restoreGame(data){
+  if(!data || data.format !== SAVE_FORMAT) throw new Error('保存の形式が違います');
+  const tiles = {};
+  data.tiles.forEach(function(t){ tiles[t.id] = Object.assign({}, t); });
+  Object.keys(G).forEach(function(k){ delete G[k]; });
+  Object.keys(data.G).forEach(function(k){ G[k] = decodeValue(data.G[k], tiles); });
+  _uid = data.uid;
+}
+/* 保存してよい場面か：あなたの手番で、積・発を待っている時（演出や質問の途中でない） */
+function canSaveGame(){
+  return !!(G.started && !G.over && G.players && G.players.length && G.turn === 0 && !P(0).isAI &&
+            G.phase === 'act' && !G.acting && !G.busy && !G.finishing);
 }
 /* ================= AIの強さ（Lv.1〜Lv.7） =================
    Lv.1＝従来の「よわい」、Lv.3＝従来の「ふつう」、Lv.5＝従来の「つよい」と全く同じ値。
@@ -3751,7 +3889,7 @@ function aiSpeedFactor(){ const o = AI_SPEEDS.find(function(x){ return x.v === S
 function aiWait(ms){ return wait(ms * aiSpeedFactor()); }
 
 /* ================= アプリのバージョン（build.py が source/VERSION の値を入れる） ================= */
-const APP_VERSION = 'v35';   // build.py が VERSION ファイルの値を入れる（sw.js も同じ値になる）
+const APP_VERSION = 'v36';   // build.py が VERSION ファイルの値を入れる（sw.js も同じ値になる）
 /* ================= 効果音（音声ファイルは使わず、その場で合成） ================= */
 const SFX = (function(){
   let ctx = null;
@@ -6353,6 +6491,7 @@ function syncStartButtons(){
   const rOpt = START_RULE_OPTIONS.find(function(o){ return o.v === startRule; });
   document.getElementById('ruleBtnVal').textContent = rOpt ? rOpt.short : startRule;
   document.getElementById('houseBtnVal').innerHTML = houseIconHtml(startHouse) + esc(HOUSE_CHARA[startHouse] || (houseById(startHouse).name + '家'));
+  if(typeof syncResumeUi === 'function') syncResumeUi();
 }
 function closeStartSetting(){ document.getElementById('startSettingRoot').innerHTML = ''; }
 function openStartSetting(kind){
@@ -6406,7 +6545,7 @@ document.getElementById('houseBtn').addEventListener('click', function(){ openSt
 document.getElementById('diffBtn').addEventListener('click', function(){ openStartSetting('diff'); });
 document.getElementById('orderBtn').addEventListener('click', function(){ openStartSetting('order'); });
 let vsPlaying = false;
-document.getElementById('startGoBtn').addEventListener('click', startBattle);
+document.getElementById('startGoBtn').addEventListener('click', function(){ if(hasSave()) resumeBattle(); else startBattle(); });
 /* 対戦開始（スタート画面の「対戦開始」とリザルトの「再戦」から）。条件はスタート画面の設定のまま */
 function startBattle(){
   if(vsPlaying) return;
@@ -6465,6 +6604,103 @@ document.getElementById('restartBtn').addEventListener('click', confirmQuit);
 document.getElementById('againBtn').addEventListener('click', backToStart);
 document.getElementById('rematchBtn').addEventListener('click', function(){ startBattle(); });
 
+/* ================= 途中保存（保存して終了 → 対戦再開） =================
+   メニューの「保存して終了」で盤面を端末に保存し、スタート画面へ戻る。
+   保存がある間は「対戦開始」が「対戦再開」になり、押すと VS の演出なしで保存した盤面に戻る。
+   保存は1つだけ。再開したら消える（もう一度やめる時は、また保存する）。 */
+function saveKey(){ return 'raigou.save.v1'; }   // 端末（ブラウザ）に保存する場所の名前
+function loadSave(){
+  try{ const s = localStorage.getItem(saveKey()); return s ? JSON.parse(s) : null; }catch(_){ return null; }
+}
+function hasSave(){ return !!loadSave(); }
+function clearSave(){ try{ localStorage.removeItem(saveKey()); }catch(_){} }
+
+/* メニューを開いた時に、今保存できるかを表示する */
+function syncSaveButton(){
+  const b = document.getElementById('saveQuitBtn'); if(!b) return;
+  const okNow = canSaveGame();
+  b.disabled = !okNow;
+  const note = document.getElementById('saveQuitNote');
+  if(note) note.hidden = okNow;
+}
+function saveAndQuit(){
+  if(!canSaveGame()){ syncSaveButton(); return; }
+  const logBox = document.getElementById('log');
+  const data = {
+    app: APP_VERSION, at: Date.now(),
+    turnNo: G.turnNo, diff: G.difficulty, house: G.houses[0],
+    log: logBox ? logBox.innerHTML : '',
+    game: serializeGame()
+  };
+  try{ localStorage.setItem(saveKey(), JSON.stringify(data)); }
+  catch(_){ alertSaveFailed(); return; }
+  quitGame();
+  syncStartButtons();
+}
+function alertSaveFailed(){
+  const b = document.getElementById('saveQuitBtn');
+  if(b){ b.textContent = '保存できませんでした（端末の空きを確認）'; setTimeout(function(){ b.textContent = '保存して終了'; }, 2600); }
+}
+/* 保存した盤面に戻る（VS の演出なし） */
+function resumeBattle(){
+  if(vsPlaying) return;
+  const data = loadSave();
+  if(!data){ syncStartButtons(); return; }
+  JINGLE.stop();
+  closeStartSetting();
+  SFX.ctx();
+  try{
+    restoreGame(data.game);
+  }catch(e){
+    clearSave(); syncStartButtons();
+    console.warn('保存した対戦を読み込めませんでした', e);
+    return;
+  }
+  clearSave();
+  G.started = true; G.over = false; G.busy = false; G.acting = false; G.statsSaved = false; G.fxBusy = false; G.reorderBusy = false;
+  // キャラ・家紋・AIの強さは保存した時のものに合わせる
+  if(G.houses && HOUSE_CHARA[G.houses[0]]){ startHouse = G.houses[0]; applyChara(startHouse); }
+  applyHouseClasses();
+  const ds = document.getElementById('diffSelect'); if(ds) ds.value = G.difficulty;
+  VIEW.resetGameUi(); VIEW.resetTurnUi();
+  const logBox = document.getElementById('log'); if(logBox) logBox.innerHTML = data.log || '';
+  document.getElementById('startScreen').hidden = true;
+  document.getElementById('resultScreen').hidden = true;
+  document.getElementById('gameScreen').hidden = false;
+  window.scrollTo(0, 0);
+  BGM.start();
+  log('保存した対戦を再開しました（' + G.turnNo + '手番目・あなたの積・発から）。', 'sys');
+  syncStartButtons();
+  render();
+}
+function discardSaveConfirm(){
+  const b = document.getElementById('resumeDiscardBtn'); if(!b) return;
+  if(!b.classList.contains('armed')){ b.classList.add('armed'); b.textContent = 'もう一度押すと消します'; return; }
+  clearSave(); syncStartButtons();
+}
+/* スタート画面のボタンの見た目（保存があれば「対戦再開」） */
+function syncResumeUi(){
+  const go = document.getElementById('startGoBtn'); if(!go) return;
+  const data = loadSave();
+  const v = go.querySelector('.sa-value');
+  if(v) v.textContent = data ? '対戦再開' : '対戦開始';
+  go.classList.toggle('resume', !!data);
+  const row = document.getElementById('resumeRow');
+  if(row){
+    row.hidden = !data;
+    if(data){
+      const nm = HOUSE_CHARA[data.house] || '';
+      const lvNo = String(data.diff || '').replace('lv', '');
+      document.getElementById('resumeInfo').textContent = '保存した対戦：' + (nm ? nm + '・' : '') + 'Lv.' + lvNo + '・' + data.turnNo + '手番目';
+      const b = document.getElementById('resumeDiscardBtn');
+      b.classList.remove('armed'); b.textContent = '消して新しく始める';
+    }
+  }
+}
+document.getElementById('saveQuitBtn').addEventListener('click', saveAndQuit);
+document.getElementById('resumeDiscardBtn').addEventListener('click', discardSaveConfirm);
+document.getElementById('menuDetails').addEventListener('toggle', syncSaveButton);
+syncResumeUi();
 /* ================= 駒一覧・役一覧（ガイド） =================
    サマリー（言霊の効果・役の種類・駒の個数・駒の重さ）をもとにした資料画面。
    対戦状態には一切触れないので、試合中・スタート画面のどちらからでも開閉できる。 */
@@ -6777,8 +7013,37 @@ function recordStats(winner){
   st.raigou = (st.raigou || 0) + ((G.raigouCounts && G.raigouCounts[0]) || 0);
   Object.keys(G.hatsuGame || {}).forEach(function(k){ st.hatsu[k] = (st.hatsu[k] || 0) + G.hatsuGame[k]; });
   (G.released || []).forEach(function(e){ if(e.pi === 0 && e.role) st.roles[e.role] = (st.roles[e.role] || 0) + 1; });
+  /* v36 から記録する項目（記録を始めてからの対局だけを数える） */
+  const ex = st.ex = Object.assign(newStatsEx(), st.ex || {});
+  const T = G.tally || newTally();
+  const res = winner === 0 ? 'w' : (winner === 1 ? 'l' : 'd');
+  ex.n++;
+  const side = G.sente === 0 ? ex.sente : ex.gote; side[res]++;
+  if(res === 'w'){ ex.streak++; ex.bestStreak = Math.max(ex.bestStreak, ex.streak); } else ex.streak = 0;
+  ex.recent.push(res); if(ex.recent.length > 10) ex.recent = ex.recent.slice(-10);
+  const diff = P(0).score - P(1).score;
+  if(res === 'w'){ ex.winDiff += diff; ex.winN++; } else if(res === 'l'){ ex.loseDiff += diff; ex.loseN++; }
+  const rg = (G.raigouCounts || [0, 0]);
+  ex.raigouMe += rg[0]; ex.raigouAi += rg[1]; ex.raigouMax = Math.max(ex.raigouMax, rg[0]);
+  for(let k = 0; k < 3; k++) ex.gassen[k] += T.gassen[0][k];
+  ex.attacked += T.attacked[0]; ex.blocked += T.blocked[0]; ex.goResp += T.goResp[0];
+  ex.fuon += T.fuon[0]; ex.taboo += T.taboo[0];
+  const bt = T.bestTower[0];
+  if(bt && (!ex.bestTower || bt.pts > ex.bestTower.pts)) ex.bestTower = { role:bt.role, pts:bt.pts, at:Date.now() };
   saveJSON(STATS_KEY, st);
 }
+function newStatsEx(){
+  return { n:0, sente:{ w:0, l:0, d:0 }, gote:{ w:0, l:0, d:0 }, streak:0, bestStreak:0, recent:[],
+           winDiff:0, winN:0, loseDiff:0, loseN:0, raigouMe:0, raigouAi:0, raigouMax:0, gassen:[0,0,0],
+           attacked:0, blocked:0, goResp:0, fuon:0, taboo:0, bestTower:null };
+}
+/* 役図鑑に並べる役（ルールブックの分類順） */
+const ZUKAN = [
+  { title:'基本役', roles:['桜花', '蓮花', '奇数蓮花', '偶数蓮花'] },
+  { title:'組み合わせ役', roles:['桜々花', '蓮々花', '桜蓮花', '蓮桜花'] },
+  { title:'特殊役', roles:['椿', '山茶花'] },
+  { title:'雷神役', raijin:true, roles: RAIJIN_ROLES.map(function(r){ return r.name; }) }
+];
 function openStats(){
   const st = loadStats();
   const lvs = ['lv1','lv2','lv3','lv4','lv5','lv6','lv7'];
@@ -6794,6 +7059,42 @@ function openStats(){
        '<div class="kpi"><span>最高陽玉</span><b>' + (st.best || 0) + '</b></div>' +
        '<div class="kpi"><span>平均陽玉</span><b>' + (N ? (S / N).toFixed(1) : '―') + '</b></div>' +
        '<div class="kpi"><span>雷轟解放</span><b>' + (st.raigou || 0) + '</b></div></div>';
+  const ex = Object.assign(newStatsEx(), st.ex || {});
+  const kpi = function(label, val){ return '<div class="kpi"><span>' + label + '</span><b>' + val + '</b></div>'; };
+  const sgn = function(v){ return (v > 0 ? '+' : '') + v; };
+  /* 連勝・最近の10局 */
+  h += '<div class="stats-kpis k3">' + kpi('連勝中', ex.streak) + kpi('最高連勝', ex.bestStreak) +
+       kpi('平均点差', ex.winN || ex.loseN ? '<small>勝</small>' + (ex.winN ? sgn((ex.winDiff / ex.winN).toFixed(1)) : '―') + ' <small>負</small>' + (ex.loseN ? sgn((ex.loseDiff / ex.loseN).toFixed(1)) : '―') : '―') + '</div>';
+  h += '<div class="st-recent" aria-label="最近の10局"><span class="st-recent-label">最近の10局</span>';
+  if(!ex.recent.length) h += '<span class="sub">まだありません</span>';
+  ex.recent.forEach(function(r){ h += '<i class="' + r + '">' + ({ w:'勝', l:'負', d:'分' })[r] + '</i>'; });
+  h += '</div>';
+  /* 先手・後手 */
+  h += '<h4>先手・後手</h4><div class="stats-table"><div class="st-row st-head"><span></span><span>勝</span><span>負</span><span>分</span><span>勝率</span></div>';
+  [['先手', ex.sente], ['後手', ex.gote]].forEach(function(r){
+    const n = r[1].w + r[1].l + r[1].d;
+    h += '<div class="st-row"><span>' + r[0] + '</span><span>' + r[1].w + '</span><span>' + r[1].l + '</span><span>' + r[1].d + '</span><span>' + pct(r[1].w, n) + '</span></div>';
+  });
+  h += '</div>';
+  /* 雷轟まわり */
+  h += '<h4>雷轟</h4><div class="stats-kpis k3">' +
+       kpi('雷轟解放<small>あなた／AI</small>', ex.raigouMe + '<small>／' + ex.raigouAi + '</small>') +
+       kpi('1局の最多', ex.raigouMax) +
+       kpi('雷轟合戦<small>勝・負・分</small>', ex.gassen.join('・')) + '</div>';
+  const defOk = ex.blocked + ex.goResp;
+  h += '<div class="stats-kpis k3">' + kpi('狙われた', ex.attacked) + kpi('陣で防いだ<small>／轟で応じた</small>', ex.blocked + '<small>／' + ex.goResp + '</small>') +
+       kpi('受けの成功率', pct(defOk, ex.attacked)) + '</div>';
+  h += '<p class="sub st-note">狙われた＝相手の雷・蛇・斬があなたに向いた回数。陣（霧）で防いだ・轟で応じた割合を成功率にしています。</p>';
+  /* ミスの記録 */
+  const pen = ex.fuon + ex.taboo;
+  h += '<h4>ミスの記録</h4><div class="stats-kpis k3">' + kpi('不穏の塔', ex.fuon) + kpi('禁忌', ex.taboo) +
+       kpi('1局の平均', ex.n ? (pen / ex.n).toFixed(2) : '―') + '</div>';
+  h += '<p class="sub st-note">陽玉を失ったミスの回数です。1局の平均が減っていけば上達のしるし。</p>';
+  /* 最高点の塔 */
+  h += '<h4>最高点の塔</h4>' + (ex.bestTower
+       ? '<div class="st-best"><b>' + ex.bestTower.pts + '点</b><span>' + esc(ex.bestTower.role) + '</span></div>'
+       : '<p class="sub">まだありません。</p>');
+  if(ex.n < N) h += '<p class="sub st-note">ここまでの項目は、記録を始めてからの' + ex.n + '局分です（それより前の' + (N - ex.n) + '局は含みません）。</p>';
   h += '<h4>AIの強さ別</h4><div class="stats-table"><div class="st-row st-head"><span>強さ</span><span>勝</span><span>負</span><span>分</span><span>勝率</span></div>';
   lvs.forEach(function(k, i){
     const g = (st.games || {})[k] || { w:0, l:0, d:0 };
@@ -6811,15 +7112,19 @@ function openStats(){
          '<div class="sb-track"><div class="sb-fill" style="width:' + Math.round(n * 100 / hatMax) + '%"></div></div><b>' + n + '</b></div>';
   });
   h += '</div>';
-  /* 作った役 */
-  const roles = Object.keys(st.roles || {}).map(function(k){ return [k, st.roles[k]]; }).sort(function(a, b){ return b[1] - a[1]; });
-  h += '<h4>作った役</h4>';
-  if(!roles.length) h += '<p class="sub">まだ役を作っていません。</p>';
-  else {
-    h += '<div class="stats-roles">';
-    roles.forEach(function(r){ h += '<div class="sr-row"><span>' + esc(r[0]) + '</span><b>' + r[1] + '回</b></div>'; });
+  /* 役図鑑：作ったことのある役に印。雷神役は達成すると光る */
+  const rc = st.roles || {};
+  let got = 0, all = 0;
+  ZUKAN.forEach(function(g){ g.roles.forEach(function(r){ all++; if(rc[r]) got++; }); });
+  h += '<h4>役図鑑 <small>' + got + ' / ' + all + '</small></h4>';
+  ZUKAN.forEach(function(g){
+    h += '<p class="zk-title">' + g.title + '</p><div class="zk-grid' + (g.raijin ? ' raijin' : '') + '">';
+    g.roles.forEach(function(r){
+      const n = rc[r] || 0;
+      h += '<div class="zk' + (n ? ' on' : '') + '"><span>' + esc(r) + '</span><b>' + (n ? n + '回' : '未達成') + '</b></div>';
+    });
     h += '</div>';
-  }
+  });
   h += '<p class="sub st-note">最後まで対戦したゲームだけを記録します（この端末のこのブラウザに保存）。</p>';
   h += '<div class="btn-row"><button type="button" class="btn primary" data-guide-close>閉じる</button><button type="button" class="btn" id="statsReset">記録をリセット</button></div>';
   h += '</div></div>';

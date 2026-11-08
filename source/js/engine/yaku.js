@@ -94,6 +94,7 @@ function releaseTower(pi, gi, bonus){
   if(isFuon(tiles)){
     p.score -= 1;
     if(G.penaltyCounts) G.penaltyCounts[pi]++;
+    if(G.tally) G.tally.fuon[pi]++;
     if(!G.finishing) VIEW.fxFuonBanner(pi, gi, tiles.slice());
     tiles.forEach(function(t){ G.canyon.push(t); });
     p.gates[gi] = []; p.seals[gi] = null;
@@ -113,6 +114,7 @@ function releaseTower(pi, gi, bonus){
   if(G.cutHints) G.cutHints[pi][gi] = [];
   if(!G.finishing) VIEW.fxReleaseBanner(pi, gi, snapshot, s, pts, (s.pts > 0 ? (bonus||0) : 0));
   if(s.pts > 0){
+    if(G.tally && (!G.tally.bestTower[pi] || pts > G.tally.bestTower[pi].pts)) G.tally.bestTower[pi] = { role:s.role, pts:pts };
     // 役になった塔の駒は峡谷へは行かず、「解放された役」の置き場へ置く
     G.released.push({ pi:pi, gi:gi, role:s.role, pts:pts, base:s.base, height:s.height, dye:s.dye,
                       bonus:(bonus||0), tiles:snapshot });

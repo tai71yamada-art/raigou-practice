@@ -18,6 +18,7 @@ engine/effect-hebi.js
 engine/effect-zan.js
 engine/effect-shun.js
 engine/effect-jou.js
+engine/save.js
 ai/levels.js
 ai/ai.js
 ai/estimate.js
@@ -55,6 +56,7 @@ ui/hand-chips.js
 ui/settings-screen.js
 ui/result-screen.js
 ui/start-screen.js
+ui/save-ui.js
 ui/guides.js
 ui/view-bind.js
 app/stats.js

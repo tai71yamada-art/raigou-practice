@@ -6,6 +6,7 @@
    1. 役と得点：ルールブックの例どおりに点数が出るか
    2. 駒と雷山：駒の数・除外1枚
    3. AI同士の対局：いろいろなレベルで最後まで進むか。毎手番、駒が消えたり増えたりしていないか
+   3b. 途中保存：手番の始めで保存して別の場所で戻し、続きが保存しなかった時と全く同じになるか
    4. いつもの対局：決まった乱数で対局した結果が、前回の記録と同じか（意図しない変更の検出） */
 'use strict';
 const fs = require('fs'), path = require('path');
@@ -112,6 +113,33 @@ function section(t){ console.log('\n■ ' + t); }
   }
   ok(games === N, N + '局すべて最後まで終わる', games + '局');
   ok(bad === 0, '駒の数と塔の高さに矛盾がない（' + turnsChecked + '手番を確認）', firstBad);
+
+  section('3b. 途中保存：保存して戻した対局が、保存しなかった対局と同じに進むか');
+  {
+    let same = 0, tried = 0, why = '';
+    const M = QUICK ? 6 : 20;
+    for(let i = 0; i < M; i++){
+      const lv = [LV[(i * 2) % 7], LV[(i * 5 + 3) % 7]];
+      const k = 4 + (i * 7) % 30;          // 何手番目の始めで保存するか
+      const A = H.createEngine(500 + i);
+      let snap = null, rngAt = 0, lineAt = 0;
+      const realStart = A.E.getStartTurn();
+      A.E.setStartTurn(function(){
+        if(!snap && A.E.G.turnNo === k){ snap = JSON.parse(JSON.stringify(A.E.serializeGame())); rngAt = A.rng.get(); lineAt = A.lines().length; }
+        return realStart();
+      });
+      const ra = await A.play(lv, i % 2 === 0);
+      if(!snap) continue;              // その手番まで行かずに終わった
+      tried++;
+      const B = H.createEngine(1);
+      B.rng.set(rngAt);
+      const rb = await B.resume(snap);
+      const tailA = ra.lines.slice(lineAt);
+      if(JSON.stringify(tailA) === JSON.stringify(rb.lines) && ra.winner === rb.winner && ra.s.join() === rb.s.join()) same++;
+      else if(!why){ const j = tailA.findIndex(function(l, x){ return l !== rb.lines[x]; }); why = '対局' + i + '（' + k + '手番目で保存）の' + j + '行目：' + tailA[j] + ' ／ ' + rb.lines[j]; }
+    }
+    ok(tried > 0 && same === tried, '保存→再開した' + tried + '局が、最後まで同じ進み方', why);
+  }
 
   section('4. いつもの対局（決まった乱数での結果が前回と同じか）');
   const SEEDS = [[11, ['lv3', 'lv3']], [22, ['lv1', 'lv5']], [33, ['lv6', 'lv7']], [44, ['lv7', 'lv2']], [55, ['lv4', 'lv6']]];

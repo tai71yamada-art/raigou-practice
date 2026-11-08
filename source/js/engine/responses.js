@@ -47,6 +47,7 @@ async function resolveRaiDefense(attacker, defender, mode, targetGi, opt){
   /* opt.goOnly：撃った側が自分の塔を対象にした雷。受け手は狙われていないので陣は使えず、
      轟（霧を轟として使う場合も含む）で「雷の対象を自分の塔に変える」ことだけができる */
   const goOnly = !!(opt && opt.goOnly);
+  if(!goOnly && G.tally) G.tally.attacked[defender]++;
   const goSlot = handHas(d, '轟');
   const kiriSlot = handHas(d, '霧');
   const jinSlot = goOnly ? -1 : handHas(d, '陣');
@@ -75,12 +76,14 @@ async function resolveRaiDefense(attacker, defender, mode, targetGi, opt){
       if(usedName === '霧') log(d.name + 'は「霧」を陣として使って防ぎました。', 'sys');
       else log(d.name + 'は「陣」で防ぎました。', 'sys');
       VIEW.render();
+      if(G.tally) G.tally.blocked[defender]++;
       return { type:'blocked' };
     }
     if(pick.action === 'go'){
       /* 轟／霧（轟として）を使う宣言だけを返す。消費と移し先／合戦の決定は primRai 側で行う
          （撃った側が轟で応じれば雷轟合戦になり、「やっぱり防がない」余地も残すため） */
       log(d.name + 'は轟として使える駒で受けることを選びました。', 'sys');
+      if(G.tally) G.tally.goResp[defender]++;
       return { type:'go', slot: pick.slot, prefGi: undefined };
     }
     return { type:'none' };
@@ -90,7 +93,7 @@ async function resolveRaiDefense(attacker, defender, mode, targetGi, opt){
   if(goOnly){
     if(!goUsable) return { type:'none' };
     const choice = withSeat(defender, function(){ return aiGoChoiceSelfTarget(attacker, defender, mode, targetGi, cands); });
-    if(choice) return { type:'go', slot: goSlot >= 0 ? goSlot : kiriSlot, prefGi: choice.gi };
+    if(choice){ if(G.tally) G.tally.goResp[defender]++; return { type:'go', slot: goSlot >= 0 ? goSlot : kiriSlot, prefGi: choice.gi }; }
     return { type:'none' };
   }
   if(goSlot >= 0 || kiriSlot >= 0){
@@ -99,12 +102,14 @@ async function resolveRaiDefense(attacker, defender, mode, targetGi, opt){
       if(choice && choice.type==='redirect'){
         /* 轟を使う宣言だけを返す（消費は primRai 側。撃った側が応じれば合戦になる） */
         const useSlot = goSlot >= 0 ? goSlot : kiriSlot;
+        if(G.tally) G.tally.goResp[defender]++;
         return { type:'go', slot: useSlot, prefGi: choice.gi };
       }
       if(choice && choice.type==='jin' && jinSlot>=0){
         consumeHand(d, jinSlot);
         log(d.name + 'は「陣」で防ぎました。', 'sys');
         VIEW.render();
+        if(G.tally) G.tally.blocked[defender]++;
         return { type:'blocked' };
       }
       if(choice && choice.type==='accept') return { type:'none' };
@@ -114,12 +119,14 @@ async function resolveRaiDefense(attacker, defender, mode, targetGi, opt){
     consumeHand(d, jinSlot);
     log(d.name + 'は「陣」で防ぎました。', 'sys');
     VIEW.render();
+    if(G.tally) G.tally.blocked[defender]++;
     return { type:'blocked' };
   }
   if(kiriSlot >= 0){
     consumeHand(d, kiriSlot);
     log(d.name + 'は「霧」を陣として使って防ぎました。', 'sys');
     VIEW.render();
+    if(G.tally) G.tally.blocked[defender]++;
     return { type:'blocked' };
   }
   return { type:'none' };
@@ -131,6 +138,7 @@ async function resolveRaiDefense(attacker, defender, mode, targetGi, opt){
    防いだら相手の効果アニメーションを五芒星で打ち消す */
 async function resolveJinDefense(defender, attackName, targetDesc){
   const d = P(defender);
+  if(G.tally) G.tally.attacked[defender]++;
   const jinSlot = handHas(d, '陣');
   const kiriSlot = handHas(d, '霧');
   if(jinSlot < 0 && kiriSlot < 0) return false;
@@ -146,6 +154,7 @@ async function resolveJinDefense(defender, attackName, targetDesc){
     else log(d.name + 'は「陣」で防ぎました。', 'sys');
     VIEW.render();
     await VIEW.playJinFx(defender);
+    if(G.tally) G.tally.blocked[defender]++;
     return true;
   }
   /* AIが守る側：自動 */
@@ -154,12 +163,14 @@ async function resolveJinDefense(defender, attackName, targetDesc){
     log(d.name + 'は「陣」で防ぎました。', 'sys');
     VIEW.render();
     await VIEW.playJinFx(defender);
+    if(G.tally) G.tally.blocked[defender]++;
     return true;
   }
   consumeHand(d, kiriSlot);
   log(d.name + 'は「霧」を陣として使って防ぎました。', 'sys');
   VIEW.render();
   await VIEW.playJinFx(defender);
+  if(G.tally) G.tally.blocked[defender]++;
   return true;
 }
 

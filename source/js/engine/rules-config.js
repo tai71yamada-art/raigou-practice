@@ -80,7 +80,7 @@ function newGame(humanSente, difficulty, opts){
   G.difficulty = difficulty;
   G.turn = G.sente; G.turnNo = 0; G.over = false; G.started = true;
   G.endIn = null; G.lastDrawer = null; G.finalTurnActive = false; G.isFinalTurn = false; G.finalRound = false; G.busy = false;
-  G.raigouCounts = [0,0]; G.penaltyCounts = [0,0]; G.finalRevealStarted = false; G.finishing = false;
+  G.raigouCounts = [0,0]; G.penaltyCounts = [0,0]; G.tally = newTally(); G.finalRevealStarted = false; G.finishing = false;
   G.revealedTopIds = new Set();
   G.kn = [new Set(), new Set()]; G.cutHints = [[[],[],[]],[[],[],[]]];
   G.hatsuGame = {}; G.statsSaved = false;

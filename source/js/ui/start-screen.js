@@ -31,6 +31,7 @@ function syncStartButtons(){
   const rOpt = START_RULE_OPTIONS.find(function(o){ return o.v === startRule; });
   document.getElementById('ruleBtnVal').textContent = rOpt ? rOpt.short : startRule;
   document.getElementById('houseBtnVal').innerHTML = houseIconHtml(startHouse) + esc(HOUSE_CHARA[startHouse] || (houseById(startHouse).name + '家'));
+  if(typeof syncResumeUi === 'function') syncResumeUi();
 }
 function closeStartSetting(){ document.getElementById('startSettingRoot').innerHTML = ''; }
 function openStartSetting(kind){
@@ -84,7 +85,7 @@ document.getElementById('houseBtn').addEventListener('click', function(){ openSt
 document.getElementById('diffBtn').addEventListener('click', function(){ openStartSetting('diff'); });
 document.getElementById('orderBtn').addEventListener('click', function(){ openStartSetting('order'); });
 let vsPlaying = false;
-document.getElementById('startGoBtn').addEventListener('click', startBattle);
+document.getElementById('startGoBtn').addEventListener('click', function(){ if(hasSave()) resumeBattle(); else startBattle(); });
 /* 対戦開始（スタート画面の「対戦開始」とリザルトの「再戦」から）。条件はスタート画面の設定のまま */
 function startBattle(){
   if(vsPlaying) return;

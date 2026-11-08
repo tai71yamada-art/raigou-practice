@@ -24,6 +24,7 @@
               <button type="button" class="start-act-btn" id="diffBtn" aria-haspopup="dialog" disabled><span class="sa-label">AIの強さ</span><span class="sa-value" id="diffBtnVal">Lv.3</span></button>
               <button type="button" class="start-act-btn" id="orderBtn" aria-haspopup="dialog" disabled><span class="sa-label">先手 / 後手</span><span class="sa-value" id="orderBtnVal">先手</span></button>
               <button type="button" class="start-act-btn start-go" id="startGoBtn" disabled><span class="sa-value">対戦開始</span></button>
+              <div class="resume-row" id="resumeRow" hidden><span id="resumeInfo"></span><button type="button" class="resume-discard" id="resumeDiscardBtn">消して新しく始める</button></div>
             </div>
           </div>
           <h1 class="serif">雷轟 練習アプリ</h1>
@@ -90,6 +91,8 @@
                   <button class="ghost-btn" id="menuSettingsBtn" type="button">設定</button>
                   <button class="ghost-btn" id="menuStatsBtn" type="button">戦績</button>
                 </div>
+                <button class="ghost-btn save-quit-btn" id="saveQuitBtn" type="button">保存して終了</button>
+                <p class="save-quit-note" id="saveQuitNote" hidden>あなたの手番の積・発の時に保存できます</p>
                 <button class="ghost-btn end-game-btn" id="restartBtn" type="button">対戦終了</button>
                 <div class="menu-guide">
                   <button class="ghost-btn" id="menuKomaBtn" type="button">駒一覧</button>

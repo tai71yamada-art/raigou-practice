@@ -23,7 +23,9 @@ const ENGINE_CODE = engineFiles().map(function(f){ return fs.readFileSync(path.j
   .replace(/\{\{VERSION\}\}/g, 'test').replace('{{chara_names}}', charaNames()) +
   '\n;globalThis.__E = { G:G, P:P, VIEW:VIEW, newGame:newGame, getMk:function(){ return mkPlayer; }, setMk:function(f){ mkPlayer = f; },' +
   ' scoreTower:scoreTower, isFuon:isFuon, roleOf:roleOf, raijinRoleOf:raijinRoleOf, mkTile:mkTile, GEN_DEF:GEN_DEF, ON_DEF:ON_DEF,' +
-  ' sortBody:sortBody, totalInner:totalInner, innerCap:innerCap, buildDeck:buildDeck };';
+  ' sortBody:sortBody, totalInner:totalInner, innerCap:innerCap, buildDeck:buildDeck,' +
+  ' serializeGame:serializeGame, restoreGame:restoreGame, startTurn:function(){ return startTurn(); },' +
+  ' getStartTurn:function(){ return startTurn; }, setStartTurn:function(f){ startTurn = f; } };';
 
 function createEngine(seed){
   let s = seed >>> 0;
@@ -45,6 +47,17 @@ function createEngine(seed){
   E.VIEW.showResult = function(winner){ if(done) done({ winner: winner, s: [E.P(0).score, E.P(1).score], turns: E.G.turnNo }); };
   return {
     E: E,
+    rng: { get: function(){ return s; }, set: function(v){ s = v; } },
+    lines: function(){ return lines; },
+    /* 保存した対局から続ける：restoreGame してから次の手番を始め、終局まで進める */
+    resume: function(data, timeoutMs){
+      lines = [];
+      return new Promise(function(resolve, reject){
+        const timer = setTimeout(function(){ done = null; reject(new Error('再開した対局が終わりません')); }, timeoutMs || 30000);
+        done = function(r){ clearTimeout(timer); done = null; r.lines = lines; setTimeout(function(){ resolve(r); }, 30); };
+        try{ E.restoreGame(JSON.parse(JSON.stringify(data))); E.startTurn(); }catch(e){ clearTimeout(timer); reject(e); }
+      });
+    },
     play: function(levels, sente, timeoutMs){
       lines = [];
       return new Promise(function(resolve, reject){

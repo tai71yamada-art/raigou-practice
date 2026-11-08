@@ -4,6 +4,7 @@ async function applyTaboo(pi, chooseDiscards){
   const p = P(pi);
   p.score -= 1;
   if(G.penaltyCounts) G.penaltyCounts[pi]++;
+  if(G.tally) G.tally.taboo[pi]++;
   log(p.name + 'は満杯のまま選を迎えたので禁忌です。陽玉-1点（残り' + p.score + '点）。内駒を2個捨てます。', 'bad');
   VIEW.render();
   await VIEW.fxTabooBanner(pi);

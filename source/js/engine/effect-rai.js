@@ -218,6 +218,10 @@ async function resolveRaigouBattle(o){
   } else {
     log('雷轟合戦の判定はC：重さが同点なので、どちらの選んだ塔にも落ちず、雷を撃った' + P(atk).name + 'が最初に指定した塔に当初の雷の効果が適用されます。+2点は付きません。', 'sys');
   }
+  if(G.tally){
+    if(pattern === 'A'){ G.tally.gassen[winnerPi][0]++; G.tally.gassen[1 - winnerPi][1]++; }
+    else { G.tally.gassen[0][2]++; G.tally.gassen[1][2]++; }
+  }
   await VIEW.showBattleRevealModal(o, picks, tops, pattern, winnerPi);
   G.inGassen = false; // 合戦の判定が出たら終了。条件を満たした受動奥義はここから後で処理する
   if(pattern === 'A'){
