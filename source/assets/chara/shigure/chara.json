@@ -1,0 +1,8 @@
+{
+ "name": "時雨 いづな",
+ "yomi": "しぐれ いづな",
+ "color": "#d48ae8",
+ "colorSoft": "#f3dcfa",
+ "css": "html[data-chara=\"shigure\"] #resultScreen[data-res=\"lose\"] .result-hero img{ right:-16%; top:34px; height:108%; }",
+ "cssNote": "敗北の絵（しゃがんだ絵）は顔が大きく出て「敗北」の文字に重なるので、小さめにして右へ"
+}

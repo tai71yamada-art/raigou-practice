@@ -11,7 +11,8 @@
 #   js/ai/             … AI
 #   js/ui/ js/audio/   … 画面・演出・音
 #   js/app/            … 設定・結果・起動
-#   assets/            … 画像と音。HTML/CSS/JS の中の {{asset:パス}} {{chara:キャラID}} {{audio:名前}} が中身に置き換わる
+#   assets/            … 画像と音。HTML/CSS/JS の中の {{asset:パス}} {{audio:名前}} が中身に置き換わる
+#   assets/chara/<家ID>/ … キャラ1人分（chara.json＋画像9枚）。フォルダを置くだけで選べるキャラになる（README.md 参照）
 #   pwa/               … ホーム画面版の付属ファイル（sw.js の {{VERSION}} も置き換わる）
 import os, re, base64, json, sys, shutil
 
@@ -38,8 +39,39 @@ def chara_block(cid):
     d = {k: data_uri('chara/%s/%s' % (cid, files[k])) for k in CHARA_KEYS}
     return '<script type="text/plain" id="charaData-' + cid + '">' + json.dumps(d, separators=(',', ':')) + '</script>'
 
+def charas():
+    """assets/chara/ の下のフォルダ＝選べるキャラ。フォルダ名は家のID（rakura, kuze, …）"""
+    base = os.path.join(HERE, 'assets', 'chara')
+    out = []
+    for cid in sorted(os.listdir(base)):
+        f = os.path.join(base, cid, 'chara.json')
+        if not os.path.exists(f): raise SystemExit('assets/chara/' + cid + '/chara.json がありません')
+        with open(f, encoding='utf-8') as fp: meta = json.load(fp)
+        for k in ['name', 'color', 'colorSoft']:
+            if not meta.get(k): raise SystemExit(cid + ' の chara.json に ' + k + ' がありません')
+        out.append((cid, meta))
+    return out
+
+def rgb(hexcolor):
+    h = hexcolor.lstrip('#')
+    return ','.join(str(int(h[i:i+2], 16)) for i in (0, 2, 4))
+
+def chara_fill(text):
+    cs = charas()
+    js_str = lambda v: "'" + v.replace('\\', '\\\\').replace("'", "\\'") + "'"
+    text = text.replace('{{charas}}', '\n'.join(chara_block(cid) for cid, _ in cs))
+    text = text.replace('{{chara_names}}', '{ ' + ', '.join(cid + ':' + js_str(m['name']) for cid, m in cs) + ' }')
+    text = text.replace('{{chara_tiles}}', '{ ' + ', '.join(cid + ":'{{asset:chara/" + cid + "/tile.webp}}'" for cid, _ in cs) + ' }')
+    text = text.replace('{{chara_colors}}', '\n'.join(
+        '      html[data-chara="%s"], .chara-tile[data-chara="%s"]{ --main:%s; --main-rgb:%s; --main-soft:%s; }' % (cid, cid, m['color'], rgb(m['color']), m['colorSoft'])
+        for cid, m in cs))
+    text = text.replace('{{chara_css}}', '\n'.join(
+        ('      /* ' + m['cssNote'] + ' */\n' if m.get('cssNote') else '') + '      ' + m['css'] for cid, m in cs if m.get('css')))
+    return text
+
 def fill(text, version, pwa):
     text = text.replace('{{VERSION}}', version)
+    text = chara_fill(text)
     text = re.sub(r'\{\{asset:([^}]+)\}\}', lambda m: data_uri(m.group(1)), text)
     text = re.sub(r'\{\{chara:([^}]+)\}\}', lambda m: chara_block(m.group(1)), text)
     def audio(m):
@@ -47,7 +79,7 @@ def fill(text, version, pwa):
         if pwa and name in PWA_SKIP_AUDIO: return ''
         return '<script type="text/plain" id="' + name + '">' + base64.b64encode(rd('assets/audio/' + name + '.mp3', True)).decode() + '</script>'
     text = re.sub(r'\{\{audio:([^}]+)\}\}', audio, text)
-    left = re.findall(r'\{\{[a-z]+:[^}]*\}\}', text)
+    left = re.findall(r'\{\{[a-z_]+(?::[^}]*)?\}\}', text)
     if left: raise SystemExit('置き換えられなかった印があります: ' + ', '.join(left[:5]))
     return text
 

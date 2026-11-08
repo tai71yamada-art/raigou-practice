@@ -12,8 +12,15 @@ function engineFiles(){
   return fs.readFileSync(path.join(JS, 'ORDER.txt'), 'utf8').split(/\s+/).filter(Boolean)
     .filter(function(f){ return f === '_prelude.js' || f.startsWith('engine/') || f.startsWith('ai/'); });
 }
+// キャラの名前（build.py と同じく assets/chara/<id>/chara.json から）
+function charaNames(){
+  const base = path.join(__dirname, '..', 'assets', 'chara');
+  return '{ ' + fs.readdirSync(base).sort().map(function(id){
+    return id + ':' + JSON.stringify(JSON.parse(fs.readFileSync(path.join(base, id, 'chara.json'), 'utf8')).name);
+  }).join(', ') + ' }';
+}
 const ENGINE_CODE = engineFiles().map(function(f){ return fs.readFileSync(path.join(JS, f), 'utf8'); }).join('')
-  .replace(/\{\{VERSION\}\}/g, 'test') +
+  .replace(/\{\{VERSION\}\}/g, 'test').replace('{{chara_names}}', charaNames()) +
   '\n;globalThis.__E = { G:G, P:P, VIEW:VIEW, newGame:newGame, getMk:function(){ return mkPlayer; }, setMk:function(f){ mkPlayer = f; },' +
   ' scoreTower:scoreTower, isFuon:isFuon, roleOf:roleOf, raijinRoleOf:raijinRoleOf, mkTile:mkTile, GEN_DEF:GEN_DEF, ON_DEF:ON_DEF,' +
   ' sortBody:sortBody, totalInner:totalInner, innerCap:innerCap, buildDeck:buildDeck };';

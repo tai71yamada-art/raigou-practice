@@ -11,6 +11,6 @@ const HOUSES = [
 ];
 const AI_HOUSE = { id:'ai', name:'', yomi:'' }; // AI専用の家紋（家名なし）
 /* 家ごとのキャラクター（まだいない家は null＝準備中） */
-const HOUSE_CHARA = { rakura:'雷藏 くらら', kuze:'空晴 ふうか', yakumo:null, shigure:'時雨 いづな', hisetsu:null, tobari:null };
+const HOUSE_CHARA = {{chara_names}};   // build.py が assets/chara/<id>/chara.json の name から作る
 function houseById(id){ if(id === 'ai') return AI_HOUSE; return HOUSES.find(function(h){ return h.id === id; }) || HOUSES[0]; }
 function houseLabel(id){ const h = houseById(id); return h.name ? h.name + '家' : ''; }

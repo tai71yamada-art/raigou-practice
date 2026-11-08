@@ -220,6 +220,10 @@ function humanJoFlow(handSlot){
     drawList();
     document.getElementById('joCancel').addEventListener('click', function(){ closeModal(); resolve(null); });
     document.getElementById('joNext').addEventListener('click', async function(){
+      // 2度押しで「捨てて引き直す」が2回動くと、駒が増えて置き直しが決められなくなるので、1回だけにする
+      if(this.disabled) return;
+      this.disabled = true;
+      document.getElementById('joCancel').disabled = true;
       // 捨てて引き直し、置き直し画面へ
       const disc = discard.slice();
       const res = await joDraw(0, handSlot, disc);

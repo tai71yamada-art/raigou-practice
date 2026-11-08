@@ -150,8 +150,8 @@
       }
       #resultScreen[data-res="lose"] .result-hero img{ opacity:1; }
       #resultScreen[data-res="win"] .result-hero img{ right:-1%; top:10px; height:136%; } /* 両手を上げた絵は横に広いので、拳が切れないよう少し小さく */
-      /* いづなの敗北（しゃがんだ絵）は顔が大きく出て「敗北」の文字に重なるので、小さめにして右へ */
-      html[data-chara="shigure"] #resultScreen[data-res="lose"] .result-hero img{ right:-16%; top:34px; height:108%; }
+      /* キャラごとの見た目の調整（build.py が assets/chara/<id>/chara.json の css から作る） */
+{{chara_css}}
       .hero-img, #startScreen .hero-img{ width:auto; max-width:100%; height:clamp(220px, 38vh, 320px); object-fit:contain; }
       #startScreen .hero-img.hero-wide{ width:100%; max-width:440px; height:auto; }
       /* 背景つきの一枚絵：縦が長すぎる画面では空の上側を切って収める */

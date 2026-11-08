@@ -2,6 +2,7 @@
      node source/tests/run_tests.js            … 全部
      node source/tests/run_tests.js --quick    … 対局テストを少なめに
      node source/tests/run_tests.js --update   … 「いつもの対局」の記録を今の動きで更新する（AIやルールをわざと変えた時だけ）
+   0. ルール側（engine/ ai/）が画面を直接さわっていないか
    1. 役と得点：ルールブックの例どおりに点数が出るか
    2. 駒と雷山：駒の数・除外1枚
    3. AI同士の対局：いろいろなレベルで最後まで進むか。毎手番、駒が消えたり増えたりしていないか
@@ -27,6 +28,14 @@ function section(t){ console.log('\n■ ' + t); }
   E.ON_DEF.forEach(function(d){ byName[d.name] = { kind:'on', w:d.w }; });
   /* 塔を「下から順」の駒の名前で作る。例 tower('轟 陣 斬') */
   function tower(s){ return s.split(/\s+/).map(function(n){ const d = byName[n]; return E.mkTile(d.kind, n, d.w); }); }
+
+  section('0. ルール側が画面をさわっていないか');
+  H.engineFiles().forEach(function(f){
+    const src = fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+    const hit = src.match(/\b(document|window|localStorage|innerHTML|addEventListener|getBoundingClientRect)\b/);
+    ok(!hit, f + ' は画面を直接さわらない', hit ? '「' + hit[0] + '」を使っています（VIEW 経由にしてください）' : '');
+  });
 
   section('1. 役と得点');
   const CASES = [

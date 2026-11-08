@@ -1,8 +1,7 @@
       /* ===================== 電脳和テーマ（ここから下が見た目の上書き） ===================== */
       /* キャラごとのメインカラー（applyChara が html の data-chara を切り替える） */
-      html[data-chara="kuze"], .chara-tile[data-chara="kuze"]{ --main:#8fe35a; --main-rgb:143,227,90; --main-soft:#dcf7c6; }
-      html[data-chara="shigure"], .chara-tile[data-chara="shigure"]{ --main:#d48ae8; --main-rgb:212,138,232; --main-soft:#f3dcfa; }
-      .chara-tile[data-chara="rakura"]{ --main:#ffd23f; --main-rgb:255,210,63; --main-soft:#fff2b0; }
+      /* build.py が assets/chara/<id>/chara.json の color・colorSoft から作る */
+{{chara_colors}}
       :root{
         --bg:#101114; --panel:#17191e; --panel2:#1e2026; --ink:#f2f0ea; --ink-soft:#a9a7a0;
         --main:#ffd23f; --main-rgb:255,210,63; --main-soft:#fff2b0;
