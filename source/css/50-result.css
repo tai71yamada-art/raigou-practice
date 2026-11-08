@@ -1,0 +1,15 @@
+      /* ===== リザルトを一画面に収める ===== */
+      #resultScreen .screen-card{ margin:0 auto; height:calc(100dvh - 40px - env(safe-area-inset-bottom)); min-height:520px; display:flex; flex-direction:column; padding:14px 14px 12px; }
+      #resultScreen .result-hero{ flex:1 1 300px; height:auto; min-height:180px; max-height:400px; margin:-6px -6px 8px; }
+      #resultScreen .result-stats{ flex:0 0 auto; }
+      #resultScreen .rt-row{ padding:5px 0; font-size:.8rem; }
+      #resultScreen .rt-row.rt-head{ padding-top:2px; }
+      #resultScreen .rt-v.num{ font-size:1rem; }
+      #resultScreen .rt-v.roles span{ display:inline-block; margin-right:6px; }
+      #resultScreen .rt-note{ margin:4px 0 0; }
+      #resultScreen .result-table{ padding:4px 12px; }
+      .result-btns{ flex:none; display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:auto; padding-top:10px; }
+      .result-btns .big-btn{ width:100%; height:52px; margin:0; padding:0 6px; font-size:1.05rem; white-space:nowrap; }
+      #resultScreen #againBtn{ height:52px; }
+      .result-btns .sub-btn{ background:transparent; color:var(--pop); box-shadow:inset 0 0 0 2px var(--pop); }
+

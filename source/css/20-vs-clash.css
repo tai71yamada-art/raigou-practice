@@ -1,0 +1,205 @@
+      /* ===== 対戦開始の VS 演出（全画面） ===== */
+      #vsRoot{ position:fixed; inset:0; z-index:400; pointer-events:none; }
+      #vsRoot:not(:empty){ pointer-events:auto; }
+      .vs{ position:absolute; inset:0; overflow:hidden; background:#101114; font-family:'Zen Kaku Gothic Antique',sans-serif; }
+      .vs.out{ animation:vsOut .32s ease-in both; }
+      @keyframes vsOut{ to{ opacity:0; } }
+      .vs .vs-side{ position:absolute; inset:0; overflow:hidden; }
+      .vs .vs-side::after{ content:''; position:absolute; inset:0; background:repeating-linear-gradient(-70deg, rgba(0,0,0,.08) 0 2px, transparent 2px 16px); }
+      .vs .vs-side.ai{ clip-path:polygon(0 0, 62% 0, 38% 100%, 0 100%); background:#7d6bff; animation:clInL .5s cubic-bezier(.2,.9,.3,1.25) .05s both, vsPush 1.2s ease-in-out 1s infinite; }
+      .vs .vs-side.me{ clip-path:polygon(62% 0, 100% 0, 100% 100%, 38% 100%); background:var(--main); animation:clInR .5s cubic-bezier(.2,.9,.3,1.25) .05s both, vsPush 1.2s ease-in-out 1s infinite; }
+      @keyframes vsPush{ 0%,100%{ transform:translateX(0);} 50%{ transform:translateX(-6px);} }
+      .vs .vs-speed{ position:absolute; inset:0; z-index:1; opacity:.35; }
+      .vs .ai .vs-speed{ background:repeating-linear-gradient(0deg, transparent 0 22px, rgba(255,255,255,.35) 22px 24px); -webkit-mask-image:linear-gradient(90deg,#000,transparent 55%); mask-image:linear-gradient(90deg,#000,transparent 55%); }
+      .vs .me .vs-speed{ background:repeating-linear-gradient(0deg, transparent 0 22px, rgba(255,255,255,.5) 22px 24px); -webkit-mask-image:linear-gradient(270deg,#000,transparent 55%); mask-image:linear-gradient(270deg,#000,transparent 55%); }
+      .vs .vs-chara{ position:absolute; z-index:2; max-width:none; }
+      /* 自分：右下から大きく。反転なし（指さした腕が中央へ伸びる） */
+      .vs .me .vs-chara{ right:-30%; bottom:-2%; height:78%; filter:drop-shadow(-4px 0 0 #101114); }
+      /* 相手：左上寄りに大きく。左右反転して顔を中央（自分）へ向ける */
+      .vs .ai .vs-chara{ left:-22%; top:12%; width:min(92vw, 62vh); transform:scaleX(-1);
+        -webkit-mask-image:radial-gradient(circle at 50% 50%, #000 42%, transparent 70%); mask-image:radial-gradient(circle at 50% 50%, #000 42%, transparent 70%); }
+      .vs .vs-tag{ position:absolute; z-index:15; font-weight:900; font-size:18px; padding:4px 16px; clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%); white-space:nowrap; display:flex; align-items:center; gap:4px; }
+      .vs .vs-tag small{ font-family:'Chakra Petch',sans-serif; font-size:11px; letter-spacing:.2em; margin-right:4px; opacity:.75; }
+      .vs .vs-tag.ai{ background:#7d6bff; color:#fff; left:16px; top:calc(16px + env(safe-area-inset-top)); }
+      .vs .vs-tag.me{ background:var(--main); color:#101114; right:16px; bottom:calc(18px + env(safe-area-inset-bottom)); }
+      .vs .vs-tag .house-ico{ width:1.1em; height:1.1em; margin-right:2px; }
+      .vs .vs-edge{ position:absolute; inset:0; z-index:10; animation:vsPush 1.2s ease-in-out 1s infinite; }
+      .vs .cl-bolt{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; filter:drop-shadow(0 0 6px rgba(58,168,255,1)) drop-shadow(0 0 18px rgba(58,168,255,.75)); opacity:0; animation:clOn .1s linear .5s both; }
+      .vs .cl-bolt .b1{ animation:clFlick .16s steps(1) .5s infinite; }
+      .vs .cl-bolt .b2{ animation:clFlick .16s steps(1) .58s infinite reverse; }
+      .vs .cl-spark{ position:absolute; width:4px; height:4px; border-radius:50%; background:#eaf8ff; box-shadow:0 0 6px 2px rgba(127,212,255,.9); z-index:12; opacity:0; animation:clSpark .6s ease-out infinite; }
+      .vs .vs-flash{ position:absolute; inset:0; z-index:30; pointer-events:none; background:radial-gradient(circle at 50% 50%, rgba(235,248,255,.95), rgba(127,212,255,.5) 35%, transparent 70%); opacity:0; animation:clFlash .5s ease-out .5s both; }
+      .vs .vs-mark{ position:absolute; left:50%; top:50%; z-index:20; transform:translate(-50%,-50%); text-align:center; animation:vsMark .45s cubic-bezier(.2,1.6,.4,1) .52s both; }
+      .vs .vs-mark b{ display:block; font-family:'Chakra Petch',sans-serif; font-weight:700; font-style:italic; font-size:clamp(84px, 30vw, 128px); line-height:1; color:#fff; letter-spacing:-.02em;
+        -webkit-text-stroke:3px #101114; paint-order:stroke fill; text-shadow:0 0 12px rgba(58,168,255,1), 0 0 30px rgba(58,168,255,.8), 5px 5px 0 #101114; animation:clShake .09s linear 1s infinite alternate; }
+      .vs .vs-mark span{ display:inline-block; margin-top:2px; font-family:'Chakra Petch',sans-serif; font-weight:700; font-size:12px; letter-spacing:.5em; padding:3px 6px 3px 12px; color:#7fd4ff; background:rgba(16,17,20,.85); text-shadow:0 0 8px rgba(58,168,255,.9); }
+      @keyframes vsMark{ 0%{ opacity:0; transform:translate(-50%,-50%) scale(2.6) rotate(-8deg); filter:blur(6px);} 60%{ opacity:1; transform:translate(-50%,-50%) scale(.92) rotate(0); filter:none;} 100%{ opacity:1; transform:translate(-50%,-50%) scale(1);} }
+
+      /* ===== 雷轟合戦カットイン（左＝相手／右＝自分、右上→左下の斜め境界で競り合う） ===== */
+      .clash{ position:absolute; inset:0; overflow:hidden; font-family:'Zen Kaku Gothic Antique',sans-serif; animation:clOut .28s ease-in 2.05s both; }
+      @keyframes clOut{ to{ opacity:0; } }
+      .clash .cl-dim{ position:absolute; inset:0; background:rgba(6,7,10,.74); animation:clDim .25s ease both; }
+      @keyframes clDim{ from{opacity:0} to{opacity:1} }
+      .clash .cl-stage{ position:absolute; left:0; right:0; top:50%; height:min(430px, 52vh); transform:translateY(-42%); }
+      .clash .cl-title{ position:absolute; left:0; right:0; bottom:calc(100% + 14px); text-align:center; z-index:20; animation:clTitle .45s cubic-bezier(.2,1.6,.4,1) .55s both; }
+      .clash .cl-en{ font-family:'Chakra Petch',sans-serif; font-weight:700; letter-spacing:.5em; padding-left:.5em; font-size:12px; color:#7fd4ff; text-shadow:0 0 8px rgba(58,168,255,.9); }
+      .clash .cl-jp{ font-family:'Zen Antique',serif; font-size:clamp(44px, 14vw, 58px); line-height:1.05; color:#fff; letter-spacing:.06em; -webkit-text-stroke:2px #101114; paint-order:stroke fill;
+        text-shadow:0 0 10px rgba(58,168,255,.95), 0 0 26px rgba(58,168,255,.7), 3px 3px 0 #101114; }
+      .clash .cl-jp span{ display:inline-block; animation:clShake .09s linear 1s infinite alternate; }
+      .clash .cl-jp span:nth-child(2n){ animation-direction:alternate-reverse; }
+      @keyframes clTitle{ 0%{ opacity:0; transform:scale(2.2); filter:blur(6px);} 60%{ opacity:1; transform:scale(.94); filter:none;} 100%{ opacity:1; transform:scale(1);} }
+      @keyframes clShake{ from{ transform:translate(-1px,1px);} to{ transform:translate(1px,-1px);} }
+      .clash .cl-side{ position:absolute; inset:0; overflow:hidden; }
+      .clash .cl-side::after{ content:''; position:absolute; inset:0; background:repeating-linear-gradient(-62deg, rgba(0,0,0,.08) 0 2px, transparent 2px 14px); }
+      .clash .cl-side.ai{ clip-path:polygon(0 0, 64% 0, 36% 100%, 0 100%); background:#7d6bff; animation:clInL .5s cubic-bezier(.2,.9,.3,1.25) .05s both, clPush 1.2s ease-in-out 1s infinite; }
+      .clash .cl-side.me{ clip-path:polygon(64% 0, 100% 0, 100% 100%, 36% 100%); background:var(--main); animation:clInR .5s cubic-bezier(.2,.9,.3,1.25) .05s both, clPush 1.2s ease-in-out 1s infinite; }
+      @keyframes clInL{ from{ transform:translateX(-105%);} to{ transform:none;} }
+      @keyframes clInR{ from{ transform:translateX(105%);} to{ transform:none;} }
+      @keyframes clPush{ 0%,100%{ transform:translateX(0);} 50%{ transform:translateX(-7px);} }
+      .clash .cl-speed{ position:absolute; inset:0; z-index:1; opacity:.35; }
+      .clash .ai .cl-speed{ background:repeating-linear-gradient(0deg, transparent 0 18px, rgba(255,255,255,.35) 18px 20px); -webkit-mask-image:linear-gradient(90deg,#000,transparent 60%); mask-image:linear-gradient(90deg,#000,transparent 60%); }
+      .clash .me .cl-speed{ background:repeating-linear-gradient(0deg, transparent 0 18px, rgba(255,255,255,.5) 18px 20px); -webkit-mask-image:linear-gradient(270deg,#000,transparent 60%); mask-image:linear-gradient(270deg,#000,transparent 60%); }
+      .clash .cl-chara{ position:absolute; z-index:2; max-width:none; }
+      .clash .me .cl-chara{ right:-24%; top:2%; height:112%; filter:drop-shadow(-4px 0 0 #101114); }
+      .clash .ai .cl-chara{ left:-14%; top:50%; height:84%; transform:translateY(-50%); -webkit-mask-image:radial-gradient(circle at 50% 50%, #000 40%, transparent 70%); mask-image:radial-gradient(circle at 50% 50%, #000 40%, transparent 70%); }
+      .clash .cl-tag{ position:absolute; z-index:15; font-weight:900; font-size:15px; padding:3px 12px; color:#101114; clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%); white-space:nowrap; }
+      .clash .cl-tag small{ font-family:'Chakra Petch',sans-serif; font-size:10px; letter-spacing:.2em; margin-right:6px; opacity:.75; }
+      .clash .cl-tag.me{ background:var(--main); right:14px; bottom:14px; }
+      .clash .cl-tag.ai{ background:#7d6bff; color:#fff; left:14px; top:14px; }
+      .clash .cl-edge{ position:absolute; inset:0; z-index:10; animation:clPush 1.2s ease-in-out 1s infinite; }
+      .clash .cl-bolt{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; filter:drop-shadow(0 0 6px rgba(58,168,255,1)) drop-shadow(0 0 16px rgba(58,168,255,.7)); opacity:0; animation:clOn .1s linear .5s both; }
+      @keyframes clOn{ to{ opacity:1; } }
+      .clash .cl-bolt .b1{ animation:clFlick .16s steps(1) .5s infinite; }
+      .clash .cl-bolt .b2{ animation:clFlick .16s steps(1) .58s infinite reverse; }
+      @keyframes clFlick{ 0%{ opacity:1;} 50%{ opacity:.15;} }
+      .clash .cl-spark{ position:absolute; width:4px; height:4px; border-radius:50%; background:#eaf8ff; box-shadow:0 0 6px 2px rgba(127,212,255,.9); z-index:12; opacity:0; animation:clSpark .6s ease-out infinite; }
+      @keyframes clSpark{ 0%{ opacity:1; transform:translate(0,0) scale(1);} 100%{ opacity:0; transform:translate(var(--dx),var(--dy)) scale(.3);} }
+      .clash .cl-flash{ position:absolute; inset:0; z-index:30; background:radial-gradient(circle at 50% 50%, rgba(235,248,255,.95), rgba(127,212,255,.5) 35%, transparent 70%); opacity:0; animation:clFlash .5s ease-out .5s both; }
+      @keyframes clFlash{ 0%{opacity:0} 15%{opacity:1} 100%{opacity:0} }
+      .fx-cut{
+        position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+        background:linear-gradient(100deg, rgba(12,11,8,.93) 52%, rgba(var(--main-rgb),.93));
+        animation:fxCutIn .95s ease both;
+      }
+      .fx-cut-who{ color:var(--pop); font-size:1.05rem; letter-spacing:.25em; font-weight:800; font-family:var(--popfont); }
+      .fx-cut-chars{ display:flex; gap:10px; }
+      .fx-cut-char{
+        width:96px; height:96px; background:var(--gen); border:3px solid var(--pop); color:#fff3e6;
+        display:flex; align-items:center; justify-content:center;
+        font-family:"Hiragino Mincho ProN","Yu Mincho",serif; font-size:3.4rem; font-weight:800; border-radius:8px;
+        box-shadow:0 8px 30px rgba(0,0,0,.5);
+      }
+
+      .fx-cut-hide{ background:linear-gradient(115deg, #000000 0%, #1e1e1e 42%, #4d4d4d 74%, #000000 100%); }
+      .fx-cut-hide .fx-cut-who{ color:#ffffff; opacity:.92; }
+      .fx-cut-hide .fx-cut-char{ background:transparent; color:#ffffff; border:none; box-shadow:none; width:auto; height:auto; font-size:clamp(5.2rem, 19vw, 8.5rem); line-height:1; text-shadow:0 6px 28px rgba(0,0,0,.65), 0 2px 0 rgba(0,0,0,.45); }
+      .tile.revealed-top{ outline:2px solid var(--gold); outline-offset:1px; }
+
+@keyframes fxCutIn{ 0%{ opacity:0; transform:translateX(-4%);} 12%{ opacity:1; transform:none;} 82%{ opacity:1;} 100%{ opacity:0;} }
+      #fxLayer{ position:fixed; inset:0; z-index:180; pointer-events:none; overflow:hidden; }
+      .fx-clone{ position:fixed; z-index:181; }
+      .fx-clone .tile{ width:100%; height:100%; }
+      .fx-bolt{ position:fixed; z-index:182; animation:fxBolt .75s ease both; filter:drop-shadow(0 0 10px #ffd94d); }
+      @keyframes fxBolt{ 0%{ opacity:0; transform:translateY(-14px) scaleY(.6);} 15%{ opacity:1; transform:none;} 30%{ opacity:.25;} 45%{ opacity:1;} 100%{ opacity:0;} }
+      .fx-flash{ position:fixed; z-index:179; background:rgba(255,240,170,.45); animation:fxFlash .5s ease both; border-radius:10px; }
+      @keyframes fxFlash{ from{ opacity:1;} to{ opacity:0;} }
+      .fx-sealstamp{
+        position:fixed; z-index:182; width:52px; height:52px; border:3px solid var(--accent); border-radius:50%;
+        color:var(--accent); background:rgba(255,250,235,.9); display:flex; align-items:center; justify-content:center;
+        font-family:"Hiragino Mincho ProN","Yu Mincho",serif; font-size:1.7rem; font-weight:800;
+        animation:fxStamp .85s ease both;
+      }
+      @keyframes fxStamp{ 0%{ opacity:0; transform:scale(2.1) rotate(-18deg);} 25%{ opacity:1; transform:scale(1) rotate(-8deg);} 80%{ opacity:1;} 100%{ opacity:0;} }
+      .fx-penta{
+        position:fixed; inset:0; z-index:182; display:flex; align-items:center; justify-content:center;
+        animation:fxPenta .9s ease both;
+      }
+      @keyframes fxPenta{ 0%{ opacity:0; transform:scale(.6) rotate(-14deg);} 25%{ opacity:1; transform:scale(1) rotate(0);} 80%{ opacity:1;} 100%{ opacity:0;} }
+      .fx-slash{
+        position:fixed; z-index:183; height:4px; background:#fff; box-shadow:0 0 8px var(--accent), 0 0 3px #fff;
+        transform-origin:left center; animation:fxSlash .3s ease both; border-radius:2px;
+      }
+      @keyframes fxSlash{ from{ transform:rotate(-32deg) scaleX(0);} to{ transform:rotate(-32deg) scaleX(1);} }
+      .fx-center-row{
+        position:fixed; inset:0; z-index:182; display:flex; align-items:center; justify-content:center; gap:10px;
+        animation:fxCenter .85s ease both;
+      }
+      @keyframes fxCenter{ 0%{ opacity:0; transform:scale(.7);} 25%{ opacity:1; transform:scale(1);} 75%{ opacity:1;} 100%{ opacity:0; transform:translateY(-16px);} }
+      .fx-center-row .tile{ width:58px; height:58px; font-size:1.25rem; }
+
+      /* ---------- 体内を縦に選ぶ（重い駒が一番下）／最終解放の開示 ---------- */
+      .pick-col-wrap{ display:flex; flex-direction:column; align-items:center; gap:2px; margin:6px 0 10px; }
+      .pick-col-note{ font-size:.72rem; color:var(--ink-soft); }
+      .pick-col{ display:flex; flex-direction:column-reverse; gap:8px; align-items:center; padding:10px 14px; border:2px dashed rgba(23,21,18,.55); border-radius:6px; background:var(--panel2); }
+      .pick-col .tile{ width:54px; height:54px; font-size:1.1rem; }
+
+.result-stats{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:12px 0; text-align:left; }
+      @media (max-width:560px){ .result-stats{ grid-template-columns:1fr; } }
+
+/* ---------- メインキャラクター（開始画面ヒーロー／リザルト） ---------- */
+      .hero-pop{
+        background:var(--pop); border:3px solid var(--line); border-radius:6px;
+        padding:16px 12px 14px; text-align:center; box-shadow:4px 4px 0 rgba(23,21,18,.9);
+        margin-bottom:6px;
+      }
+      .hero-en{
+        margin:0 0 8px; font-family:var(--popfont); font-weight:800; color:var(--ink);
+        font-size:1.02rem; letter-spacing:.34em; text-indent:.34em;
+      }
+      .hero-img{
+        display:block; margin:0 auto; width:min(210px,58%); height:auto;
+      }
+      /* ---------- スタート画面の開始ボタン3つ（AIの強さ／先手・後手／対戦開始） ---------- */
+      .start-actions{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:12px; }
+      .start-act-btn{
+        flex:1 1 0; min-width:96px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+        background:#ffffff; color:var(--ink); border:3px solid var(--line); border-radius:6px;
+        padding:8px 6px 9px; box-shadow:3px 3px 0 rgba(23,21,18,.9); font-family:var(--popfont);
+      }
+      .start-act-btn:hover{ transform:translate(-1px,-1px); box-shadow:4px 4px 0 rgba(23,21,18,.9); }
+      .start-act-btn .sa-label{ font-size:.72rem; font-weight:800; letter-spacing:.1em; color:var(--ink-soft); }
+      .start-act-btn .sa-value{ font-size:1.12rem; font-weight:800; line-height:1.25; }
+      .start-act-btn.start-go{ background:var(--ink); color:var(--pop); }
+      .start-act-btn.start-go .sa-value{ font-size:1.18rem; letter-spacing:.06em; }
+      .start-act-btn:disabled{ opacity:.45; cursor:not-allowed; transform:none !important; box-shadow:3px 3px 0 rgba(23,21,18,.9); }
+      /* スタート設定ポップアップの選択肢 */
+      .set-opt{
+        display:block; width:100%; text-align:left; background:#fffdf4; color:var(--ink);
+        border:2px solid var(--line); border-radius:6px; padding:9px 12px; margin-bottom:8px;
+        box-shadow:2px 2px 0 rgba(23,21,18,.85);
+      }
+      .set-opt:hover{ background:var(--panel2); }
+      .set-opt.on{ background:var(--pop); outline:2px solid var(--line); outline-offset:-5px; }
+      .set-opt .so-head{ display:flex; align-items:baseline; gap:8px; font-weight:800; font-family:var(--popfont); font-size:1.02rem; }
+      .set-opt .so-check{ margin-left:auto; font-size:.8rem; color:var(--accent); white-space:nowrap; }
+      .set-opt .so-desc{ display:block; margin-top:3px; font-size:.86rem; color:var(--ink-soft); line-height:1.6; }
+      .set-opt.on .so-desc{ color:var(--ink); }
+      /* スタート画面はスマホ1画面に収まるよう全体を詰める */
+      #startScreen .screen-card{ margin:12px auto 20px; padding:16px 16px 18px; }
+      #startScreen .screen-card h1{ margin:10px 0 4px; }
+      #startScreen .guide-entry{ margin:10px 0 2px; }
+      @media (max-width:560px){
+        #startScreen .screen-card{ padding:12px 12px 14px; }
+        .hero-pop{ padding:10px 8px 12px; }
+        .hero-en{ margin-bottom:4px; font-size:.9rem; }
+        .hero-img{ width:min(168px,52%); }
+        #startScreen .screen-card h1{ font-size:1.55rem; }
+        .start-act-btn{ min-width:88px; padding:7px 4px 8px; }
+        .start-act-btn .sa-value{ font-size:1.02rem; }
+      }
+
+      .winner{ font-family:var(--popfont); }
+      /* ---------- 言霊カットイン（キャラクターイラスト＋言霊名） ---------- */
+
+/* AI側の言霊カットイン画像は正方形なので、縦横比を保って全体を見せる */
+
+      @keyframes fxCharaSlide{ from{ transform:translateX(70px); opacity:0; } to{ transform:none; opacity:1; } }
+
+      @keyframes fxCharaText{ from{ transform:translateX(-40px); opacity:0; } to{ transform:none; opacity:1; } }
+
+@media (max-width:560px){
+}
+      @media (prefers-reduced-motion: reduce){
+        *{ animation:none !important; transition:none !important; }
+      }
+

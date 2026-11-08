@@ -73,3 +73,15 @@ function towerValue(tiles, avail){
   return v;
 }
 
+/* 雷轟合戦でAIが自分の塔を選ぶ：一番上の駒が最も重い塔を優先し、同点なら役の点数が高い塔 */
+function aiBattlePick(pi){
+  const cands = goTowerCands(pi);
+  let best = -1, bestKey = -1;
+  cands.forEach(function(gi){
+    const tw = P(pi).gates[gi];
+    const top = tw[tw.length-1];
+    const key = top.w * 1000 + scoreTower(tw).pts * 10 + tw.length;
+    if(key > bestKey){ bestKey = key; best = gi; }
+  });
+  return best;
+}

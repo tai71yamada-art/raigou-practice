@@ -1,14 +1,14 @@
 /* ================= ログ ================= */
 const logEl = function(){ return document.getElementById('log'); };
-function logClear(){ const el = logEl(); if(el) el.innerHTML=''; }
-function logTurn(text){
+function uiLogClear(){ const el = logEl(); if(el) el.innerHTML=''; }
+function uiLogTurn(text){
   const el = logEl(); if(!el) return;
   const g = document.createElement('div'); g.className = 'lt-group';
   const d = document.createElement('div'); d.className='lt'; d.textContent = text;
   g.appendChild(d);
   el.insertBefore(g, el.firstChild); el.scrollTop = 0;
 }
-function log(text, cls){
+function uiLog(text, cls){
   const el = logEl(); if(!el) return;
   const d = document.createElement('div'); d.className = 'le' + (cls ? ' '+cls : '');
   d.textContent = text;

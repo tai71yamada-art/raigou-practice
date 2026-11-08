@@ -94,12 +94,12 @@ function releaseTower(pi, gi, bonus){
   if(isFuon(tiles)){
     p.score -= 1;
     if(G.penaltyCounts) G.penaltyCounts[pi]++;
-    if(!G.finishing) fxFuonBanner(pi, gi, tiles.slice());
+    if(!G.finishing) VIEW.fxFuonBanner(pi, gi, tiles.slice());
     tiles.forEach(function(t){ G.canyon.push(t); });
     p.gates[gi] = []; p.seals[gi] = null;
     if(G.cutHints) G.cutHints[pi][gi] = [];
     log(p.name + 'の桜門' + (gi+1) + 'の塔は不穏の塔でした。得点にならず、' + p.name + 'の陽玉-1点（残り' + p.score + '点）。駒は全部峡谷へ行きます。', 'bad');
-    render();
+    VIEW.render();
     if(!G.finishing) checkLose(pi);
     return -1;
   }
@@ -111,7 +111,7 @@ function releaseTower(pi, gi, bonus){
   const snapshot = tiles.slice();
   p.gates[gi] = []; p.seals[gi] = null;
   if(G.cutHints) G.cutHints[pi][gi] = [];
-  if(!G.finishing) fxReleaseBanner(pi, gi, snapshot, s, pts, (s.pts > 0 ? (bonus||0) : 0));
+  if(!G.finishing) VIEW.fxReleaseBanner(pi, gi, snapshot, s, pts, (s.pts > 0 ? (bonus||0) : 0));
   if(s.pts > 0){
     // 役になった塔の駒は峡谷へは行かず、「解放された役」の置き場へ置く
     G.released.push({ pi:pi, gi:gi, role:s.role, pts:pts, base:s.base, height:s.height, dye:s.dye,

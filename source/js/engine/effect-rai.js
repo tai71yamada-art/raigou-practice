@@ -17,25 +17,25 @@ async function applyRaiTo(actor, mode, targetPi, targetGi, bonus, countRaigou, s
   const p = P(actor);
   const owner = P(targetPi);
   onTowerEffect({ source: source || 'rai', mode: mode, pi: targetPi, gi: targetGi, actor: actor });
-  if(targetPi === 0 && actor !== 0 && (source || 'rai') === 'rai') setMeFace('hit');
+  if(targetPi === 0 && actor !== 0 && (source || 'rai') === 'rai') VIEW.setMeFace('hit');
   if(mode === 'hou'){
     if(countRaigou && G.raigouCounts) G.raigouCounts[targetPi]++;
-    await fxLightning(targetPi, targetGi);
+    await VIEW.fxLightning(targetPi, targetGi);
     log(p.name + 'の雷放：' + owner.name + 'の桜門' + (targetGi+1) + 'の塔（' + owner.gates[targetGi].length + '段）を解放します。' + (bonus ? '（雷轟解放：役が成立すれば+2点）' : ''));
     releaseTower(targetPi, targetGi, bonus || 0);
   } else {
     owner.seals[targetGi] = { old:false };
     log(p.name + 'の雷停：' + owner.name + 'の桜門' + (targetGi+1) + 'の塔を封印しました（持ち主の次の手番が終わるまで）。');
-    render();
-    await fxSealFx(targetPi, targetGi);
+    VIEW.render();
+    await VIEW.fxSealFx(targetPi, targetGi);
   }
-  render();
+  VIEW.render();
 }
 async function primRai(actor, handSlot, mode, target){
   const p = P(actor);
   const t = p.hand[handSlot];
   if(!t) return false;
-  await playCutIn(mode === 'hou' ? '雷放' : '雷停', actor);
+  await VIEW.playCutIn(mode === 'hou' ? '雷放' : '雷停', actor);
   let targetGi = target.gi;
   let targetPi = target.pi;
   let goBonus = false; // 受け手の轟で移し替えられた（＝受け手側の雷轟解放）かどうか
@@ -47,8 +47,8 @@ async function primRai(actor, handSlot, mode, target){
     const def = await resolveRaiDefense(actor, defender, mode, targetGi, selfTarget ? { goOnly:true } : null);
     if(def.type==='blocked'){
       // 陣が雷の演出を打ち消す
-      await playJinFx(defender);
-      consumeHand(p, handSlot); render(); return true;
+      await VIEW.playJinFx(defender);
+      consumeHand(p, handSlot); VIEW.render(); return true;
     }
     if(def.type==='go'){
       /* 受け手が轟を使った。撃った側も轟（霧）で応じれば雷轟合戦になる */
@@ -61,9 +61,9 @@ async function primRai(actor, handSlot, mode, target){
         consumeHand(p, counter.slot);
         consumeHand(p, handSlot);
         log(d.name + 'は「' + defTileName + '」を轟として使い、' + p.name + 'も「' + atkTileName + '」を轟として使いました。両者が轟を使ったので雷轟合戦になります。使った雷と轟は全部峡谷へ行きます。', 'score');
-        render();
+        VIEW.render();
         await resolveRaigouBattle({ attacker: actor, defender: defender, mode: mode, originalTarget: { pi: target.pi, gi: target.gi } });
-        render();
+        VIEW.render();
         return true;
       }
       /* 合戦なし：受け手の轟で移し替え（雷轟解放）が成立する */
@@ -75,7 +75,7 @@ async function primRai(actor, handSlot, mode, target){
           gi = cc.length ? cc[0] : targetGi;
         }
       } else {
-        gi = await humanRedirectChoice(mode, targetGi, goTowerCands(defender));
+        gi = await VIEW.humanRedirectChoice(mode, targetGi, goTowerCands(defender));
         if(gi === null || gi === undefined){
           log(d.name + 'は移し先を選ばず、そのまま受けることにしました（轟は消費しません）。', 'sys');
           gi = null;
@@ -83,7 +83,7 @@ async function primRai(actor, handSlot, mode, target){
       }
       if(gi !== null && gi !== undefined){
         // 轟が雷の演出を打ち消し、移し先の塔に落雷する
-        await playCutIn('轟', defender);
+        await VIEW.playCutIn('轟', defender);
         const usedName = d.hand[def.slot] ? d.hand[def.slot].name : '轟';
         consumeHand(d, def.slot);
         if(usedName === '霧') log(d.name + 'は「霧」を轟として使って受けて、落とす先を自分の桜門' + (gi+1) + 'の塔に変えました。', 'score');
@@ -91,13 +91,13 @@ async function primRai(actor, handSlot, mode, target){
         targetGi = gi;
         targetPi = defender;
         goBonus = true;
-        render();
+        VIEW.render();
       }
     }
   }
   consumeHand(p, handSlot);
   await applyRaiTo(actor, mode, targetPi, targetGi, goBonus ? 2 : 0, goBonus && mode === 'hou', goBonus ? 'go' : 'rai');
-  render();
+  VIEW.render();
   return true;
 }
 
@@ -114,7 +114,7 @@ async function attackerCounterGo(actor, raiSlot){
   if(raiTile.name === '霧' && goTile.name === '霧') return null; // 霧＋霧は不可
   if(!goTowerCands(actor).length) return null;
   if(!p.isAI){
-    const yes = await humanBattleCounterChoice(goTile.name);
+    const yes = await VIEW.humanBattleCounterChoice(goTile.name);
     if(!yes) log(p.name + 'は轟を使わず、相手の移し替えを受け入れることにしました。', 'sys');
     return yes ? { slot: slot } : null;
   }
@@ -166,7 +166,7 @@ async function resolveRaigouResponse(attacker, defender, gi, modeOpt){
   }
   /* 人間：防御駒を何も持っていなければポップアップ自体を出さない */
   if(goSlot < 0 && kiriSlot < 0 && jinSlot < 0) return { type:'accept' };
-  const pick = await humanRaigouResponseChoice(attacker, gi, {
+  const pick = await VIEW.humanRaigouResponseChoice(attacker, gi, {
     mode: mode,
     goSlot: canGo ? goCandSlot : -1,
     goName: canGo ? (d.hand[goCandSlot] ? d.hand[goCandSlot].name : '轟') : '',
@@ -178,81 +178,23 @@ async function resolveRaigouResponse(attacker, defender, gi, modeOpt){
   }
   return { type:'go', slot: pick.slot };
 }
-/* 雷轟合戦でAIが自分の塔を選ぶ：一番上の駒が最も重い塔を優先し、同点なら役の点数が高い塔 */
-function aiBattlePick(pi){
-  const cands = goTowerCands(pi);
-  let best = -1, bestKey = -1;
-  cands.forEach(function(gi){
-    const tw = P(pi).gates[gi];
-    const top = tw[tw.length-1];
-    const key = top.w * 1000 + scoreTower(tw).pts * 10 + tw.length;
-    if(key > bestKey){ bestKey = key; best = gi; }
-  });
-  return best;
-}
-/* 雷轟合戦で人間が自分の塔を選ぶ：拡大表示＋「この塔でよろしいですか？」の確認つき。
-   合戦は宣言済みなので、キャンセルしたら選び直しに戻る */
-async function humanBattlePick(pi){
-  const cands = goTowerCands(pi);
-  if(!cands.length) return -1;
-  while(true){
-    const targets = cands.map(function(gi){ return { pi: pi, gi: gi }; });
-    const tgt = await pickTowerModal('雷轟合戦：自分の塔を選ぶ', '雷を落としたい自分の塔を1つ選んでください。段数の制限はありません。選んだ塔の一番上の駒が開示され、相手の一番上の駒より重ければ、あなたの塔に雷が落ちます。', targets);
-    if(!tgt) continue;
-    const tw = P(pi).gates[tgt.gi];
-    const ok = await confirmYesNo('雷轟合戦：塔の確認', '自分の桜門' + (tgt.gi+1) + 'の塔（' + tw.length + '段）で雷轟合戦に臨みます。この塔でよろしいですか？（一番上の駒が開示されます）');
-    if(ok) return tgt.gi;
-  }
-}
-/* 雷轟合戦の開示モーダル：両者の一番上の駒と重さ、A／Cの判定、雷の落ち先を示す */
-function showBattleRevealModal(o, picks, tops, pattern, winnerPi){
-  return new Promise(function(resolve){
-    const atk = o.attacker;
-    function sideHtml(pi, cls){
-      const tw = P(pi).gates[picks[pi]];
-      const top = tops[pi];
-      const win = (pattern === 'A' && winnerPi === pi) ? ' win' : '';
-      return '<div class="bt-side ' + cls + win + '"><div class="bt-who"><span class="bt-en">' + (pi === 0 ? 'YOU' : 'AI') + '</span>' +
-             '<span class="bt-name">' + esc(P(pi).name) + ' — 桜門' + (picks[pi]+1) + '（' + tw.length + '段）</span></div>' +
-             '<div class="bt-tile">' + tileHtml(top, 'big', { ntid:true }) + '</div>' +
-             '<div class="bt-w">一番上の駒：重さ ' + top.w + '</div></div>';
-    }
-    let h = '<div class="battle-split">';
-    h += sideHtml(1, 'top');
-    h += '<div class="bt-mid"><span class="bt-title">雷轟合戦</span><span class="bt-sub">' + esc(P(atk).name) + 'の雷に、両者が轟で応じた — 重い方の塔に雷が落ちる</span></div>';
-    h += sideHtml(0, 'bottom');
-    if(pattern === 'A'){
-      h += '<div class="bt-result"><b>' + esc(P(winnerPi).name) + 'の塔に雷が落ちる！</b><span>' +
-           (o.mode === 'hou' ? '雷轟解放：役が成立すれば陽玉 +2' : '雷停が適用されます') + '</span></div>';
-    } else {
-      h += '<div class="bt-result draw"><b>同じ重さ — 合戦は引き分け</b><span>' + esc(P(atk).name) + 'が最初に指定した塔（' + esc(P(o.originalTarget.pi).name) + 'の桜門' + (o.originalTarget.gi+1) + '）に当初の雷が落ちます。+2点は付きません。</span></div>';
-    }
-    h += '<p class="bt-note">開示された一番上の駒は、このあとも表向きのまま見えます</p>';
-    h += '<div class="btn-row"><button type="button" class="btn primary" id="battleOk">雷を落とす</button></div>';
-    h += '</div>';
-    showModal(h);
-    const pb = document.querySelector('#modalRoot [data-peekbtn]');
-    if(pb) pb.remove();
-    document.getElementById('battleOk').addEventListener('click', function(){ closeModal(); resolve(); });
-  });
-}
 /* 雷轟合戦の本体：両者が塔を選び → 一番上を一斉開示 → A／C判定 → 雷の効果を適用する。
    合戦の間は他の言霊の効果は割り込まない（掟2）。使った雷と轟は呼び出し側で峡谷へ送る。
    o: {attacker, defender, mode:'hou'|'tei', originalTarget:{pi,gi}} */
 async function resolveRaigouBattle(o){
   const atk = o.attacker, def = o.defender, mode = o.mode;
-  if(atk === 0 || def === 0) setMeFace('act', 4000);
+  if(atk === 0 || def === 0) VIEW.setMeFace('act', 4000);
   G.inGassen = true; // 雷轟合戦中：奥義を含む全言霊の効果・持続奥義への蓄積は適用しない
   { const hp = !P(atk).isAI ? atk : (!P(def).isAI ? def : null);
-    if(hp !== null) await playClash(hp, hp === atk ? def : atk);
-    else await playCutIn('雷轟合戦', null); }
+    if(hp !== null) await VIEW.playClash(hp, hp === atk ? def : atk);
+    else await VIEW.playCutIn('雷轟合戦', null); }
   log('雷轟合戦！ ' + P(atk).name + 'と' + P(def).name + 'が自分の塔を1つずつ選び、一番上の駒を一斉に開示します。合戦の間は他の言霊の効果は割り込みません。', 'score');
-  render();
+  VIEW.render();
   const picks = {};
   const order = (!P(atk).isAI) ? [atk, def] : (!P(def).isAI ? [def, atk] : [atk, def]);
   for(let k=0; k<order.length; k++){
     const pi = order[k];
-    picks[pi] = P(pi).isAI ? aiBattlePick(pi) : await humanBattlePick(pi);
+    picks[pi] = P(pi).isAI ? aiBattlePick(pi) : await VIEW.humanBattlePick(pi);
     if(picks[pi] === null || picks[pi] === undefined || !P(pi).gates[picks[pi]] || !P(pi).gates[picks[pi]].length){
       const cc = goTowerCands(pi);
       picks[pi] = cc.length ? cc[0] : (o.originalTarget.pi === pi ? o.originalTarget.gi : 0);
@@ -265,7 +207,7 @@ async function resolveRaigouBattle(o){
     if(tops[pi] && G.revealedTopIds) G.revealedTopIds.add(tops[pi].id);
     if(tops[pi] && G.kn){ G.kn[0].add(tops[pi].id); G.kn[1].add(tops[pi].id); }
   });
-  render();
+  VIEW.render();
   const wa = tops[atk].w, wd = tops[def].w;
   let pattern, winnerPi = null;
   if(wa !== wd){ pattern = 'A'; winnerPi = wa > wd ? atk : def; }
@@ -276,25 +218,25 @@ async function resolveRaigouBattle(o){
   } else {
     log('雷轟合戦の判定はC：重さが同点なので、どちらの選んだ塔にも落ちず、雷を撃った' + P(atk).name + 'が最初に指定した塔に当初の雷の効果が適用されます。+2点は付きません。', 'sys');
   }
-  await showBattleRevealModal(o, picks, tops, pattern, winnerPi);
+  await VIEW.showBattleRevealModal(o, picks, tops, pattern, winnerPi);
   G.inGassen = false; // 合戦の判定が出たら終了。条件を満たした受動奥義はここから後で処理する
   if(pattern === 'A'){
     const wpi = winnerPi, wgi = picks[winnerPi];
     onTowerEffect({ source:'go', mode: mode, pi: wpi, gi: wgi, actor: atk });
     if(mode === 'hou'){
       if(G.raigouCounts) G.raigouCounts[wpi]++;
-      await fxLightning(wpi, wgi);
+      await VIEW.fxLightning(wpi, wgi);
       log(P(wpi).name + 'の桜門' + (wgi+1) + 'の塔に雷が落ち、雷轟解放として解放します。', 'score');
       releaseTower(wpi, wgi, 2);
     } else {
       P(wpi).seals[wgi] = { old:false };
       log(P(wpi).name + 'の桜門' + (wgi+1) + 'の塔に雷が落ち、雷停が適用されました（持ち主の次の手番が終わるまで）。', 'score');
-      render();
-      await fxSealFx(wpi, wgi);
+      VIEW.render();
+      await VIEW.fxSealFx(wpi, wgi);
     }
   } else {
     await applyRaiTo(atk, mode, o.originalTarget.pi, o.originalTarget.gi, 0, false, 'rai'); // 引き分け後は雷の効果
   }
-  render();
+  VIEW.render();
 }
 

@@ -16,7 +16,7 @@ async function primRaigou(actor, handSlot, gi, partnerSlotOpt, modeOpt){
   if(!p.gates[gi].length || p.seals[gi]) return false;
   // 霧＋霧は不可：同じ言霊（霧）を同じ手番に2回使うことになるため
   if(t.name === '霧' && p.hand[goSlot] && p.hand[goSlot].name === '霧') return false;
-  await playCutIn(mode === 'hou' ? '雷轟' : '雷轟・雷停', actor);
+  await VIEW.playCutIn(mode === 'hou' ? '雷轟' : '雷轟・雷停', actor);
   const partnerTile = p.hand[goSlot];
   let pairLabel = '「' + tileLabel(t) + '」と「' + tileLabel(partnerTile) + '」';
   if(partnerTile.name === '霧') pairLabel += '（霧を轟として使用）';
@@ -32,9 +32,9 @@ async function primRaigou(actor, handSlot, gi, partnerSlotOpt, modeOpt){
     consumeHand(p, goSlot);
     consumeHand(d, resp.slot);
     log(d.name + 'は「' + defTileName + '」を轟として使って受けました。両者が轟を使ったので雷轟合戦になります。使った雷と轟は全部峡谷へ行きます。', 'score');
-    render();
+    VIEW.render();
     await resolveRaigouBattle({ attacker: actor, defender: defender, mode: mode, originalTarget: { pi: actor, gi: gi } });
-    render();
+    VIEW.render();
     return true;
   }
   if(mode === 'tei'){
@@ -43,9 +43,9 @@ async function primRaigou(actor, handSlot, gi, partnerSlotOpt, modeOpt){
     onTowerEffect({ source:'go', mode:'tei', pi: actor, gi: gi, actor: actor });
     p.seals[gi] = { old:false };
     log(p.name + 'の雷＋轟（雷停）：' + pairLabel + 'を合わせて、自分の桜門' + (gi+1) + 'の塔を封印しました（' + p.name + 'の次の手番が終わるまで）。', 'score');
-    render();
-    await fxSealFx(actor, gi);
-    render();
+    VIEW.render();
+    await VIEW.fxSealFx(actor, gi);
+    VIEW.render();
     return true;
   }
   if(G.raigouCounts) G.raigouCounts[actor]++;
@@ -53,9 +53,9 @@ async function primRaigou(actor, handSlot, gi, partnerSlotOpt, modeOpt){
   consumeHand(p, goSlot);
   log(p.name + 'の雷轟解放：' + pairLabel + 'を合わせて、自分の桜門' + (gi+1) + 'の塔を解放します。');
   onTowerEffect({ source:'go', mode:'hou', pi: actor, gi: gi, actor: actor });
-  await fxLightning(actor, gi);
+  await VIEW.fxLightning(actor, gi);
   releaseTower(actor, gi, 2);
-  render();
+  VIEW.render();
   return true;
 }
 

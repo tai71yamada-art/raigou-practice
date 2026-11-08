@@ -1,0 +1,31 @@
+      /* ===== 言霊カットイン（斜めの帯） ===== */
+      .fsc{ position:absolute; inset:0; background:rgba(12,12,14,.6); animation:fscFade 1.45s ease both; overflow:hidden; }
+      .fsc-band{
+        position:absolute; left:-4%; right:-4%; top:50%; height:min(44vh,300px); margin-top:calc(min(44vh,300px) / -2);
+        background:var(--main); overflow:hidden;
+        clip-path:polygon(0 18%,100% 0,100% 82%,0 100%);
+        animation:fscBand .42s cubic-bezier(.2,.9,.25,1) both;
+      }
+      @keyframes fscBand{ from{ clip-path:polygon(0 18%,0 18%,0 100%,0 100%); } to{ clip-path:polygon(0 18%,100% 0,100% 82%,0 100%); } }
+      @keyframes fscFade{ 0%{ opacity:0; } 8%{ opacity:1; } 86%{ opacity:1; } 100%{ opacity:0; } }
+      .fsc-img{
+        position:absolute; right:-9%; left:auto; top:-4%; height:130%; width:auto; max-width:none;
+        filter:drop-shadow(-4px 0 0 rgba(16,17,20,.25));
+        animation:fxCharaSlide .5s cubic-bezier(.2,.9,.25,1.15) both;
+      }
+      .fsc-text{
+        position:absolute; left:8%; top:14%; bottom:14%; max-width:56%;
+        display:flex; flex-direction:column; justify-content:center; align-items:flex-start; color:#101114; text-align:left;
+        animation:fxCharaText .45s .08s ease both;
+      }
+      .fsc-en{ font-family:var(--num); font-weight:700; font-size:.72rem; letter-spacing:.3em; }
+      .fsc-name{ font-family:var(--kanji); font-size:clamp(2.8rem, 16vw, 5.4rem); line-height:1.05; white-space:nowrap; }
+      .fsc-sub{ font-weight:900; font-size:.82rem; margin-top:4px; }
+      .fsc-who{ font-size:.7rem; font-weight:700; opacity:.75; margin-top:2px; }
+      /* AI の言霊：紫の帯に基板の画像 */
+      .fsc.ai .fsc-band{ background:#7d6bff; }
+      .fsc.ai .fsc-img{ right:0; left:auto; top:0; height:100%; max-width:42%; width:42%; object-fit:cover; opacity:.85; filter:none; }
+      /* 画像なし（雷轟合戦など）：文字を中央に */
+      .fsc.noimg .fsc-text{ left:0; right:0; max-width:none; align-items:center; text-align:center; }
+      .fsc.noimg .fsc-name{ font-size:clamp(2.6rem, 14vw, 4.6rem); letter-spacing:.08em; }
+

@@ -59,7 +59,7 @@ async function resolveRaiDefense(attacker, defender, mode, targetGi, opt){
 
   if(!d.isAI){
     /* ---- 人間が守る側：まず防御するかどうか・どの駒で受けるか選ぶ ---- */
-    const pick = await humanRaiDefenseChoice(mode, targetGi, {
+    const pick = await VIEW.humanRaiDefenseChoice(mode, targetGi, {
       jinSlot: jinUsable ? jinSlot : -1,
       kiriAsJinSlot: jinUsable ? kiriSlot : -1,
       goSlot: goUsable ? goSlot : -1,
@@ -74,7 +74,7 @@ async function resolveRaiDefense(attacker, defender, mode, targetGi, opt){
       consumeHand(d, pick.slot);
       if(usedName === '霧') log(d.name + 'は「霧」を陣として使って防ぎました。', 'sys');
       else log(d.name + 'は「陣」で防ぎました。', 'sys');
-      render();
+      VIEW.render();
       return { type:'blocked' };
     }
     if(pick.action === 'go'){
@@ -104,7 +104,7 @@ async function resolveRaiDefense(attacker, defender, mode, targetGi, opt){
       if(choice && choice.type==='jin' && jinSlot>=0){
         consumeHand(d, jinSlot);
         log(d.name + 'は「陣」で防ぎました。', 'sys');
-        render();
+        VIEW.render();
         return { type:'blocked' };
       }
       if(choice && choice.type==='accept') return { type:'none' };
@@ -113,13 +113,13 @@ async function resolveRaiDefense(attacker, defender, mode, targetGi, opt){
   if(jinSlot >= 0){
     consumeHand(d, jinSlot);
     log(d.name + 'は「陣」で防ぎました。', 'sys');
-    render();
+    VIEW.render();
     return { type:'blocked' };
   }
   if(kiriSlot >= 0){
     consumeHand(d, kiriSlot);
     log(d.name + 'は「霧」を陣として使って防ぎました。', 'sys');
-    render();
+    VIEW.render();
     return { type:'blocked' };
   }
   return { type:'none' };
@@ -135,7 +135,7 @@ async function resolveJinDefense(defender, attackName, targetDesc){
   const kiriSlot = handHas(d, '霧');
   if(jinSlot < 0 && kiriSlot < 0) return false;
   if(!d.isAI){
-    const pick = await humanJinDefenseChoice(attackName || '言霊', targetDesc || '', jinSlot, kiriSlot);
+    const pick = await VIEW.humanJinDefenseChoice(attackName || '言霊', targetDesc || '', jinSlot, kiriSlot);
     if(!pick || pick.action === 'accept'){
       log(d.name + 'は防御駒を使わず、そのまま受けることにしました。', 'sys');
       return false;
@@ -144,22 +144,22 @@ async function resolveJinDefense(defender, attackName, targetDesc){
     consumeHand(d, pick.slot);
     if(usedName === '霧') log(d.name + 'は「霧」を陣として使って防ぎました。', 'sys');
     else log(d.name + 'は「陣」で防ぎました。', 'sys');
-    render();
-    await playJinFx(defender);
+    VIEW.render();
+    await VIEW.playJinFx(defender);
     return true;
   }
   /* AIが守る側：自動 */
   if(jinSlot >= 0){
     consumeHand(d, jinSlot);
     log(d.name + 'は「陣」で防ぎました。', 'sys');
-    render();
-    await playJinFx(defender);
+    VIEW.render();
+    await VIEW.playJinFx(defender);
     return true;
   }
   consumeHand(d, kiriSlot);
   log(d.name + 'は「霧」を陣として使って防ぎました。', 'sys');
-  render();
-  await playJinFx(defender);
+  VIEW.render();
+  await VIEW.playJinFx(defender);
   return true;
 }
 

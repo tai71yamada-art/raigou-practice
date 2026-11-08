@@ -1,7 +1,7 @@
-/* ================= AIの強さ（Lv.1〜Lv.5） =================
+/* ================= AIの強さ（Lv.1〜Lv.7） =================
    Lv.1＝従来の「よわい」、Lv.3＝従来の「ふつう」、Lv.5＝従来の「つよい」と全く同じ値。
-   Lv.2はLv.1とLv.3の中間、Lv.4はLv.3とLv.5の中間で、各要素を線形に補間する。 */
-const APP_VERSION = '{{VERSION}}';   // build.py が VERSION ファイルの値を入れる（sw.js も同じ値になる）
+   Lv.2はLv.1とLv.3の中間、Lv.4はLv.3とLv.5の中間で、各要素を線形に補間する。
+   Lv.6はLv.3の判断＋不穏の塔の管理、Lv.7はLv.6＋相手の返し手を読む。 */
 const DIFF_LEVELS = ['lv1','lv2','lv3','lv4','lv5','lv6','lv7'];
 let AI_SEAT = 1;   // 今判断しているAIの席（通常は1）
 function withSeat(pi, fn){ const s = AI_SEAT; AI_SEAT = pi; try{ return fn(); } finally { AI_SEAT = s; } }
@@ -50,6 +50,3 @@ const LV6_TUNE = { fuonBin: 0.6, fuonFix: 1.0 };
 const LV7_TUNE = { plan: 1, zanBot: 0.6, zanTopScarce: 0.8 };
 /* Lv.7 の局面評価の重み（AI同士の対戦で調整する） */
 const LV7_W = { pot: 0.7, oppPot: 0.45, fuon: 0.9, five: 0.4, stuck: 0.35, full: 1.6, expose: 0, heur: 0.8, jinKeep: 0.25, botCut: 0.55 };
-function cur(){ return P(G.turn); }
-function opp(i){ return 1-i; }
-function totalInner(p){ return p.body.length + p.hand.filter(Boolean).length; }

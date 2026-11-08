@@ -5,8 +5,8 @@ async function applyTaboo(pi, chooseDiscards){
   p.score -= 1;
   if(G.penaltyCounts) G.penaltyCounts[pi]++;
   log(p.name + 'は満杯のまま選を迎えたので禁忌です。陽玉-1点（残り' + p.score + '点）。内駒を2個捨てます。', 'bad');
-  render();
-  await fxTabooBanner(pi);
+  VIEW.render();
+  await VIEW.fxTabooBanner(pi);
   if(checkLose(pi)) return false;
   const discards = await chooseDiscards(p);
   discards.forEach(function(t){
@@ -16,7 +16,7 @@ async function applyTaboo(pi, chooseDiscards){
   });
   sortBody(p);
   // 捨てた後に残った体内が詰まって並び替わる動きを見せてから選へ進む
-  await render();
+  await VIEW.render();
   return true;
 }
 function removeInner(pi, t){

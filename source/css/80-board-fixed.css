@@ -1,0 +1,100 @@
+      /* ===== 配置案2（画面の長さ固定） ===== */
+      .foot-notes{ display:none; }
+      .board-wrap{ display:flex; flex-direction:column; gap:7px; }
+      .menu-row{ margin-bottom:0; }
+      .menu-row .turn-badge{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.72rem; }
+      .pile-btn{ flex:none; background:var(--panel2); color:var(--ink-soft); border:1px solid var(--line); padding:3px 8px; font-size:.68rem; font-weight:700; }
+      .pile-btn b{ font-family:var(--num); font-size:.9rem; color:var(--ink); margin-left:2px; }
+      .player-zone{ margin-bottom:0; padding:7px 9px 9px; }
+      .pz-head{ margin-bottom:5px; }
+      #aiZone .pz-avatar{ width:28px; height:28px; }
+      #aiZone .pz-name{ font-size:.8rem; }
+      #aiZone .yogyoku{ font-size:1rem; margin-left:auto; }
+      #humanZone .pz-avatar{ width:30px; height:30px; }
+      #humanZone .yogyoku{ margin-left:auto; }
+      .control-strip{ margin:0; gap:6px; }
+      .control-strip .btn.hide-btn{ flex:none; width:64px; padding:0; height:32px; font-size:1.05rem; letter-spacing:0; }
+      .actionbar{ padding:6px 10px; }
+      .actionbar .hint{ font-size:.75rem; line-height:1.5; }
+
+      /* 桜門：高さ固定（6段まで収まる）・駒は薄い板で積む */
+      .gate{ min-height:0 !important; justify-content:flex-end; padding:16px 2px 6px; overflow:visible; }
+      .pz-main.opp .gate{ height:104px; border-radius:34px 34px 6px 6px; }
+      .pz-main.me .gate{ height:142px; border-radius:44px 44px 6px 6px; }
+      .gate .g-label{ position:absolute; top:5px; left:0; right:0; margin:0; font-size:.62rem; line-height:1.3; }
+      .gate .g-info{ display:none; }
+      .gl-name{ color:#8d8b85; }
+      .gl-n{ color:#a9a7a0; font-weight:700; }
+      .gl-role{ background:var(--main); color:#101114; font-weight:900; padding:0 5px; }
+      .gl-bad{ background:#ff4d5e; color:#101114; font-weight:900; padding:0 5px; }
+      .gl-seal{ color:#c9c1ff; font-weight:900; }
+      .gate.has-role{ border:1.5px solid var(--main); background:rgba(var(--main-rgb),.05); box-shadow:0 0 14px rgba(var(--main-rgb),.22); }
+      .gate .g-stack{ width:auto; display:flex; flex-direction:column; gap:2px; align-items:center; }
+      .gate .g-stack .tile{ margin:0 !important; border-radius:1px; flex-direction:row; line-height:1; animation:none; }
+      .gate .g-stack .tile.back::before{ display:none; }
+      .pz-main.me .gate .g-stack .tile{ width:60px; height:16px; font-size:.72rem; }
+      .pz-main.me .gate .g-stack .tile .w{ top:50%; transform:translateY(-50%); right:4px; font-size:.48rem !important; }
+      .pz-main.opp .gate .g-stack .tile{ width:44px; height:11px; font-size:.55rem; }
+      .pz-main.opp .gate .g-stack .tile .w{ display:none; }
+      .pz-main.opp .gate .g-stack .tile.revealed-top{ outline-width:1.5px; }
+      .gate .gate-empty{ height:auto; line-height:1; margin:auto 0; font-size:.6rem; }
+      .gate.sealed .g-stack .tile.back{ box-shadow:inset 0 0 0 1px #7d6bff; }
+
+      /* 相手側：手・体内も小さめに */
+      .pz-main.opp .inner-row{ gap:12px; }
+      .pz-main.opp .hand-slot{ width:32px; height:32px; }
+      .pz-main.opp .hand-slot .tile{ width:30px; height:30px; }
+      .pz-main.opp .body-col .tile{ width:34px; height:22px; }
+      .pz-main.opp .body-wrap{ margin-right:14px; } /* NEW の文字の分だけあける */
+      .pz-main.opp .ib-label{ font-size:.6rem; }
+
+      /* 自分側：手の駒を大きく（操作の起点になるため） */
+      .pz-main.me .inner-row{ gap:16px; padding-top:4px; }
+      .pz-main.me .hand-slot{ width:64px; height:64px; }
+      .pz-main.me .hand-slot .tile{ width:62px; height:62px; font-size:1.85rem; }
+      .pz-main.me .body-col .tile{ width:40px; height:34px; font-size:1.2rem; }
+      .hand-slot.chip-on{ outline:2px solid #ffffff; outline-offset:3px; box-shadow:0 0 16px rgba(var(--main-rgb),.55); }
+
+      /* 操作チップ */
+      #chipRoot{ position:fixed; inset:0; z-index:60; pointer-events:none; }
+      .hand-chips{ position:fixed; pointer-events:auto; max-width:calc(100vw - 16px); background:#101114; padding:6px; box-shadow:0 0 0 1px var(--main), 0 10px 28px rgba(0,0,0,.6); animation:fxCharaText .18s ease both; }
+      .hc-row{ display:flex; flex-wrap:wrap; gap:5px; }
+      .hc-chip{ height:38px; padding:0 12px; border:1.5px solid var(--main); background:#101114; color:var(--main); font-weight:900; font-size:.85rem; font-family:var(--popfont); clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px); }
+      .hc-chip.primary{ background:var(--main); color:#101114; border-color:var(--main); }
+      .hc-chip.more{ border-color:#3a3d47; color:#f2f0ea; background:#1e2026; font-weight:700; }
+      .hc-chip:disabled{ opacity:.35; }
+      .hc-note{ font-size:.68rem; color:#a9a7a0; margin-top:5px; max-width:300px; }
+      .hc-arrow{ position:absolute; bottom:-8px; width:0; height:0; border-left:7px solid transparent; border-right:7px solid transparent; border-top:8px solid var(--main); }
+      .hand-chips.below .hc-arrow{ bottom:auto; top:-8px; border-top:none; border-bottom:8px solid var(--main); }
+
+      .pz-head{ flex-wrap:nowrap; }
+      .pz-head .pz-name{ white-space:nowrap; }
+      .pz-head .yogyoku .dots{ display:none; }
+      .phasebar{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+      /* 画面の高さが低い端末（iPhone SE など）向けに、桜門と駒をひと回り詰める */
+      @media (max-height: 740px){
+        .wrap{ padding-top:4px; }
+        .board-wrap{ gap:5px; }
+        .player-zone{ padding:5px 8px 7px; }
+        .pz-head{ margin-bottom:3px; }
+        #aiZone .pz-avatar, #humanZone .pz-avatar{ width:24px; height:24px; }
+        .pz-main{ gap:5px; }
+        .pz-main.opp .gate{ height:88px; padding-top:14px; }
+        .pz-main.opp .gate .g-stack .tile{ height:9px; }
+        .pz-main.opp .hand-slot{ width:28px; height:28px; }
+        .pz-main.opp .hand-slot .tile{ width:26px; height:26px; }
+        .pz-main.opp .body-col .tile{ width:30px; height:18px; }
+        .pz-main.opp .ib-label{ display:none; }
+        .pz-main.me .gate{ height:118px; padding-top:15px; }
+        .pz-main.me .gate .g-stack .tile{ height:13px; font-size:.64rem; }
+        .pz-main.me .hand-slot{ width:54px; height:54px; }
+        .pz-main.me .hand-slot .tile{ width:52px; height:52px; font-size:1.55rem; }
+        .pz-main.me .body-col .tile{ width:36px; height:28px; font-size:1.05rem; }
+        .pz-main.me .ib-label{ font-size:.58rem; }
+        .control-strip .btn.hide-btn{ height:28px; }
+        .phase-step{ padding:4px 0; font-size:.78rem; }
+        .actionbar{ display:none; }
+      }
+      .logo-mark{ font-size:0; gap:0; }
+      .menu summary{ padding:4px 9px; font-size:.8rem; }
+

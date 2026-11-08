@@ -261,16 +261,6 @@ function aiApplyLookahead(acts, p, o, avail, lambda, rel){
     acts.forEach(function(a){ if(a._risk !== undefined) a.gain -= lambda * a._risk; });
   }
 }
-/* AIの行動を上部の帯で知らせる */
-let _aiBandTimer = null;
-function aiBand(text){
-  let el = document.getElementById('aiBand');
-  if(!el){ el = document.createElement('div'); el.id = 'aiBand'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
-  el.innerHTML = '<span class="ab-who">AI</span><span class="ab-txt">' + esc(text) + '</span>';
-  el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
-  clearTimeout(_aiBandTimer);
-  _aiBandTimer = setTimeout(function(){ el.classList.remove('show'); }, 1500 * aiSpeedFactor() + 500);
-}
 function aiActText(act){
   const who = function(pi){ return pi === AI_SEAT ? '自分' : 'あなた'; };
   const kiri = function(){ return act.via === '霧' ? '（霧でまねる）' : ''; };

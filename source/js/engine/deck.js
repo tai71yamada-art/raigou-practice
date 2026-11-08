@@ -2,7 +2,7 @@
 function drawTiles(n){
   const out = [];
   for(let i=0;i<n && G.deck.length>0;i++) out.push(G.deck.pop());
-  if(out.length) SFX.play('draw');
+  if(out.length) VIEW.sfx('draw');
   if(out.length > 0 && G.deck.length===0 && G.endIn===null && !G.over){
     /* 公式の終了手順（ルールブック11ページ・13ページ）：最後の駒を引いても即終了にしない。
        今の手番を最後まで行い、次に相手が選なしで最終手番を行い、次に最後の駒を引いた人が

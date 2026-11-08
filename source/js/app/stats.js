@@ -1,4 +1,4 @@
-/* ================= 結果・起動 ================= */
+/* ================= 戦績（端末に保存） ================= */
 const STATS_DEFS = { games:{}, hatsu:{}, roles:{}, best:0, raigou:0, total:0 };
 function loadStats(){ return loadJSON(STATS_KEY, STATS_DEFS); }
 function recordStats(winner){

@@ -19,3 +19,6 @@ const G = {
   finalRevealStarted:false
 };
 function P(i){ return G.players[i]; }
+function cur(){ return P(G.turn); }
+function opp(i){ return 1-i; }
+function totalInner(p){ return p.body.length + p.hand.filter(Boolean).length; }

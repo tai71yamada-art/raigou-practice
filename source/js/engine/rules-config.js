@@ -67,9 +67,11 @@ function buildDeck(){
   return tiles;
 }
 
-function newGame(humanSente, difficulty){
+/* opts（省略可）：{ rule:'basic'|…, house:'rakura'|… }。省略すると画面で選んだもの（VIEW.gameSetup）を使う */
+function newGame(humanSente, difficulty, opts){
+  opts = opts || VIEW.gameSetup();
   _uid = 0;
-  UI.aiBodyIds = null; UI.aiBodyKey = null; UI.aiNewIds = null;
+  VIEW.resetGameUi();
   G.deck = buildDeck();
   G.canyon = [];
   G.released = [];
@@ -81,20 +83,17 @@ function newGame(humanSente, difficulty){
   G.raigouCounts = [0,0]; G.penaltyCounts = [0,0]; G.finalRevealStarted = false; G.finishing = false;
   G.revealedTopIds = new Set();
   G.kn = [new Set(), new Set()]; G.cutHints = [[[],[],[]],[[],[],[]]];
-  UI.disp = null;
   G.hatsuGame = {}; G.statsSaved = false;
-  G.rules = RULESETS[startRule] || RULESETS.basic;
-  {
-    G.houses = [ startHouse, AI_HOUSE.id ];
-    applyHouseClasses();
-  }
+  G.rules = RULESETS[opts.rule] || RULESETS.basic;
+  G.houses = [ opts.house || 'rakura', AI_HOUSE.id ];
+  VIEW.applyHouseClasses();
   G.actedSlots = new Set(); G.inGassen = false; G.lastTowerEffect = null;
   // 初期の体内：先手1枚、後手2枚
   const gote = opp(G.sente);
   P(G.sente).body.push(G.deck.pop());
   P(gote).body.push(G.deck.pop(), G.deck.pop());
   P(0).body && sortBody(P(0)); sortBody(P(1));
-  logClear();
+  VIEW.logClear();
   log('対戦開始。先手は' + P(G.sente).name + '、後手は' + P(gote).name + 'です。', 'sys');
   log('あなたは' + houseById(G.houses[0]).name + '家です。', 'sys');
   log('陽玉は各自2点から。雷山は' + G.deck.length + '枚です。', 'sys');

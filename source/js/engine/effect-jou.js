@@ -3,20 +3,11 @@
 async function joDraw(actor, handSlot, discardTiles){
   const p = P(actor);
   const joTile = p.hand[handSlot];
-  await playCutIn('浄', actor);
+  await VIEW.playCutIn('浄', actor);
   discardTiles.forEach(function(t){ removeInner(actor, t); G.canyon.push(t); });
   // 浄：捨てる駒を表示して消える演出（捨てた駒は峡谷で公開される）。
   // 残った体内が詰まる動きと並行して見せる
-  if(discardTiles.length){
-    const bodyAnimP = render();
-    const layer = fxLayerEl();
-    const row = document.createElement('div');
-    row.className = 'fx-center-row';
-    row.innerHTML = discardTiles.map(function(t){ return tileHtml(t, '', { ntid:true }); }).join('');
-    layer.appendChild(row);
-    await Promise.all([bodyAnimP, fxWait(860)]);
-    row.remove();
-  }
+  if(discardTiles.length) await VIEW.fxJoDiscard(discardTiles);
   const drawn = drawTiles(discardTiles.length);
   const pool = innerTiles(p).filter(function(t){ return t !== joTile; }).concat(drawn);
   return { pool:pool, drawnCount:drawn.length, discardCount:discardTiles.length };
@@ -42,6 +33,6 @@ async function joArrange(actor, handSlot, handTiles, pool, counts){
   if(actor === 0 && G.hatsuGame) G.hatsuGame['浄'] = (G.hatsuGame['浄'] || 0) + 1;
   G.used.add('浄');
   log(p.name + 'の浄：内駒を' + counts.discardCount + '個捨てて、' + counts.drawnCount + '個引き直し、置き直しました。');
-  await render();
+  await VIEW.render();
   return true;
 }

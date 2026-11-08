@@ -143,13 +143,13 @@ function aiGoChoice(defender, mode, targetGi, cands, hasJin){
 async function aiTurn(){
   const me = G.turn;
   const p = P(me);
-  await aiWait(650);
+  await VIEW.aiWait(650);
   if(G.over) return;
   { const b0 = p.body.length; withSeat(me, aiGen); const mv = b0 - p.body.length;
-    aiBand(mv > 0 ? '現：体内の駒を' + mv + '個、手に移した' : '現：0現（手に移さない）'); }
+    VIEW.aiBand(mv > 0 ? '現：体内の駒を' + mv + '個、手に移した' : '現：0現（手に移さない）'); }
   // 現で残った体内（裏向き）が詰まる動きを、プレイヤーが追える速さで見せる
-  await render();
-  await aiWait(350);
+  await VIEW.render();
+  await VIEW.aiWait(350);
   if(G.over) return;
   if(!(G.finalRound || G.deck.length === 0)){
     if(totalInner(p) >= innerCap(p)){
@@ -157,10 +157,10 @@ async function aiTurn(){
       if(!ok || G.over) return;
     }
     { const d0 = G.deck.length; withSeat(me, aiSen); const n = d0 - G.deck.length;
-      if(n > 0) aiBand('選：雷山から' + n + '個引いた（' + (n === 2 ? '二選' : '一選') + '）'); }
+      if(n > 0) VIEW.aiBand('選：雷山から' + n + '個引いた（' + (n === 2 ? '二選' : '一選') + '）'); }
     // 選で引いた駒が体内で重さ順に整列する動き（裏向きのまま）を見せる
-    await render();
-    await aiWait(350);
+    await VIEW.render();
+    await VIEW.aiWait(350);
   }
   let guard = 0;
   const maxActs = withSeat(me, diffParams).maxActs;
@@ -168,11 +168,11 @@ async function aiTurn(){
     if(G.over) return;
     const act = withSeat(me, aiChooseAction);
     if(!act) break;
-    aiBand(withSeat(me, function(){ return aiActText(act); }));
-    await aiWait(450);
+    VIEW.aiBand(withSeat(me, function(){ return aiActText(act); }));
+    await VIEW.aiWait(450);
     await aiExecute(act, me);
-    render();
-    await aiWait(520);
+    VIEW.render();
+    await VIEW.aiWait(520);
   }
   if(G.over) return;
   G.busy = false;

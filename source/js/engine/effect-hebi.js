@@ -6,9 +6,9 @@ async function primHebi(actor, handSlot, targetLoc){
   if(!t) return false;
   const tp = P(targetLoc.pi);
   const _hebiHitMe = (targetLoc.pi === 0 && actor !== 0);
-  await playCutIn('蛇', actor);
+  await VIEW.playCutIn('蛇', actor);
   if(targetLoc.pi !== actor && await resolveJinDefense(targetLoc.pi, '蛇', tp.name + 'の' + (targetLoc.where==='body' ? '体内' : '手') + 'の駒1個')){
-    consumeHand(p, handSlot); render(); return true;
+    consumeHand(p, handSlot); VIEW.render(); return true;
   }
   let stolen = null;
   if(targetLoc.where === 'body'){
@@ -18,14 +18,10 @@ async function primHebi(actor, handSlot, targetLoc){
     stolen = tp.hand[targetLoc.idx];
     if(!stolen) return false;
   }
-  // 奪われる駒の現在位置をアニメーション用に控える（相手の駒は裏向きのまま動かす）
-  const stolenFromRect = (function(){
-    const el = document.querySelector('[data-tid="' + stolen.id + '"]');
-    return el ? el.getBoundingClientRect() : null;
-  })();
-  const stolenFaceUp = (targetLoc.pi === 0 || actor === 0);
+  // 奪われる駒の今の位置を演出用に控える（相手の駒どうしは裏向きのまま動かす）
+  const fxTok = VIEW.fxHebiBefore(stolen, (targetLoc.pi === 0 || actor === 0));
   if(G.kn){ G.kn[actor].add(stolen.id); G.kn[targetLoc.pi].add(stolen.id); }
-  if(_hebiHitMe) setMeFace('hit');
+  if(_hebiHitMe) VIEW.setMeFace('hit');
   if(targetLoc.where === 'body') tp.body.splice(targetLoc.idx, 1);
   else tp.hand[targetLoc.idx] = null;
   consumeHand(p, handSlot);       // 蛇は峡谷へ
@@ -42,13 +38,8 @@ async function primHebi(actor, handSlot, targetLoc){
   }
   sortBody(tp);
   // 奪った駒が空いた手へ移動する動きと、残った体内が詰まる動きを並行して見せる（どちらも確認できる速さ）
-  const bodyAnimP = render();
-  const handRect = fxRectOf('[data-hand="' + actor + ':' + handSlot + '"]');
-  const jobs = [bodyAnimP];
-  if(stolenFromRect && handRect){
-    jobs.push(fxMoveClone(stolenFromRect, handRect, 40, stolenFaceUp ? tileHtml(stolen, '', { ntid:true }) : backHtml(null)));
-  }
-  await Promise.all(jobs);
+  const bodyAnimP = VIEW.render();
+  await Promise.all([bodyAnimP, VIEW.fxHebiAfter(fxTok, actor, handSlot)]);
   return true;
 }
 

@@ -5,7 +5,7 @@
 # ソースの構成
 #   VERSION            … アプリのバージョン（設定画面と sw.js に入る）
 #   html/              … head.html（<style>の手前まで）・body.html（画面の骨組み）・tail.html
-#   css/style.css      … 見た目
+#   css/ORDER.txt      … 見た目（CSS）の読み込み順。後ろのファイルほど優先（30-theme-denno 以降が今の見た目）
 #   js/ORDER.txt       … 読み込む順番。engine → ai → ui → app の順（後ろのファイルは前のものを使える）
 #   js/engine/         … ルール（画面を直接さわらない。画面とのやりとりは VIEW 経由）
 #   js/ai/             … AI
@@ -53,7 +53,8 @@ def fill(text, version, pwa):
 
 def build_html(version, pwa):
     js = ''.join(rd('js/' + f) for f in rd('js/ORDER.txt').split())
-    html = rd('html/head.html') + rd('css/style.css') + rd('html/body.html') + js + rd('html/tail.html')
+    css = ''.join(rd('css/' + f) for f in rd('css/ORDER.txt').split())
+    html = rd('html/head.html') + css + rd('html/body.html') + js + rd('html/tail.html')
     return fill(html, version, pwa)
 
 def main():

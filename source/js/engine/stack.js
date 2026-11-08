@@ -12,7 +12,7 @@ async function primStack(actor, handSlot, gi){
   p.hand[handSlot] = null;
   markActed(p, handSlot);
   p.gates[gi].push(t);
-  SFX.play('stack');
+  VIEW.sfx('stack');
   if(p.isAI){
     log(p.name + 'は桜門' + (gi+1) + 'の塔に駒を積みました（' + p.gates[gi].length + '段）。');
   } else {
@@ -22,7 +22,7 @@ async function primStack(actor, handSlot, gi){
     log(p.name + 'の桜門' + (gi+1) + 'が6段になりました。自動で解放します。');
     releaseTower(actor, gi, 0);
   }
-  render();
+  VIEW.render();
   return true;
 }
 
