@@ -623,8 +623,9 @@
 
       /* ===================== 電脳和テーマ（ここから下が見た目の上書き） ===================== */
       /* キャラごとのメインカラー（applyChara が html の data-chara を切り替える） */
-      html[data-chara="kuze"]{ --main:#8fe35a; --main-rgb:143,227,90; --main-soft:#dcf7c6; }
-      html[data-chara="shigure"]{ --main:#d48ae8; --main-rgb:212,138,232; --main-soft:#f3dcfa; }
+      html[data-chara="kuze"], .chara-tile[data-chara="kuze"]{ --main:#8fe35a; --main-rgb:143,227,90; --main-soft:#dcf7c6; }
+      html[data-chara="shigure"], .chara-tile[data-chara="shigure"]{ --main:#d48ae8; --main-rgb:212,138,232; --main-soft:#f3dcfa; }
+      .chara-tile[data-chara="rakura"]{ --main:#ffd23f; --main-rgb:255,210,63; --main-soft:#fff2b0; }
       :root{
         --bg:#101114; --panel:#17191e; --panel2:#1e2026; --ink:#f2f0ea; --ink-soft:#a9a7a0;
         --main:#ffd23f; --main-rgb:255,210,63; --main-soft:#fff2b0;
@@ -1327,6 +1328,8 @@
       .house-pick-note{ text-align:center; margin:0 0 10px; }
       .set-ver{ text-align:center; font-family:var(--num); font-size:.75rem; letter-spacing:.12em; color:var(--ink-soft); margin:10px 0 0; }
       .house-pick .set-opt:disabled{ opacity:.42; cursor:default; }
+      .house-pick .set-opt:disabled .house-ico.big{ color:#8a8d96; }
+      .house-pick .set-opt.chara-tile.on{ background:var(--main); }
       .house-pick .set-opt.chara-tile{ position:relative; overflow:hidden; display:block; padding:0; min-height:118px; text-align:left; }
       .chara-tile .house-ico.ct-mon{ position:absolute; left:8px; top:8px; width:34px; height:34px; margin:0; color:var(--main); z-index:2; }
       .chara-tile.on .house-ico.ct-mon{ color:#101114; }
@@ -1624,7 +1627,7 @@ function P(i){ return G.players[i]; }
 /* ================= AIの強さ（Lv.1〜Lv.5） =================
    Lv.1＝従来の「よわい」、Lv.3＝従来の「ふつう」、Lv.5＝従来の「つよい」と全く同じ値。
    Lv.2はLv.1とLv.3の中間、Lv.4はLv.3とLv.5の中間で、各要素を線形に補間する。 */
-const APP_VERSION = 'v32';   // ホーム画面版の sw.js の VERSION（raigou-v32）とそろえる
+const APP_VERSION = 'v33';   // ホーム画面版の sw.js の VERSION（raigou-v33）とそろえる
 const DIFF_LEVELS = ['lv1','lv2','lv3','lv4','lv5','lv6','lv7'];
 let AI_SEAT = 1;   // 今判断しているAIの席（通常は1）
 function withSeat(pi, fn){ const s = AI_SEAT; AI_SEAT = pi; try{ return fn(); } finally { AI_SEAT = s; } }
@@ -6573,7 +6576,7 @@ function openStartSetting(kind){
     if(o.img){
       /* キャラのタイル：左上に家紋、右下に立ち絵、左下に名前 */
       const nm = String(o.label).split(' ');
-      h += '<button type="button" class="set-opt chara-tile' + (on ? ' on' : '') + '" data-setval="' + esc(o.v) + '" aria-label="' + esc(o.label) + '">' +
+      h += '<button type="button" class="set-opt chara-tile' + (on ? ' on' : '') + '" data-setval="' + esc(o.v) + '" data-chara="' + esc(o.v) + '" aria-label="' + esc(o.label) + '">' +
            houseIconHtml(o.icon, 'ct-mon') + '<img class="ct-img" src="' + o.img + '" alt="">' +
            '<span class="ct-name"><small>' + esc(nm[0] || '') + '</small>' + esc(nm.slice(1).join(' ') || nm[0]) + '</span>' +
            (on ? '<span class="ct-check">選択中</span>' : '') + '</button>';
