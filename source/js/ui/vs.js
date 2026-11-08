@@ -81,26 +81,17 @@ async function playCutIn(name, actorPi){
   const info = INFO[name] || ['KOTODAMA',''];
   const whoText = actor ? esc(actor.name) + ' の言霊' : '';
   let img = '';
-  const useVideo = !!(actor && !isAI && CUT_SPRITE && CUT_SPRITE_OK);
   if(actor && isAI) img = '<img class="fsc-img" src="' + AI_IMG + '" alt="">';
-  else if(useVideo) img = '<div class="fsc-vidwrap"><canvas class="fsc-vid" width="' + CUT_SPRITE_META.w + '" height="' + CUT_SPRITE_META.h + '"></canvas></div>';
   else if(actor) img = '<img class="fsc-img" src="' + CUT_IMG_ME + '" alt="">';
-  const cls = 'fsc' + (isAI ? ' ai' : '') + (actor ? '' : ' noimg') + (useVideo ? ' vid' : '');
+  const cls = 'fsc' + (isAI ? ' ai' : '') + (actor ? '' : ' noimg');
   root.innerHTML = '<div class="' + cls + '" role="status" aria-label="' + esc((whoText ? whoText + '：' : '') + name) + '">' +
     '<div class="fsc-band">' + img +
       '<div class="fsc-text"><span class="fsc-en">' + info[0] + '</span><span class="fsc-name">' + esc(name) + '</span>' +
       (info[1] ? '<span class="fsc-sub">' + info[1] + '</span>' : '') + (whoText ? '<span class="fsc-who">' + whoText + '</span>' : '') + '</div>' +
     '</div></div>';
-  let ms = 1450, stopAnim = null;
-  if(useVideo){
-    stopAnim = playCutSprite(root.querySelector('.fsc-vid'));
-    ms = 1900;
-    const fsc = root.querySelector('.fsc');
-    if(fsc) fsc.style.animationDuration = ms + 'ms';
-  }
+  const ms = 1450;
   G.fxBusy = true;
   await fxWait(ms);
-  if(stopAnim) stopAnim();
   root.innerHTML = '';
   G.fxBusy = false;
 }

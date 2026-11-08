@@ -61,7 +61,4 @@ async function primShun(actor, handSlot, locA, locB){
   await Promise.all(jobs);
   return true;
 }
-function shunLocKey(loc){
-  return loc.zone + ':' + (loc.pi===undefined ? '' : loc.pi) + ':' + loc.idx;
-}
 

@@ -160,15 +160,12 @@
         font-weight:800; font-size:.6rem; font-family:var(--popfont); letter-spacing:.04em; line-height:1.5;
         background:#0b3d66; color:#7fe3ff; border:1.5px solid var(--line); border-radius:3px; padding:0 5px;
       }
-      .rs-avatar{
-        width:36px; height:36px; object-fit:cover; object-position:center; vertical-align:-10px; margin-right:8px;
-        border:2.5px solid var(--line); border-radius:6px; background:var(--pop);
-      }
+
       #aiZone .pz-name{ background:var(--ink); color:var(--pop); border:2px solid var(--line); border-radius:4px; padding:1px 10px; }
       #humanZone .pz-name{ background:var(--pop); color:var(--ink); border:2px solid var(--line); border-radius:4px; padding:1px 10px; }
       .yogyoku{ font-weight:700; font-size:.9rem; }
       .yogyoku .dots{ color:var(--accent); letter-spacing:1px; font-size:.52rem; vertical-align:2px; }
-      .pz-note{ color:var(--ink-soft); font-size:.8rem; }
+
       .pz-main{ display:flex; gap:8px; align-items:flex-start; }
 
       .gates{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; flex:1; min-width:0; }
@@ -186,17 +183,10 @@
       .gate .g-stack .tile.back{ font-size:.6rem; }
       .gate .g-info{ font-size:.68rem; text-align:center; margin-top:3px; min-height:1.1em; color:var(--ink-soft); line-height:1.3; }
       .gate .g-info b{ color:var(--good); }
-      .seal-badge{
-        position:absolute; top:-4px; right:-16px; background:var(--seal); color:#fff; border-radius:6px;
-        font-size:.62rem; padding:0 5px; font-weight:700; z-index:2;
-      }
+
       .gate-empty{ text-align:center; color:var(--ink-soft); font-size:.75rem; height:32px; line-height:32px; }
 
-      .inner-col{ width:104px; flex:none; display:flex; flex-direction:column; gap:6px; }
-      .inner-box{ border:2px solid var(--line); border-radius:5px; padding:4px 5px; background:var(--panel); }
-      .inner-box .ib-label{ font-size:.68rem; color:var(--ink-soft); margin-bottom:3px; }
-      .hand-slots{ display:flex; gap:5px; }
-      .hand-slot{
+.hand-slot{
         width:44px; height:44px; border:2px dashed rgba(23,21,18,.55); border-radius:4px;
         display:flex; align-items:center; justify-content:center; background:transparent; padding:0;
       }
@@ -209,24 +199,8 @@
       .body-col .tile.back{ font-size:.58rem; }
       .body-count{ font-size:.78rem; color:var(--ink-soft); }
 
-      .mid-strip{
-        display:flex; align-items:center; gap:6px; flex-wrap:nowrap;
-        background:var(--ink); border:2.5px solid var(--line); border-radius:6px; color:#fff8e6;
-        padding:4px 8px; box-shadow:var(--shadow); margin-bottom:6px; font-size:.82rem;
-      }
-      .mid-strip .score-strip{ font-weight:800; color:var(--pop); font-family:var(--popfont); white-space:nowrap; }
-      .mid-strip button{
-        border:2px solid var(--pop); background:var(--pop); color:var(--ink);
-        border-radius:4px; padding:2px 8px; font-weight:800; font-size:.82rem; line-height:1.3; white-space:nowrap;
-      }
-      .mid-strip #deckBtn{ margin-left:0; }
-      .mid-strip .btn.hide-btn{ margin-left:auto; flex:none; background:var(--accent); color:var(--ink); border:2.5px solid var(--line); border-radius:6px; padding:4px 18px; font-size:1.02rem; letter-spacing:.12em; box-shadow:2px 2px 0 rgba(0,0,0,.55); }
-      @media (max-width:400px){
-        .mid-strip{ gap:5px; padding:4px 6px; }
-        .mid-strip .score-strip{ font-size:.74rem; }
-        .mid-strip button{ padding:1px 6px; font-size:.78rem; }
-        .mid-strip .btn.hide-btn{ padding:3px 14px; font-size:.98rem; }
-      }
+@media (max-width:400px){
+}
       @keyframes pulseBtn{ 0%{ transform:scale(1); } 40%{ transform:scale(1.12); } 100%{ transform:scale(1); } }
       .pulse{ animation:pulseBtn .45s ease; }
 
@@ -234,7 +208,7 @@
       .phasebar{ display:flex; gap:4px; align-items:center; flex-wrap:wrap; flex:1; }
       .phase-step{ border:2px solid var(--line); border-radius:4px; padding:2px 10px; font-size:.82rem; color:var(--ink-soft); background:var(--panel); font-weight:700; }
       .phase-step.on{ background:var(--ink); border-color:var(--line); color:var(--pop); font-weight:800; font-family:var(--popfont); }
-      .phase-arrow{ color:var(--ink); font-weight:800; }
+
       .btn{
         border:2px solid var(--line); background:var(--panel); color:var(--ink);
         border-radius:5px; padding:8px 16px; font-weight:700; box-shadow:2px 2px 0 rgba(23,21,18,.9);
@@ -452,17 +426,13 @@
         font-family:"Hiragino Mincho ProN","Yu Mincho",serif; font-size:3.4rem; font-weight:800; border-radius:8px;
         box-shadow:0 8px 30px rgba(0,0,0,.5);
       }
-      .fx-cut.long .fx-cut-char{ width:62px; height:62px; font-size:2.1rem; }
+
       .fx-cut-hide{ background:linear-gradient(115deg, #000000 0%, #1e1e1e 42%, #4d4d4d 74%, #000000 100%); }
       .fx-cut-hide .fx-cut-who{ color:#ffffff; opacity:.92; }
       .fx-cut-hide .fx-cut-char{ background:transparent; color:#ffffff; border:none; box-shadow:none; width:auto; height:auto; font-size:clamp(5.2rem, 19vw, 8.5rem); line-height:1; text-shadow:0 6px 28px rgba(0,0,0,.65), 0 2px 0 rgba(0,0,0,.45); }
       .tile.revealed-top{ outline:2px solid var(--gold); outline-offset:1px; }
-      .battle-tops{ display:flex; gap:14px; justify-content:center; align-items:flex-start; flex-wrap:wrap; margin:10px 0; }
-      .battle-side{ display:flex; flex-direction:column; align-items:center; gap:5px; min-width:110px; }
-      .battle-side .bs-name{ font-weight:800; font-size:.9rem; text-align:center; }
-      .battle-side .bs-top{ font-size:.82rem; color:var(--ink-soft); text-align:center; }
-      .battle-vs{ font-weight:800; font-size:1.2rem; align-self:center; }
-      @keyframes fxCutIn{ 0%{ opacity:0; transform:translateX(-4%);} 12%{ opacity:1; transform:none;} 82%{ opacity:1;} 100%{ opacity:0;} }
+
+@keyframes fxCutIn{ 0%{ opacity:0; transform:translateX(-4%);} 12%{ opacity:1; transform:none;} 82%{ opacity:1;} 100%{ opacity:0;} }
       #fxLayer{ position:fixed; inset:0; z-index:180; pointer-events:none; overflow:hidden; }
       .fx-clone{ position:fixed; z-index:181; }
       .fx-clone .tile{ width:100%; height:100%; }
@@ -499,22 +469,11 @@
       .pick-col-note{ font-size:.72rem; color:var(--ink-soft); }
       .pick-col{ display:flex; flex-direction:column-reverse; gap:8px; align-items:center; padding:10px 14px; border:2px dashed rgba(23,21,18,.55); border-radius:6px; background:var(--panel2); }
       .pick-col .tile{ width:54px; height:54px; font-size:1.1rem; }
-      .reveal-tower{ border:2px solid var(--line); border-radius:6px; background:var(--panel2); padding:9px 11px; margin:9px 0; }
-      .reveal-head{ display:flex; flex-wrap:wrap; gap:4px 10px; align-items:baseline; margin-bottom:6px; font-size:.95rem; }
-      .reveal-head .rv-gate{ font-weight:800; }
-      .reveal-result{ font-weight:800; }
-      .reveal-result.good{ color:var(--good); }
-      .reveal-result.bad{ color:var(--accent); }
-      .reveal-result.none{ color:var(--ink-soft); }
-      .reveal-tiles{ display:flex; flex-wrap:wrap; gap:4px; align-items:flex-end; }
-      .reveal-tiles .tile{ animation:tileIn .45s ease both; }
-      .reveal-order{ font-size:.72rem; color:var(--ink-soft); margin-top:4px; }
-      .result-stats{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:12px 0; text-align:left; }
+
+.result-stats{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:12px 0; text-align:left; }
       @media (max-width:560px){ .result-stats{ grid-template-columns:1fr; } }
-      .rs-card{ border:2px solid var(--line); border-radius:6px; background:var(--panel2); padding:10px 12px; }
-      .rs-card h3{ margin:0 0 6px; font-size:1rem; font-family:var(--popfont); }
-      .rs-card p{ margin:3px 0; font-size:.92rem; }
-      /* ---------- メインキャラクター（開始画面ヒーロー／リザルト） ---------- */
+
+/* ---------- メインキャラクター（開始画面ヒーロー／リザルト） ---------- */
       .hero-pop{
         background:var(--pop); border:3px solid var(--line); border-radius:6px;
         padding:16px 12px 14px; text-align:center; box-shadow:4px 4px 0 rgba(23,21,18,.9);
@@ -565,40 +524,18 @@
         .start-act-btn{ min-width:88px; padding:7px 4px 8px; }
         .start-act-btn .sa-value{ font-size:1.02rem; }
       }
-      .result-chara{
-        display:block; width:96px; height:96px; object-fit:cover; margin:4px 0 10px;
-        border:3px solid var(--line); border-radius:8px; background:var(--pop);
-        box-shadow:4px 4px 0 rgba(23,21,18,.9);
-      }
+
       .winner{ font-family:var(--popfont); }
       /* ---------- 言霊カットイン（キャラクターイラスト＋言霊名） ---------- */
-      .fx-chara{
-        position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:18px;
-        background:linear-gradient(100deg, rgba(12,11,8,.93) 55%, rgba(var(--main-rgb),.92));
-        animation:fxCutIn 1.45s ease both; padding:16px;
-      }
-      .fx-chara-img{
-        height:min(66vh,520px); max-width:56vw; object-fit:cover; background:var(--pop);
-        border:3px solid var(--ink); border-radius:8px; box-shadow:6px 6px 0 rgba(23,21,18,.85);
-        animation:fxCharaSlide .5s cubic-bezier(.2,.9,.25,1.15) both;
-      }
-      /* AI側の言霊カットイン画像は正方形なので、縦横比を保って全体を見せる */
-      .fx-chara-img.ai{ height:auto; width:min(46vh,400px); aspect-ratio:1/1; }
+
+/* AI側の言霊カットイン画像は正方形なので、縦横比を保って全体を見せる */
+
       @keyframes fxCharaSlide{ from{ transform:translateX(70px); opacity:0; } to{ transform:none; opacity:1; } }
-      .fx-chara-side{ display:flex; flex-direction:column; align-items:flex-start; gap:8px; animation:fxCharaText .45s ease both; }
+
       @keyframes fxCharaText{ from{ transform:translateX(-40px); opacity:0; } to{ transform:none; opacity:1; } }
-      .fx-chara-who{ color:var(--pop); font-size:.95rem; letter-spacing:.25em; font-weight:800; font-family:var(--popfont); }
-      .fx-chara-name{
-        color:#fff6e8; font-family:"Hiragino Mincho ProN","Yu Mincho",serif; font-weight:800;
-        font-size:clamp(2.2rem, 10vw, 4.4rem); line-height:1.15; white-space:nowrap;
-        text-shadow:3px 3px 0 rgba(23,21,18,.9);
-      }
-      @media (max-width:560px){
-        .fx-chara{ flex-direction:column; gap:10px; }
-        .fx-chara-img{ height:min(50vh,400px); max-width:82vw; }
-        .fx-chara-img.ai{ height:auto; width:min(68vw,320px); }
-        .fx-chara-side{ align-items:center; }
-      }
+
+@media (max-width:560px){
+}
       @media (prefers-reduced-motion: reduce){
         *{ animation:none !important; transition:none !important; }
       }
@@ -697,8 +634,8 @@
       /* プレイヤーゾーン */
       .player-zone{ background:var(--panel); border:none; border-radius:0; box-shadow:none; clip-path:var(--cut); }
       .player-zone.active{ outline:none; box-shadow:inset 0 0 0 1.5px var(--main); }
-      .pz-avatar, .rs-avatar{ border:2px solid var(--pop); border-radius:0; }
-      #aiZone .pz-avatar, .rs-avatar.ai{ border-color:#7d6bff; }
+      .pz-avatar{ border:2px solid var(--pop); border-radius:0; }
+      #aiZone .pz-avatar{ border-color:#7d6bff; }
       .pz-name{ font-family:var(--popfont); font-weight:900; }
       #aiZone .pz-name{ background:transparent; color:var(--ink); border:none; border-left:4px solid #7d6bff; border-radius:0; padding:0 8px; }
       #humanZone .pz-name{ background:transparent; color:var(--ink); border:none; border-left:4px solid var(--main); border-radius:0; padding:0 8px; }
@@ -721,28 +658,23 @@
       .gate.sealed::before{ background:#b9afff; opacity:.16; }
       .gate.fuon{ border:1.5px solid #ff4d5e; }
       .gate.targetable{ border:1.5px solid var(--main); box-shadow:0 0 16px rgba(var(--main-rgb),.35); cursor:pointer; }
-      .seal-badge{ background:#7d6bff; color:#ffffff; border-radius:0; }
+
       .gate-empty{ color:#8d8b85; font-family:var(--num); font-weight:600; letter-spacing:.06em; }
 
       /* 手・体内 */
-      .inner-box{ background:transparent; border:1px solid var(--line); border-radius:0; }
-      .inner-box .ib-label{ color:var(--ink-soft); }
-      .inner-box .ib-label small{ font-size:.6rem; color:#8d8b85; margin-left:2px; }
-      .hand-slot{ border:1px dashed #4a4d57; border-radius:3px; }
+
+.hand-slot{ border:1px dashed #4a4d57; border-radius:3px; }
       .body-count{ color:#8d8b85; }
 
       /* 中央の帯・フェーズ・ボタン */
-      .mid-strip{ background:var(--panel); border:none; border-radius:0; box-shadow:none; color:var(--ink); clip-path:var(--cut); }
-      .mid-strip .score-strip{ color:var(--pop); font-family:var(--num); font-weight:700; }
-      .mid-strip button{ background:var(--panel2); color:var(--ink); border:1px solid var(--line); border-radius:0; }
-      .mid-strip button b{ font-family:var(--num); }
-      .mid-strip .btn.hide-btn, .btn.hide-btn{
+
+.btn.hide-btn{
         background:var(--main); color:#101114; border:none; border-radius:0; box-shadow:none;
         font-family:var(--kanji); font-weight:400; clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);
       }
       .phase-step{ background:var(--panel2); color:#8d8b85; border:none; border-radius:0; font-weight:900; }
       .phase-step.on{ background:var(--main); color:#101114; font-family:var(--popfont); font-weight:900; }
-      .phase-arrow{ color:#4a4d57; }
+
       .btn{ background:var(--panel2); color:var(--ink); border:1px solid var(--line); border-radius:0; box-shadow:none; font-weight:700; }
       .btn:hover:not(:disabled){ border-color:var(--main); }
       .btn.primary{ background:var(--main); color:#101114; border-color:var(--main); font-weight:900; }
@@ -774,14 +706,12 @@
       .guide-badge{ background:var(--panel2); border:1px solid var(--line); border-radius:0; }
       .guide-badge.warn{ background:#ff4d5e; color:#101114; border-color:#ff4d5e; }
       .tower-base{ border-top-color:var(--main); }
-      .slot-box, .big-gate, .canyon-cell, .confirm-summary, .reveal-tower, .rs-card, .pick-col{ background:var(--panel2); border-color:var(--line); border-radius:0; }
+      .slot-box, .big-gate, .canyon-cell, .confirm-summary, .pick-col{ background:var(--panel2); border-color:var(--line); border-radius:0; }
       .slot-box, .big-gate{ border:1px dashed #4a4d57; }
       .slot-box.targetable, .big-gate.pickable{ border:1.5px solid var(--main); }
       .big-stack .tile.hl-top{ outline-color:#ff4d5e; }
-      .reveal-result.good{ color:var(--pop); }
-      .reveal-result.bad{ color:var(--bad); }
-      .battle-vs{ font-family:var(--kanji); font-weight:400; color:var(--pop); font-size:1.6rem; }
-      .peek-bar{ background:var(--panel); color:var(--ink); border-top:2px solid var(--main); }
+
+.peek-bar{ background:var(--panel); color:var(--ink); border-top:2px solid var(--main); }
 
       /* リザルト */
       .result-hero{ position:relative; background:var(--main); color:#101114; height:250px; overflow:hidden; margin:-6px -6px 14px; clip-path:polygon(0 0,100% 0,100% 82%,0 100%); }
@@ -792,16 +722,10 @@
       #resultScreen[data-res="lose"] .result-hero img{ opacity:.55; }
       #resultScreen .winner{ font-family:var(--popfont); font-weight:900; }
       #resultScreen .result-score{ font-family:var(--num); color:var(--pop); }
-      .result-chara{ border:2px solid var(--main); border-radius:0; box-shadow:none; }
 
-      /* ---------- カットイン（言霊・隠） ---------- */
-      .fx-chara{ background:rgba(12,12,14,.86); }
-      .fx-chara-img{ border:none; border-radius:0; background:transparent; box-shadow:none; object-fit:contain; height:min(72vh,560px); filter:drop-shadow(0 0 24px rgba(var(--main-rgb),.35)); }
-      .fx-chara-img.ai{ border:2px solid #7d6bff; object-fit:cover; filter:none; }
-      .fx-chara-side{ background:var(--main); padding:14px 22px 16px; clip-path:var(--cut); }
-      .fx-chara-who{ color:#101114; font-family:var(--num); font-weight:700; }
-      .fx-chara-name{ color:#101114; font-family:var(--kanji); font-weight:400; text-shadow:none; }
-      @media (max-width:560px){ .fx-chara-img{ height:min(54vh,420px); } }
+/* ---------- カットイン（言霊・隠） ---------- */
+
+@media (max-width:560px){ }
       .fx-cut{ background:rgba(12,12,14,.88); }
       .fx-cut-who{ color:var(--pop); font-family:var(--num); }
       .fx-cut-char{ background:var(--main); color:#101114; border:none; border-radius:0; font-family:var(--kanji); font-weight:400; }
@@ -867,9 +791,8 @@
       #humanZone .yogyoku{ font-size:1.35rem; }
       .phasebar{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:4px; }
       .phase-step{ text-align:center; padding:6px 0; font-size:.85rem; }
-      .phase-arrow{ display:none; }
 
-      /* 雷放：標的の表示 */
+/* 雷放：標的の表示 */
       .fx-bolt{ filter:drop-shadow(0 0 14px rgba(var(--main-rgb),.8)); }
       .fx-flash{ background:rgba(var(--main-rgb),.35); box-shadow:0 0 40px 14px rgba(var(--main-rgb),.45); border-radius:44px 44px 8px 8px; }
       .fx-target{ position:fixed; z-index:183; width:160px; display:flex; flex-direction:column; align-items:center; animation:fxCenter .9s ease both; text-align:center; }
@@ -1002,14 +925,6 @@
       .fsc.noimg .fsc-text{ left:0; right:0; max-width:none; align-items:center; text-align:center; }
       .fsc.noimg .fsc-name{ font-size:clamp(2.6rem, 14vw, 4.6rem); letter-spacing:.08em; }
 
-      /* ===== 第5弾：カットイン動画 ===== */
-      .fsc.vid .fsc-band{ background:var(--main); }
-      .fsc-vidwrap{
-        position:absolute; right:-4%; top:-18%; height:150%; aspect-ratio:264/486;
-        animation:fxCharaSlide .5s cubic-bezier(.2,.9,.25,1.15) both;
-        -webkit-mask-image:linear-gradient(to right, transparent 0, #000 26%); mask-image:linear-gradient(to right, transparent 0, #000 26%);
-      }
-      .fsc-vid{ display:block; width:100%; height:100%; pointer-events:none; }
       /* ===== ローディング画面 ===== */
       .load-screen{
         position:fixed; inset:0; z-index:1000; display:flex; align-items:center; justify-content:center;
@@ -1383,10 +1298,10 @@
       .modal-box .btn-row, .guide-box .btn-row{ justify-content:center; }
       .act-list{ align-items:stretch; }
       .act-list .btn{ text-align:center; }
-      .pick-list, .slot-row, .big-gates, .battle-tops, .canyon-grid{ justify-content:center; }
+      .pick-list, .slot-row, .big-gates, .canyon-grid{ justify-content:center; }
       .gate-group-label{ text-align:center; }
       .modal-center, .pick-col-wrap{ justify-content:center; align-items:center; }
-      .reveal-tiles{ justify-content:center; }
+
       .hc-row{ justify-content:center; }
 
       /* 選：二選／一選 */

@@ -131,8 +131,3 @@ async function runEffectFlow(kind, slot){
     render();
   }
 }
-async function humanJoCmd(){
-  const slot = UI.selHand;
-  if(slot === null || slot === undefined) return;
-  await runEffectFlow('jo', slot);
-}

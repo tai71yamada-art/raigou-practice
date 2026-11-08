@@ -163,10 +163,6 @@ function isGateTargetable(pi, gi){
   if(pd.type==='zan' || pd.type==='kirZan') return P(pi).gates[gi].length>0 && !P(pi).seals[gi];
   return false;
 }
-/* プレイヤーキャラのアバター（静止画）。プレイヤー側のみ。AI側には使わない */
-function charaAvatarHtml(cls){
-  return '<img class="' + cls + '" src="' + ME_AVATAR + '" alt="あなたのキャラクター（' + esc(charaName(startHouse)) + '）" width="480" height="480">';
-}
 /* プレイヤーゾーンの盤面部分（桜門＋手・体内）のHTML。アバターや名前・陽玉は含まない */
 function zoneMainHtml(pi){
   const p = P(pi);
@@ -268,13 +264,6 @@ function renderCanyon(){
   if(cn) cn.textContent = G.canyon.length;
   const rt = document.getElementById('tabRemain');
   if(rt && !rt.hidden) renderRemain();
-}
-function tileTotalCount(t){
-  if(t.kind === 'gen'){
-    for(let i=0;i<GEN_DEF.length;i++){ if(GEN_DEF[i].name === t.name) return GEN_DEF[i].n; }
-    return 0;
-  }
-  return 4; // 音無は各4枚
 }
 function showCanyonModal(peekMode){
   const counts = new Map();

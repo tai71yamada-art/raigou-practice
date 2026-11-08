@@ -34,7 +34,6 @@ ui/peek.js
 ui/fx.js
 ui/images.js
 ui/chara.js
-ui/cutin-sprite.js
 ui/clash.js
 ui/vs.js
 ui/banners.js

@@ -73,7 +73,6 @@ function onHand(pi, s){
   if(!P(0).hand[s]) return;
   showHandChips(s);
 }
-function onCanyon(idx){ /* 峡谷はポップアップで見る。瞬の対象選択もポップアップ内で行う */ }
 document.addEventListener('click', function(e){
   if(G.peeking) return; // 盤面を見ている間は閲覧専用（戻る・峡谷・タブは別リスナーで動く）
   if(G.fxBusy) return;  // カットイン／効果アニメーション中は操作できない

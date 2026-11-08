@@ -42,17 +42,14 @@
     document.querySelectorAll('img').forEach(function(im){ if(im.getAttribute('src')) srcs.push(im.getAttribute('src')); });
     srcs.push(AI_IMG, ME_AVATAR, CUT_IMG_ME, RESULT_IMG_WIN, RESULT_IMG_LOSE, FACE_IMG.act, FACE_IMG.hit, FACE_IMG.joy);
     let n = 0;
-    await limit(Promise.all(srcs.map(function(src){ return loadImg(src).then(function(){ n++; set(0.02 + 0.28 * n / srcs.length); }); })), 8000);
+    await limit(Promise.all(srcs.map(function(src){ return loadImg(src).then(function(){ n++; set(0.02 + 0.68 * n / srcs.length); }); })), 8000);
     // 2. フォント
-    set(0.3, 'フォントを読み込んでいます');
+    set(0.7, 'フォントを読み込んでいます');
     if(document.fonts && document.fonts.load){
       const fams = ['1em "Zen Antique"', '700 1em "Zen Kaku Gothic Antique"', '900 1em "Zen Kaku Gothic Antique"', '700 1em "Chakra Petch"'];
       let f = 0;
-      await limit(Promise.all(fams.map(function(fm){ return document.fonts.load(fm, '雷轟').catch(function(){}).then(function(){ f++; set(0.3 + 0.1 * f / fams.length); }); })), 5000);
+      await limit(Promise.all(fams.map(function(fm){ return document.fonts.load(fm, '雷轟').catch(function(){}).then(function(){ f++; set(0.7 + 0.28 * f / fams.length); }); })), 5000);
     }
-    // 3. カットイン動画
-    set(0.4, 'カットインを準備しています');
-    await limit(prepCutSprite(function(p){ set(0.4 + 0.58 * p); }), 12000);
     done();
   })().catch(done);
 })();

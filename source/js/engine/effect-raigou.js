@@ -1,8 +1,4 @@
 /* ================= 雷轟解放（自分の雷＋自分の轟。霧をどちらか一方のまねに使える） ================= */
-function goOtherSlot(p, slot){
-  for(let i=0;i<p.hand.length;i++){ if(i!==slot && p.hand[i] && p.hand[i].name==='轟') return i; }
-  return -1;
-}
 function raigouGates(p){
   const out = [];
   for(let gi=0; gi<3; gi++){ if(p.gates[gi].length>=1 && !p.seals[gi]) out.push(gi); }
