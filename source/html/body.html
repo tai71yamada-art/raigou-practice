@@ -1,0 +1,170 @@
+</style>
+  </head>
+  <body>
+    <div id="loadScreen" class="load-screen" role="status" aria-live="polite">
+      <div class="ls-inner">
+        <svg class="ls-bolt" width="34" height="34" viewBox="0 0 24 24" fill="#ffd23f" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6z"></path></svg>
+        <div class="ls-logo">雷轟</div>
+        <div class="ls-title">Now loading</div>
+        <div class="ls-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="lsBar"><div class="ls-fill" id="lsFill"></div></div>
+        <div class="ls-row"><span class="ls-note" id="lsNote">準備しています</span><span class="ls-pct" id="lsPct">0%</span></div>
+      </div>
+    </div>
+    <div class="wrap">
+
+      <!-- ======== start screen ======== -->
+      <div id="startScreen">
+        <div class="screen-card">
+          <div class="hero-pop">
+            <p class="hero-en">RAIGOU PRACTICE</p>
+            <img class="hero-img hero-wide hero-art" src="{{asset:img/key-visual.webp}}" alt="虹の下の荒野に立つ 雷藏 くらら・時雨 いづな・空晴 ふうか" width="800" height="1000" />
+            <div class="start-actions">
+              <button type="button" class="start-act-btn rule-btn" id="ruleBtn" aria-haspopup="dialog" disabled><span class="sa-label">ルール</span><span class="sa-value" id="ruleBtnVal">基本ルール</span></button>
+              <button type="button" class="start-act-btn rule-btn house-btn" id="houseBtn" aria-haspopup="dialog" disabled><span class="sa-label">キャラ</span><span class="sa-value" id="houseBtnVal">雷藏 くらら</span></button>
+              <button type="button" class="start-act-btn" id="diffBtn" aria-haspopup="dialog" disabled><span class="sa-label">AIの強さ</span><span class="sa-value" id="diffBtnVal">Lv.3</span></button>
+              <button type="button" class="start-act-btn" id="orderBtn" aria-haspopup="dialog" disabled><span class="sa-label">先手 / 後手</span><span class="sa-value" id="orderBtnVal">先手</span></button>
+              <button type="button" class="start-act-btn start-go" id="startGoBtn" disabled><span class="sa-value">対戦開始</span></button>
+            </div>
+          </div>
+          <h1 class="serif">雷轟 練習アプリ</h1>
+          <p class="sub">ボードゲーム「雷轟（らいごう）」を1人で練習するための試作品です。あなた対AIの2人戦で遊べます。「キャラ」で選んだキャラクターが、あなたの分身として対戦画面の自分エリアに表示されます。AIは電子基盤のアバターで、AIエリアに表示されます。</p>
+          <div class="guide-entry">
+            <button class="ghost-btn" id="startKomaBtn" type="button">駒一覧</button>
+            <button class="ghost-btn" id="startYakuBtn" type="button">役一覧</button>
+            <button class="ghost-btn" id="startStatsBtn" type="button">戦績</button>
+            <button class="ghost-btn" id="startSettingsBtn" type="button">設定</button>
+          </div>
+
+          <h2 class="serif">遊び方の要点</h2>
+          <p>手番は「現 → 選 → 積・発」の順に進みます。現では体内の駒を手に移し（0〜2個）、選では雷山から1〜2個引いて体内か空いている手に置きます。そのあと、手の駒がある限り「積む」「発する」をくり返せます（同じ言霊の「効果」は1手番に1回まで。雷放と雷停は別の効果なので同じ手番に両方使えます。霧でまねた効果も、その効果を使ったことになります）。終わりたくなったら「隠」ボタンを押すと相手の手番に進みます。現と選はポップアップで進めます。</p>
+          <p>塔は桜門に6段まで積めます。下の駒より重い駒を積むこともできますが、その塔は「不穏の塔」になり、解放しても得点にならず、持ち主の陽玉が1点減ります。6段目を積むと自動で解放して得点計算します。内駒は体内3個・手2箇所まで（合計5個）です。満杯のまま選を迎えると禁忌で、陽玉が1点減り、内駒を2個捨てて選をやり直します。陽玉が0点になると負けです。</p>
+          <p>雷山の最後の駒を引いたら終了の合図です。すぐには終わらず、その手番を最後まで行い、次に相手が選なしで最終手番を行い、次に最後の駒を引いた人が選なしでもう一度最終手番を行ってから終了します（最終手番では現・積・発・隠は通常通り行います）。最終手番が終わったら、先手→後手の順に残った塔を全部解放して中身を開示し、得点計算します。そのあと勝敗と両者のリザルト（最終点数・作った役・雷轟解放数・ペナルティ数）を表示します。陽玉が多い方の勝ちです。同点なら内駒の少ない方の勝ちです。雷轟解放ができるのは「雷＋轟」「雷＋霧」「霧＋轟」の3通りだけで、霧＋霧ではできません。1つの雷に対して両プレイヤーが轟（霧を轟として使う場合も含みます）を使うと「雷轟合戦」になります。両者が自分の塔を1つずつ選んで一番上の駒を一斉に開示し、重い方の塔に雷が落ちます（雷放なら雷轟解放として+2点）。重さが同点の場合は、雷を撃った人が最初に指定した塔に当初の雷の効果がそのまま適用され、+2点は付きません。開示された一番上の駒は、その後も塔の表示で表向きのまま分かります。また、1つの雷に陣と轟の両方が使われた場合、陣は適用されず消費もされず手に残ります（言霊の掟）。</p>
+
+          <h2 class="serif">この試作品の割り切り</h2>
+          <ul class="notes">
+            <li>対戦で使う駒は63枚です（全68枚から音無「八」4枚を除き、裏向きに1枚を除外）。奥義駒は入っていません。</li>
+            <li>霧は雷・蛇・斬・陣・轟をまねることができる</li>
+            <li>競技雷轟（雷神化・奥義）は準備中です。今は基本ルールの2人戦で遊べます。</li>
+            <li>対戦BGM：uchi-138（uchinari）</li>
+            <li>勝利ジングル：ビクトリー（Azell）</li>
+            <li>敗北ジングル：魔王魂</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ======== game screen ======== -->
+      <div id="gameScreen" hidden>
+        <div class="board-wrap">
+          <div class="menu-row">
+            <span class="logo-mark" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="#ffd23f"><path d="M13 2 4 14h6l-1 8 9-12h-6z"></path></svg>雷轟</span>
+<div class="phasebar" id="phasebar">
+              <span class="phase-step" data-ph="gen">現</span>
+              <span class="phase-step" data-ph="sen">選</span>
+              <span class="phase-step" data-ph="act">積・発</span>
+            </div>
+            <span class="turn-badge" id="turnLabel"></span>
+            <span class="score-strip" id="scoreStrip" hidden></span>
+            
+            
+            
+          </div>
+
+          <section class="player-zone" id="aiZone"></section>
+          <div class="control-strip">
+            
+            <div class="mid-dock"><span class="dock-spacer"></span><details class="menu" id="menuDetails">
+              <summary>メニュー</summary>
+              <div class="menu-pop">
+                <label>AIの強さ
+                  <select id="diffSelect" aria-label="AIの強さ">
+                    <option value="lv1">Lv.1</option>
+                    <option value="lv2">Lv.2</option>
+                    <option value="lv3">Lv.3</option>
+                    <option value="lv4">Lv.4</option>
+                    <option value="lv5">Lv.5</option>
+                    <option value="lv6">Lv.6</option>
+                    <option value="lv7">Lv.7</option>
+                  </select>
+                </label>
+                <div class="menu-guide">
+                  <button class="ghost-btn" id="menuSettingsBtn" type="button">設定</button>
+                  <button class="ghost-btn" id="menuStatsBtn" type="button">戦績</button>
+                </div>
+                <button class="ghost-btn end-game-btn" id="restartBtn" type="button">対戦終了</button>
+                <div class="menu-guide">
+                  <button class="ghost-btn" id="menuKomaBtn" type="button">駒一覧</button>
+                  <button class="ghost-btn" id="menuYakuBtn" type="button">役一覧</button>
+                </div>
+              </div>
+            </details><button type="button" class="pile-btn" id="deckBtn" data-anchor="deck">雷山 <b id="deckNum">0</b></button><button type="button" class="pile-btn" id="canyonBtn">峡谷 <b id="canyonNum">0</b></button></div>
+          </div>
+
+
+          <section class="player-zone" id="humanZone">
+            <div class="pz-head">
+              <img class="pz-avatar" alt="あなたのキャラクター" width="480" height="480">
+              <span class="pz-name" id="humanName">あなた</span><span class="pz-house" id="humanHouse"></span>
+              <span class="yogyoku" id="humanScore"></span>
+            </div>
+            <div id="humanZoneBody"></div>
+          </section>
+
+          <div class="actionbar" id="actionbar"></div>
+
+          <ul class="foot-notes">
+            <li>相手の塔は段数だけが分かります。解放された時に中身と得点の内訳が分かります。</li>
+            <li>不穏の塔（重さの順番が合わない塔）は、解放すると得点にならず、持ち主の陽玉が1点減ります。</li>
+            <li>霧は雷・蛇・斬・陣・轟をまねることができる。内駒は体内3個・手2箇所までです。</li>
+          </ul>
+        </div>
+
+        <div class="below-tabs">
+          <div class="tab-row">
+            <button type="button" class="tab-btn on" id="tabBtnLog">ログ</button>
+            <button type="button" class="tab-btn" id="tabBtnRel">解放された役</button>
+            <button type="button" class="tab-btn" id="tabBtnRemain">残り駒</button>
+            <button type="button" class="btn hide-btn swipe-hide" id="hideBtn" hidden aria-label="隠（上にスワイプで手番終了）"><span class="sh-arrow" aria-hidden="true">▲</span><span class="sh-kanji">隠</span><span class="sh-sub">上へスワイプ</span></button>
+          </div>
+          <div class="tab-panel" id="tabLog">
+            <div class="log" id="log"></div>
+          </div>
+          <div class="tab-panel" id="tabRemain" hidden><div id="remainBox"></div></div>
+          <div class="tab-panel" id="tabRel" hidden>
+            <p class="sub">解放されて役になった塔の駒は、峡谷ではなくここに置かれます。役にならなかった塔と不穏の塔の駒は、今まで通り峡谷へ行きます。</p>
+            <div id="releasedList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======== result screen ======== -->
+      <div id="resultScreen" hidden>
+        <div class="screen-card">
+          <div class="result-hero" aria-hidden="true"><img id="resultHeroImg" alt=""><span class="rh-en" id="resultEn">RESULT</span><span class="rh-big" id="resultBig">結果</span><span class="rh-score" id="resultHeroScore"></span></div>
+          <p class="result-score" id="resultScore"></p>
+          <p id="resultDetail"></p>
+          <div class="result-stats" id="resultStats"></div>
+          <div class="result-btns"><button class="big-btn" id="rematchBtn" type="button">再戦</button><button class="big-btn sub-btn" id="againBtn" type="button">スタートに戻る</button></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div id="modalRoot"></div>
+    <div id="startSettingRoot"></div>
+    <div id="guideRoot"></div>
+    <div id="guideDetailRoot"></div>
+    <div id="peekRoot"></div>
+    <div id="peekModalRoot"></div>
+    <div id="fxRoot"></div>
+    <div id="vsRoot"></div>
+{{chara:kuze}}
+{{chara:rakura}}
+{{chara:shigure}}
+{{audio:jingleWinData}}
+{{audio:jingleLoseData}}
+{{audio:vsThunderData}}
+{{audio:bgmTitleData}}
+{{audio:bgmData}}
+
+
+<script>
