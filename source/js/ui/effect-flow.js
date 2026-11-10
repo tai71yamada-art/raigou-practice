@@ -75,8 +75,8 @@ async function runEffectFlow(kind, slot){
     }
     else if(kind === 'hebi' || kind === 'kirHebi'){
       const items = [];
-      P(1).body.forEach(function(t, idx){ items.push({ group:'相手の体内', loc:{ pi:1, where:'body', idx:idx }, desc:'相手の体内の駒', html: backHtml(null, 'clickable') }); });
-      P(1).hand.forEach(function(t, s){ if(t) items.push({ group:'相手の手', loc:{ pi:1, where:'hand', idx:s }, desc:'相手の手の駒', html: backHtml(null, 'clickable') }); });
+      P(1).body.forEach(function(t, idx){ items.push({ group:'相手の体内', loc:{ pi:1, where:'body', idx:idx }, desc: isOpenTile(t) ? '相手の体内の「' + tileLabel(t) + '」' : '相手の体内の駒', html: oppInnerHtml(t, 'clickable', { ntid:true }) }); });
+      P(1).hand.forEach(function(t, s){ if(t) items.push({ group:'相手の手', loc:{ pi:1, where:'hand', idx:s }, desc: isOpenTile(t) ? '相手の手の「' + tileLabel(t) + '」' : '相手の手の駒', html: oppInnerHtml(t, 'clickable', { ntid:true }) }); });
       P(0).body.forEach(function(t, idx){ items.push({ group:'あなたの体内', loc:{ pi:0, where:'body', idx:idx }, desc:'あなたの体内の「' + tileLabel(t) + '」', html: tileHtml(t, 'clickable', { ntid:true }) }); });
       P(0).hand.forEach(function(t, s){ if(t && s !== slot) items.push({ group:'あなたの手', loc:{ pi:0, where:'hand', idx:s }, desc:'あなたの手の「' + tileLabel(t) + '」', html: tileHtml(t, 'clickable', { ntid:true }) }); });
       while(true){

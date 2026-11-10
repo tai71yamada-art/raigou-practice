@@ -1,7 +1,7 @@
 /* ================= 山・終了管理 ================= */
 function drawTiles(n){
   const out = [];
-  for(let i=0;i<n && G.deck.length>0;i++) out.push(G.deck.pop());
+  for(let i=0;i<n && G.deck.length>0;i++){ const t = G.deck.pop(); if(G.deckOpen) G.deckOpen.delete(t.id); out.push(t); }
   if(out.length) VIEW.sfx('draw');
   if(out.length > 0 && G.deck.length===0 && G.endIn===null && !G.over){
     /* 公式の終了手順（ルールブック11ページ・13ページ）：最後の駒を引いても即終了にしない。

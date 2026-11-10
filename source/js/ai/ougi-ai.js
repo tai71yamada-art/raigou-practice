@@ -1,7 +1,7 @@
 /* ================= AI：競技雷轟（開・奥義） ================= */
 /* 開するかどうか。雷神化は手が1つ増えて内駒の上限も増えるので、開できる時は基本的にすぐ開く。
    Lv.1・Lv.2 はときどき見送る */
-const AI_OUGI_LIKE = { '覇':1.0, '天':0.9, '啓':0.8, '和':0.6, '禅':0.7, '楼':0.9, '幻':0.6, '鳴':0.85, '赫':0.4 };
+const AI_OUGI_LIKE = { '覇':1.0, '天':0.9, '啓':0.8, '和':0.6, '禅':0.7, '楼':0.9, '幻':0.6, '鳴':0.85, '赫':0.4, '涼':0.35, '風':0.7, '凛':0.7 };
 function aiPickKai(){
   const p = P(AI_SEAT);
   if(!canKai(AI_SEAT)) return null;
@@ -102,7 +102,33 @@ function aiOugiActs(p, s, t, dp, avail, acts){
     const myMv = Math.min(GEN_MAX, p.body.length, p.hand.filter(function(x, k){ return !x || k === s; }).length);
     const g = 0.45 * oppMv - 0.3 * myMv;
     if(g > 0.35) acts.push({ kind:'ougi', name:'赫', hand:s, gain:g });
+  } else if(t.name === '涼'){
+    /* 相手の分からない内駒が見える分と、自分の内駒が見られる分 */
+    const q = P(1 - me);
+    const oppUnknown = q.body.concat(q.hand.filter(Boolean)).filter(function(x){ return !aiKnows(x, me); }).length;
+    const mine = p.body.length + p.hand.filter(function(x, k){ return x && k !== s; }).length;
+    const g = 0.22 * oppUnknown - 0.1 * mine;
+    if(g > 0.4) acts.push({ kind:'ougi', name:'涼', hand:s, gain:g });
+  } else if(t.name === '風'){
+    if(!G.finalRound) acts.push({ kind:'ougi', name:'風', hand:s, gain:0.55 });
+  } else if(t.name === '凛'){
+    const pOn = aiRinOnProb(me);
+    rinTowers(me).forEach(function(gi){
+      const tw = p.gates[gi], pts = scoreTower(tw).pts;
+      /* 塔の点数は解放できて初めて手に入るので、今の点数は少し割り引いて考える。伸ばせる見込みも一部足す */
+      const keep = 0.75 * pts + (G.finalRound ? 0 : 0.25) * Math.max(0, aiOwnVal(tw, avail) - pts);
+      const g = pOn * (pts + 2) - keep;
+      if(g > 0.15) acts.push({ kind:'ougi', name:'凛', hand:s, gi:gi, gain:g });
+    });
   }
+}
+/* 凛：雷山の一番上が音無である見込み（表向きなら確実に分かる） */
+function aiRinOnProb(me){
+  const top = deckOpenTop();
+  if(top.length) return top[0].kind === 'on' ? 1 : 0;
+  const un = withSeat(me, function(){ return aiUnseenByName(P(me)); });
+  let gen = 0; Object.keys(un.cnt).forEach(function(k){ gen += Math.max(0, un.cnt[k]); });
+  return Math.max(0, Math.min(1, (un.total - gen) / un.total));
 }
 /* 禅で相手に渡す駒と、受け取る駒の見込み */
 function aiZenGain(me){
@@ -153,6 +179,9 @@ function aiOugiText(act){
   if(act.name === '啓') return '奥義「啓」：' + who(act.target.pi) + 'の桜門' + (act.target.gi + 1) + 'の塔を2つに分ける';
   if(act.name === '和') return '奥義「和」：自分の桜門' + (act.gi + 1) + 'の塔を公開する';
   if(act.name === '禅') return '奥義「禅」：体内の最も重い駒を移し合う';
+  if(act.name === '涼') return '奥義「涼」：全員の内駒を表向きにする';
+  if(act.name === '風') return '奥義「風」：雷山から3個引き、1個を手に置く';
+  if(act.name === '凛') return '奥義「凛」：自分の桜門' + (act.gi + 1) + 'の塔を公開して、雷山から1個引く';
   if(act.name === '幻') return '奥義「幻」：除外された駒を自分の内駒にする';
   if(act.name === '赫') return '奥義「赫」：次の手番は全員0現にする';
   if(act.name === '楼') return '奥義「楼」：自分の桜門' + (act.gi + 1) + 'の塔を積み直す';
@@ -174,4 +203,13 @@ async function aiOugiExecute(act, me){
     }));
   });
   else if(act.name === '赫') await primKaku(me, act.hand);
+  else if(act.name === '涼') await primRyou(me, act.hand);
+  else if(act.name === '風') await primKaze(me, act.hand, function(tiles){
+    return Promise.resolve(withSeat(me, function(){
+      let bi = 0, bv = -Infinity;
+      tiles.forEach(function(x, i){ const v = aiTileDesire(x, P(me)); if(v > bv){ bv = v; bi = i; } });
+      return bi;
+    }));
+  });
+  else if(act.name === '凛') await primRin(me, act.hand, act.gi);
 }

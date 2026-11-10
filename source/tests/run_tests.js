@@ -8,7 +8,7 @@
    3. AI同士の対局：いろいろなレベルで最後まで進むか。毎手番、駒が消えたり増えたりしていないか
    3b. 途中保存：手番の始めで保存して別の場所で戻し、続きが保存しなかった時と全く同じになるか
    4. いつもの対局：決まった乱数で対局した結果が、前回の記録と同じか（意図しない変更の検出）
-   5. 競技雷轟：開・雷神化・奥義（覇・天・啓・和・禅・楼・幻・鳴・赫）の動きと、AI同士の対局での決まりごと */
+   5. 競技雷轟：開・雷神化・奥義（覇・天・啓・和・禅・楼・幻・鳴・赫・涼・風・凛）の動きと、AI同士の対局での決まりごと */
 'use strict';
 const fs = require('fs'), path = require('path');
 const H = require('./headless');
@@ -334,9 +334,50 @@ function section(t){ console.log('\n■ ' + t); }
       await Y.primRai(0, 0, 'hou', { pi:1, gi:0 });
       ok(Y.P(1).gates[0].length === 0 && Y.G.canyon.some(function(t){ return t.name === '鳴'; }), '鳴：雷と同じ効果（雷放）を適用できる');
     }
+    {
+      const X = fresh();
+      X.P(0).body = mk(X, '五'); X.P(1).body = mk(X, '六 二'); X.P(1).hand[1] = mk(X, '雷')[0];
+      X.P(0).hand[0] = X.mkOugiTile('涼');
+      await X.primRyou(0, 0);
+      ok(X.isOpenTile(X.P(1).body[0]) && X.isOpenTile(X.P(1).hand[1]) && X.isOpenTile(X.P(0).body[0]), '涼：全員の内駒が表向きになる');
+      X.P(1).gates = [[], [], []];
+      const t1 = X.P(1).hand[1];
+      X.G.turn = 1; X.G.actedSlots = new Set();
+      await X.primStack(1, 1, 0);
+      ok(!X.isOpenTile(t1), '涼：表になった駒は、積むと表ではなくなる');
+    }
+    {
+      const X = fresh();
+      const n0 = X.G.deck.length, top3 = X.G.deck.slice(-3).reverse();
+      X.P(0).hand[1] = X.mkOugiTile('風');
+      await X.primKaze(0, 1, function(){ return Promise.resolve(1); });
+      ok(X.P(0).hand[1] === top3[1] && X.G.deck.length === n0 - 1 && X.G.deck[X.G.deck.length-1] === top3[0] && X.G.deck[X.G.deck.length-2] === top3[2], '風：3個引いて1個を手に置き、残りは引いた順に雷山の上へ戻す');
+      ok(X.G.deckOpen.has(top3[0].id) && X.G.deckOpen.has(top3[2].id), '風：戻した駒は表向き');
+      X.drawTiles(1);
+      ok(!X.G.deckOpen.has(top3[0].id), '風：表向きの駒も、引かれたら表向きの印が外れる');
+    }
+    {
+      const X = fresh();
+      X.P(0).gates = [mk(X, '五 四 三'), [], []];
+      X.G.deck.push(mk(X, '二')[0]);
+      X.P(0).hand[0] = X.mkOugiTile('凛');
+      const s0 = X.P(0).score, pts = X.scoreTower(X.P(0).gates[0]).pts;
+      await X.primRin(0, 0, 0);
+      ok(X.P(0).score === s0 + pts + 2 && X.P(0).gates[0].length === 0, '凛：引いた駒が音無なら、塔を解放して役の点数+2点');
+      const Y = fresh();
+      Y.P(0).gates = [mk(Y, '五 四 三'), [], []];
+      Y.G.deck.push(mk(Y, '雷')[0]);
+      Y.P(0).hand[0] = Y.mkOugiTile('凛');
+      const s1 = Y.P(0).score;
+      await Y.primRin(0, 0, 0);
+      ok(Y.P(0).score === s1 && Y.P(0).gates[0].length === 0 && Y.G.canyon.length === 5, '凛：言霊なら0点で、塔の駒と引いた駒は峡谷へ');
+      const Z = fresh();
+      Z.P(0).gates = [mk(Z, '五 三'), [], []]; Z.P(0).hand[0] = Z.mkOugiTile('凛');
+      ok(Z.ougiUsable(0, 0) !== '', '凛：役が完成している塔が無い時は発できない');
+    }
     /* AI同士の競技雷轟：毎手番、駒の数・塔の高さ・内駒の上限を確かめる */
     const NK = QUICK ? 21 : 84;
-    let kGames = 0, kBad = 0, kFirst = '', kai = 0, hatsu = { '覇':0, '天':0, '啓':0, '和':0, '禅':0, '楼':0, '幻':0, '鳴':0, '赫':0 }, kTurns = 0;
+    let kGames = 0, kBad = 0, kFirst = '', kai = 0, hatsu = { '覇':0, '天':0, '啓':0, '和':0, '禅':0, '楼':0, '幻':0, '鳴':0, '赫':0, '涼':0, '風':0, '凛':0 }, kTurns = 0;
     for(let i = 0; i < NK; i++){
       const eng = H.createEngine(3000 + i);
       const G = eng.E.G, P = eng.E.P;

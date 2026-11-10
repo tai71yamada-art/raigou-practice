@@ -345,3 +345,7 @@
       .wa-minus{ color:var(--accent); font-size:1.2rem; }
       .tile-btn.rou-used{ opacity:.3; }
       p.warn{ color:var(--accent); font-weight:bold; text-align:center; }
+      /* 涼：表向きの内駒／風：表向きで雷山に戻した駒 */
+      .tile.open-face{ box-shadow:0 0 0 2px #5ec8e6, 0 0 8px rgba(94,200,230,.55); }
+      .pile-btn .deck-open{ display:block; font-size:.66rem; color:#5ec8e6; line-height:1.1; margin-top:1px; white-space:nowrap; }
+      .rin-draw{ display:flex; gap:14px; align-items:center; justify-content:center; margin:8px 0; }

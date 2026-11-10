@@ -6,7 +6,7 @@
    ・奥義駒はすべて重さ9の言霊。発したら峡谷へ行く。陣で防げるのは雷・蛇・斬だけなので、奥義は防げない。
    効果を作った奥義駒は ougi-data.js の implemented を true にする（選択画面に出るのは true の駒だけ）。 */
 const OUGI_BRING = 2;   // 持ち込む奥義駒の数
-['覇','天','啓','和','禅','楼','幻','鳴','赫'].forEach(function(n){ const o = ougiByName(n); if(o) o.implemented = true; });
+['覇','天','啓','和','禅','楼','幻','鳴','赫','涼','風','凛'].forEach(function(n){ const o = ougiByName(n); if(o) o.implemented = true; });
 
 function ougiReadyList(){ return OUGI_DATA.filter(function(o){ return o.implemented && !o.kyogiBanned; }); }
 /* 奥義駒は自分と相手で重ならないのが決まり。ただし作り終えた駒が4種類そろうまでは、重なりを認める */
@@ -107,7 +107,12 @@ function ougiUsable(pi, slot){
     return rouTowers(pi).length ? '' : '2段以上の自分の塔がありません';
   }
   if(t.name === '幻') return genAvailable().length ? '' : '除外された駒がありません（奥義駒は選べません）';
-  if(t.name === '鳴' || t.name === '赫') return '';
+  if(t.name === '鳴' || t.name === '赫' || t.name === '涼') return '';
+  if(t.name === '風') return G.deck.length >= 3 ? '' : '雷山の駒が3個未満です';
+  if(t.name === '凛'){
+    if(!G.deck.length) return '雷山に駒がありません';
+    return rinTowers(pi).length ? '' : '役が完成している自分の塔がありません';
+  }
   return 'この奥義駒は準備中です';
 }
 
@@ -335,3 +340,86 @@ async function primKaku(actor, slot){
    自分の手番では、選んだ言霊の効果をそのまま（鳴の手で）実行する。陣・轟（と霧でまねる陣・轟）は、
    相手の雷・蛇・斬を受けた時に、霧と同じように使える（responses.js の mimicSlot） ---- */
 function isMei(t){ return !!(t && t.kind === 'gen' && t.name === '鳴'); }
+
+/* ================= 涼・風・凛 ================= */
+/* 表向きの内駒（涼）：G.openIds。積むまで表のまま（primStack で外す） */
+function isOpenTile(t){ return !!(t && G.openIds && G.openIds.has(t.id)); }
+/* 表向きで雷山の上に戻した駒（風）：G.deckOpen。引かれたら外す（drawTiles） */
+function deckOpenTop(){
+  const out = [];
+  for(let i = G.deck.length - 1; i >= 0; i--){ const t = G.deck[i]; if(G.deckOpen && G.deckOpen.has(t.id)) out.push(t); else break; }
+  return out;
+}
+/* ---- 涼：全プレイヤーは内駒を全て表向きにする。表になった駒は積むまで表のまま ---- */
+async function primRyou(actor, slot){
+  const p = P(actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '涼') return false;
+  G.used.add('涼');
+  await VIEW.playCutIn('涼', actor);
+  consumeHand(p, slot);
+  if(!G.openIds) G.openIds = new Set();
+  const parts = [];
+  for(let pi = 0; pi < 2; pi++){
+    const q = P(pi), tiles = q.body.concat(q.hand.filter(Boolean));
+    tiles.forEach(function(x){ G.openIds.add(x.id); if(G.kn){ G.kn[0].add(x.id); G.kn[1].add(x.id); } });
+    parts.push(q.name + '：' + (tiles.length ? tiles.map(tileLabel).join('・') : 'なし'));
+  }
+  log(p.name + 'の奥義「涼」：全員の内駒を表向きにしました（' + parts.join('／') + '）。表になった駒は、積むまで表のままです。', 'score');
+  if(actor !== 0) VIEW.setMeFace('hit');
+  await VIEW.render();
+  return true;
+}
+/* ---- 風：雷山から3駒（2人＋1）引き、1つを自分の手に置く。残りは表向きで雷山の上に戻し、雷山として扱う ---- */
+async function primKaze(actor, slot, choose){
+  const p = P(actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '風' || G.deck.length < 3) return false;
+  G.used.add('風');
+  await VIEW.playCutIn('風', actor);
+  consumeHand(p, slot);
+  const drawn = [G.deck.pop(), G.deck.pop(), G.deck.pop()];
+  VIEW.sfx('draw');
+  drawn.forEach(function(x){ if(G.deckOpen) G.deckOpen.delete(x.id); if(G.kn) G.kn[actor].add(x.id); });
+  let k = await choose(drawn);
+  if(!(k >= 0 && k < 3)) k = 0;
+  const keep = drawn[k], rest = drawn.filter(function(_, i){ return i !== k; });
+  p.hand[slot] = keep;
+  if(!G.deckOpen) G.deckOpen = new Set();
+  for(let i = rest.length - 1; i >= 0; i--){ const x = rest[i]; G.deck.push(x); G.deckOpen.add(x.id); if(G.kn){ G.kn[0].add(x.id); G.kn[1].add(x.id); } }
+  const restTxt = rest.map(function(x){ return '「' + tileLabel(x) + '」'; }).join('と');
+  if(p.isAI) log(p.name + 'の奥義「風」：雷山から3個引き、1個を手に置きました。残りの' + restTxt + 'は、表向きで雷山の上に戻しました（次に引かれるのは' + '「' + tileLabel(rest[0]) + '」）。');
+  else log(p.name + 'の奥義「風」：雷山から3個引き、「' + tileLabel(keep) + '」を' + handLabel(slot) + 'に置きました。残りの' + restTxt + 'は、表向きで雷山の上に戻しました（次に引かれるのは「' + tileLabel(rest[0]) + '」）。');
+  await VIEW.render();
+  return true;
+}
+/* ---- 凛：役が完成している自分の塔を1つ公開し、雷山から1駒引く。音無なら塔を解放して役の点数+2点。
+   言霊なら役の点数は0点で、塔の駒は全て峡谷へ。引いた駒は峡谷へ ---- */
+function rinTowers(pi){
+  const p = P(pi), out = [];
+  for(let gi = 0; gi < 3; gi++){ const tw = p.gates[gi]; if(!p.seals[gi] && tw.length >= 3 && !isFuon(tw) && scoreTower(tw).pts > 0) out.push(gi); }
+  return out;
+}
+async function primRin(actor, slot, gi){
+  const p = P(actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '凛' || rinTowers(actor).indexOf(gi) < 0 || !G.deck.length) return false;
+  G.used.add('凛');
+  await VIEW.playCutIn('凛', actor);
+  consumeHand(p, slot);
+  const snap = p.gates[gi].slice(), s = scoreTower(snap);
+  snap.forEach(function(x){ if(G.kn){ G.kn[0].add(x.id); G.kn[1].add(x.id); } });
+  const x = drawTiles(1)[0];
+  if(G.deckOpen) G.deckOpen.delete(x.id);
+  if(G.kn){ G.kn[0].add(x.id); G.kn[1].add(x.id); }
+  const win = x.kind === 'on';
+  log(p.name + 'の奥義「凛」：桜門' + (gi+1) + 'の塔（' + snap.map(tileLabel).join('・') + '、' + s.role + '）を公開し、雷山から「' + tileLabel(x) + '」を引きました。' +
+      (win ? '音無なので、塔を解放して役の点数に+2点します。' : '言霊なので、役の点数は0点になり、塔の駒は全て峡谷へ置きます。'), win ? 'score' : 'bad');
+  await VIEW.showRinReveal(actor, gi, snap, s, x, win);
+  G.canyon.push(x);
+  if(win) releaseTower(actor, gi, 2);
+  else {
+    snap.forEach(function(y){ G.canyon.push(y); });
+    p.gates[gi] = []; p.seals[gi] = null;
+    if(G.cutHints) G.cutHints[actor][gi] = [];
+  }
+  await VIEW.render();
+  return true;
+}

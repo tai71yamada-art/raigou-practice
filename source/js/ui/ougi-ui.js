@@ -210,6 +210,30 @@ async function runOugiFlow(slot){
     await primKaku(0, slot);
     return;
   }
+  if(t.name === '涼'){
+    const ok = await confirmYesNo('奥義「涼」の確認', 'あなたとAIの<b>内駒（体内と手）を全て表向き</b>にします。表になった駒は、積むまで表のままです。');
+    if(!ok) return;
+    await primRyou(0, slot);
+    return;
+  }
+  if(t.name === '風'){
+    const ok = await confirmYesNo('奥義「風」の確認', '雷山から3個引き、1個を選んで' + handLabel(slot) + 'に置きます。残りの2個は<b>表向きで雷山の上に戻し</b>、そのまま雷山として使います。引いた駒が見えるので、途中でやめることはできません。');
+    if(!ok) return;
+    await primKaze(0, slot, chooseKazeTile);
+    return;
+  }
+  if(t.name === '凛'){
+    while(true){
+      const tgt = await pickTowerModal('奥義「凛」：公開する塔を選ぶ', '役が完成している自分の塔を1つ選びます。雷山から1個引き、<b>音無なら塔を解放して役の点数+2点</b>、<b>言霊なら役の点数は0点</b>で、塔の駒は全て峡谷へ置きます。', rinTowers(0).map(function(gi){ return { pi:0, gi:gi }; }));
+      if(!tgt) return;
+      const tw = P(0).gates[tgt.gi], s = scoreTower(tw), top = deckOpenTop();
+      const ok = await confirmYesNo('奥義「凛」の確認', '桜門' + (tgt.gi+1) + 'の塔（' + esc(s.role) + '・' + s.pts + '点）を公開して、雷山から1個引きます。音無なら' + (s.pts + 2) + '点、言霊なら0点です。' +
+        (top.length ? '<br>雷山の一番上は表向きの「' + esc(tileLabel(top[0])) + '」です。' : ''));
+      if(!ok) continue;
+      await primRin(0, slot, tgt.gi);
+      return;
+    }
+  }
   if(t.name === '鳴'){
     const kind = await pickMeiEffect(slot);
     if(!kind) return;
@@ -333,8 +357,8 @@ function pickTenSourceModal(handSlot, gi){
     section('峡谷', G.canyon.map(function(t, idx){ const key = 'c:' + idx; items[key] = { zone:'canyon', idx:idx }; return wrap(key, tileHtml(t, 'clickable', { ntid:true })); }).join(''));
     sectionBody('あなたの体内', P(0).body.map(function(t, idx){ const key = 'b0:' + idx; items[key] = { zone:'body', pi:0, idx:idx }; return wrap(key, tileHtml(t, 'clickable', { ntid:true })); }).join(''));
     section('あなたの手', P(0).hand.map(function(t, s){ if(!t || s === handSlot) return ''; const key = 'h0:' + s; items[key] = { zone:'hand', pi:0, idx:s }; return wrap(key, tileHtml(t, 'clickable', { ntid:true })); }).join(''));
-    sectionBody('相手の体内', P(1).body.map(function(t, idx){ const key = 'b1:' + idx; items[key] = { zone:'body', pi:1, idx:idx }; return wrap(key, backHtml(null, 'clickable')); }).join(''));
-    section('相手の手', P(1).hand.map(function(t, s){ if(!t) return ''; const key = 'h1:' + s; items[key] = { zone:'hand', pi:1, idx:s }; return wrap(key, backHtml(null, 'clickable')); }).join(''));
+    sectionBody('相手の体内', P(1).body.map(function(t, idx){ const key = 'b1:' + idx; items[key] = { zone:'body', pi:1, idx:idx }; return wrap(key, oppInnerHtml(t, 'clickable', { ntid:true })); }).join(''));
+    section('相手の手', P(1).hand.map(function(t, s){ if(!t) return ''; const key = 'h1:' + s; items[key] = { zone:'hand', pi:1, idx:s }; return wrap(key, oppInnerHtml(t, 'clickable', { ntid:true })); }).join(''));
     h += '<div class="btn-row"><button type="button" class="btn" id="tenCancel">塔を選び直す</button></div>';
     showModal(h);
     document.getElementById('tenCancel').addEventListener('click', function(){ closeModal(); resolve(null); });
@@ -435,5 +459,35 @@ function pickMeiEffect(slot){
     document.querySelectorAll('[data-mei]').forEach(function(b){
       b.addEventListener('click', function(){ closeModal(); resolve(items[parseInt(b.getAttribute('data-mei'), 10)].kind); });
     });
+  });
+}
+
+/* 風：引いた3個から、手に置く1個を選ぶ */
+function chooseKazeTile(tiles){
+  return new Promise(function(resolve){
+    let h = '<h3 class="serif">奥義「風」：手に置く駒を選ぶ</h3>';
+    h += '<p>雷山から引いた3個です。手に置く1個を選んでください。残りの2個は表向きで雷山の上に戻します。</p><div class="pick-list">';
+    tiles.forEach(function(x, i){ h += '<button type="button" class="tile-btn" data-kaze="' + i + '">' + tileHtml(x, 'clickable', { ntid:true }) + '</button>'; });
+    h += '</div>';
+    showModal(h);
+    const pk = document.querySelector('#modalRoot [data-peekbtn]'); if(pk) pk.remove();
+    document.querySelectorAll('[data-kaze]').forEach(function(b){
+      b.addEventListener('click', function(){ closeModal(); resolve(parseInt(b.getAttribute('data-kaze'), 10)); });
+    });
+  });
+}
+/* 凛：公開した塔と引いた駒、結果を見せる（あなた・AIどちらが発した時も） */
+function showRinReveal(actor, gi, tiles, s, x, win){
+  return new Promise(function(resolve){
+    const p = P(actor);
+    let h = '<h3 class="serif">奥義「凛」：' + esc(p.name) + 'の桜門' + (gi+1) + 'の塔</h3>';
+    h += '<div class="rin-draw"><div class="big-gate"><div class="big-stack">';
+    for(let i = tiles.length - 1; i >= 0; i--) h += tileHtml(tiles[i], '', { ntid:true });
+    h += '</div><div class="bg-info">' + esc(s.role) + '・' + s.pts + '点</div></div>';
+    h += '<div><p class="sub">雷山から引いた駒</p>' + tileHtml(x, 'big', { ntid:true }) + '</div></div>';
+    h += '<p class="wa-result">' + (win ? '音無なので解放：<b class="wa-plus">' + (s.pts + 2) + '点</b>（役' + s.pts + '点＋2点）' : '言霊なので<b class="wa-minus">0点</b>。塔の駒は全て峡谷へ置きます。') + '</p>';
+    h += '<div class="btn-row"><button type="button" class="btn primary" id="rinOk">閉じる</button></div>';
+    showModal(h);
+    document.getElementById('rinOk').addEventListener('click', function(){ closeModal(); resolve(); });
   });
 }

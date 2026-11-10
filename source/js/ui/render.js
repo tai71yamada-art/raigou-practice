@@ -12,6 +12,8 @@ function tileHtml(t, extra, opts){
   const tid = (opts && opts.ntid) ? '' : ' data-tid="' + t.id + '"';
   return '<div class="tile ' + t.kind + (t.ougi ? ' ougi' : '') + (extra ? ' ' + extra : '') + '"' + tid + '><span class="w">' + t.w + '</span>' + esc(tileLabel(t)) + '</div>';
 }
+/* 相手の内駒：涼で表になった駒は表向き、それ以外は裏向き */
+function oppInnerHtml(t, extra, opts){ return isOpenTile(t) ? tileHtml(t, 'open-face' + (extra ? ' ' + extra : ''), opts) : backHtml((opts && opts.ntid) ? null : t, extra); }
 function backHtml(t, extra){
   if(typeof t === 'string'){ extra = t; t = null; }
   const tid = t ? ' data-tid="' + t.id + '"' : '';
@@ -69,6 +71,10 @@ function render(){
   if(UI.chipSlot !== null && UI.chipSlot !== undefined && (G.turn !== 0 || G.phase !== 'act' || G.busy)) closeHandChips();
   const prevRects = captureRects();
   document.getElementById('deckNum').textContent = G.deck.length;
+  { const db = document.getElementById('deckBtn'); let od = document.getElementById('deckOpen');
+    const top = (typeof deckOpenTop === 'function' && G.deck) ? deckOpenTop() : [];
+    if(db && !od && top.length){ od = document.createElement('small'); od.id = 'deckOpen'; od.className = 'deck-open'; db.appendChild(od); }
+    if(od){ od.textContent = top.length ? '上：' + top.map(tileLabel).join('・') : ''; od.hidden = !top.length; } }
   { const db = document.getElementById('deckBtn'); if(db) db.classList.toggle('low', G.deck.length <= 10); }
   const cn = document.getElementById('canyonNum');
   if(cn){
@@ -201,7 +207,7 @@ function zoneMainHtml(pi){
   function handHtml(s){
     const t = p.hand[s];
     let inner = '';
-    if(t) inner = isHuman ? tileHtml(t, 'clickable') : backHtml(t);
+    if(t) inner = isHuman ? tileHtml(t, 'clickable' + (isOpenTile(t) ? ' open-face' : '')) : oppInnerHtml(t);
     else inner = '<span class="body-count">空</span>';
     const label = handLabel(s);
     const slot = isHuman
@@ -212,9 +218,9 @@ function zoneMainHtml(pi){
   // 体内（縦一列：body配列は重い順で index0 が一番重いので、column-reverse で一番下に表示する）
   let body = '<div class="body-wrap"><span class="ib-label">体内<small>下ほど重い</small></span><div class="body-col">';
   if(isHuman){
-    p.body.forEach(function(t, idx){ body += '<div data-body="' + pi + ':' + idx + '">' + tileHtml(t, 'clickable') + '</div>'; });
+    p.body.forEach(function(t, idx){ body += '<div data-body="' + pi + ':' + idx + '">' + tileHtml(t, 'clickable' + (isOpenTile(t) ? ' open-face' : '')) + '</div>'; });
   } else {
-    p.body.forEach(function(t, idx){ body += '<div data-body="' + pi + ':' + idx + '">' + backHtml(t, aiNew && aiNew.has(t.id) ? 'is-new' : '') + '</div>'; });
+    p.body.forEach(function(t, idx){ body += '<div data-body="' + pi + ':' + idx + '">' + oppInnerHtml(t, aiNew && aiNew.has(t.id) ? 'is-new' : '') + '</div>'; });
   }
   if(!p.body.length) body += '<span class="body-count">（なし）</span>';
   body += '</div></div>';

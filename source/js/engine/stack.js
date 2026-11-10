@@ -13,7 +13,11 @@ async function primStack(actor, handSlot, gi){
   markActed(p, handSlot);
   p.gates[gi].push(t);
   VIEW.sfx('stack');
-  if(p.isAI){
+  const wasOpen = isOpenTile(t);
+  if(G.openIds) G.openIds.delete(t.id);   // 涼で表になった駒は、積むと裏向きに戻る
+  if(p.isAI && wasOpen){
+    log(p.name + 'は表向きの「' + tileLabel(t) + '」を桜門' + (gi+1) + 'の塔に積みました（' + p.gates[gi].length + '段）。');
+  } else if(p.isAI){
     log(p.name + 'は桜門' + (gi+1) + 'の塔に駒を積みました（' + p.gates[gi].length + '段）。');
   } else {
     log(p.name + 'は「' + tileLabel(t) + '」を桜門' + (gi+1) + 'に積みました（' + p.gates[gi].length + '段）。');

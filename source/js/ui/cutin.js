@@ -35,7 +35,10 @@ async function playCutIn(name, actorPi){
     '楼':['OUGI','塔を好きな順番に積み直す（一発奥義）'],
     '幻':['OUGI','除外された駒を自分の内駒にする'],
     '鳴':['OUGI','言霊1つと同じ効果を適用する'],
-    '赫':['OUGI','次の手番は全員の「現」が0個']
+    '赫':['OUGI','次の手番は全員の「現」が0個'],
+    '涼':['OUGI','全員の内駒を表向きにする'],
+    '風':['OUGI','雷山から3個引き、1個を手に置く'],
+    '凛':['OUGI','塔を公開し、雷山の駒で役の点数が決まる']
   };
   const info = INFO[name] || ['KOTODAMA',''];
   const whoText = actor ? esc(actor.name) + (name === '雷神化' ? '' : (ougiByName(name) ? ' の奥義' : ' の言霊')) : '';
