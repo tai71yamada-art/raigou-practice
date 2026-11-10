@@ -1,6 +1,7 @@
 /* ================= 結果画面 ================= */
 function showResult(winner, detail){
   BGM.stop();
+  if(STORY_BATTLE.active){ G.statsSaved = true; STORY_BATTLE.onResult(winner); }   // ストーリーの対戦は戦績に入れない
   recordStats(winner);
   if(winner === 0) JINGLE.play('win');
   else if(winner === 1) JINGLE.play('lose');
@@ -9,15 +10,15 @@ function showResult(winner, detail){
   if(rsEl) rsEl.setAttribute('data-res', winner === 0 ? 'win' : (winner === 1 ? 'lose' : 'draw'));
   const rhImg = document.getElementById('resultHeroImg'), heroSrc = document.querySelector('.hero-img');
   if(rhImg){
-    const want = winner === 0 ? RESULT_IMG_WIN : (winner === 1 ? RESULT_IMG_LOSE : ((charaAssets(startHouse) || {}).hero || ''));
+    const want = winner === 0 ? RESULT_IMG_WIN : (winner === 1 ? RESULT_IMG_LOSE : ((charaAssets(meChara()) || {}).hero || ''));
     if(want && rhImg.getAttribute('src') !== want) rhImg.setAttribute('src', want);
   }
   const rEn = document.getElementById('resultEn'), rBig = document.getElementById('resultBig');
   if(rEn) rEn.textContent = winner === 0 ? 'VICTORY' : (winner === 1 ? 'DEFEAT' : 'DRAW');
   if(rBig) rBig.textContent = winner === 0 ? '勝利' : (winner === 1 ? '敗北' : '引分');
   const rhs = document.getElementById('resultHeroScore');
-  if(rhs) rhs.innerHTML = '<b>' + P(0).score + '</b><i>vs</i><em>' + P(1).score + '</em><small>陽玉 · あなた 対 AI ' + esc(diffName()) + '</small>';
-  document.getElementById('resultScore').textContent = '陽玉：あなた ' + P(0).score + '点 ／ AI ' + P(1).score + '点';
+  if(rhs) rhs.innerHTML = '<b>' + P(0).score + '</b><i>vs</i><em>' + P(1).score + '</em><small>陽玉 · あなた 対 ' + (OPP_CHARA ? esc(oppLabel()) : 'AI ' + esc(diffName())) + '</small>';
+  document.getElementById('resultScore').textContent = '陽玉：あなた ' + P(0).score + '点 ／ ' + oppShort() + ' ' + P(1).score + '点';
   document.getElementById('resultDetail').textContent = detail;
   const statsEl = document.getElementById('resultStats');
   if(statsEl){
@@ -28,7 +29,7 @@ function showResult(winner, detail){
     function cell(v, cls){ return '<span class="rt-v' + (cls ? ' ' + cls : '') + '">' + v + '</span>'; }
     const rc = G.raigouCounts || [0,0], pc = G.penaltyCounts || [0,0];
     let sh = '<div class="result-table">';
-    sh += '<div class="rt-row rt-head"><span></span><span class="rt-me">あなた</span><span>AI</span></div>';
+    sh += '<div class="rt-row rt-head"><span></span><span class="rt-me">あなた</span><span>' + esc(oppShort()) + '</span></div>';
     sh += '<div class="rt-row"><span class="rt-k">最終点数</span>' + cell(P(0).score, 'me num') + cell(P(1).score, 'num') + '</div>';
     sh += '<div class="rt-row"><span class="rt-k">作った役</span><span class="rt-v roles">' + rolesOf(0) + '</span><span class="rt-v roles">' + rolesOf(1) + '</span></div>';
     sh += '<div class="rt-row"><span class="rt-k">雷轟解放</span>' + cell(rc[0] || 0, 'me num') + cell(rc[1] || 0, 'num') + '</div>';

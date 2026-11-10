@@ -1,6 +1,18 @@
 /* ================= 画像・動画の共通データ ================= */
 const AI_IMG = '{{asset:img/ai.jpg}}';
 const AI_EYES_IMG = '{{asset:img/ai_eyes.webp}}';   // 奥義解放のカットイン（AI）
+/* 対戦相手の見た目。OPP_CHARA が null ならいつものAI、家ID（'rakura' など）ならそのキャラ（ストーリーの対戦） */
+let OPP_CHARA = null;
+function oppAssets(){ return OPP_CHARA ? charaAssets(OPP_CHARA) : null; }
+function oppAvatar(){ const a = oppAssets(); return a ? a.avatar : AI_IMG; }
+function oppCutImg(){ const a = oppAssets(); return a ? a.cutin : AI_IMG; }
+function oppEyesImg(){ const a = oppAssets(); return a ? (a.eyes || a.cutin) : AI_EYES_IMG; }
+function oppLabel(){ return OPP_CHARA ? charaName(OPP_CHARA) : 'AI'; }
+/* 盤面の見出しなど、狭い所に出す短い名前（「雷藏 くらら」→「くらら」） */
+function oppShort(){ return OPP_CHARA ? oppLabel().split(' ').pop() : 'AI'; }
+function oppHouseId(){ return OPP_CHARA || AI_HOUSE.id; }
+/* 今の自分のキャラ（練習モードは選んだキャラ、ストーリーの対戦はその対戦のキャラ） */
+function meChara(){ return document.documentElement.getAttribute('data-chara') || startHouse; }
 let ME_AVATAR = '';
 let RESULT_IMG_WIN = '';
 const FACE_IMG = { normal:'', act:'', hit:'', joy:'' };

@@ -9,8 +9,12 @@ const HOUSES = [
   { id:'hisetsu', name:'飛雪', yomi:'ひせつ' },
   { id:'tobari',  name:'帳',   yomi:'とばり' }
 ];
+/* ストーリーモードだけで使う家（練習モードのキャラ選択には出さない）。いろはは「赤月」と名乗っている */
+const STORY_HOUSES = [
+  { id:'akatsuki', name:'赤月', yomi:'あかつき' }
+];
 const AI_HOUSE = { id:'ai', name:'', yomi:'' }; // AI専用の家紋（家名なし）
 /* 家ごとのキャラクター（まだいない家は null＝準備中） */
 const HOUSE_CHARA = {{chara_names}};   // build.py が assets/chara/<id>/chara.json の name から作る
-function houseById(id){ if(id === 'ai') return AI_HOUSE; return HOUSES.find(function(h){ return h.id === id; }) || HOUSES[0]; }
+function houseById(id){ if(id === 'ai') return AI_HOUSE; return HOUSES.concat(STORY_HOUSES).find(function(h){ return h.id === id; }) || HOUSES[0]; }
 function houseLabel(id){ const h = houseById(id); return h.name ? h.name + '家' : ''; }

@@ -7,3 +7,4 @@
 70-loading.css
 80-board-fixed.css
 90-one-hand.css
+95-story.css

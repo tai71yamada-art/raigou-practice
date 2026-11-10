@@ -12,13 +12,13 @@ function clearSave(){ try{ localStorage.removeItem(saveKey()); }catch(_){} }
 /* メニューを開いた時に、今保存できるかを表示する */
 function syncSaveButton(){
   const b = document.getElementById('saveQuitBtn'); if(!b) return;
-  const okNow = canSaveGame();
+  const okNow = canSaveGame() && !STORY_BATTLE.active;
   b.disabled = !okNow;
   const note = document.getElementById('saveQuitNote');
   if(note) note.hidden = okNow;
 }
 function saveAndQuit(){
-  if(!canSaveGame()){ syncSaveButton(); return; }
+  if(!canSaveGame() || STORY_BATTLE.active){ syncSaveButton(); return; }
   const logBox = document.getElementById('log');
   const data = {
     app: APP_VERSION, at: Date.now(),

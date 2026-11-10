@@ -62,5 +62,10 @@ ui/save-ui.js
 ui/ougi-ui.js
 ui/guides.js
 ui/view-bind.js
+story/story-data.js
+story/chapters/ch00.js
+story/adv.js
+story/story-battle.js
+story/mode-select.js
 app/stats.js
 app/loading.js

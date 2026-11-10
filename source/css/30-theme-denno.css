@@ -222,4 +222,5 @@
       .house-shigure{ --mon:url("{{asset:img/house/shigure.png}}"); }
       .house-hisetsu{ --mon:url("{{asset:img/house/hisetsu.png}}"); }
       .house-ai{ --mon:url("{{asset:img/house/ai.png}}"); }
+      .house-akatsuki{ --mon:url("{{asset:img/house/akatsuki.png}}"); }
 

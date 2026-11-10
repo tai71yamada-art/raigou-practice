@@ -245,10 +245,10 @@ function renderZone(el, pi){
   const p = P(pi);
   let h = '';
   h += '<div class="pz-head">' +
-       '<img class="pz-avatar" src="' + AI_IMG + '" alt="AIのアバター（青い電子基盤とAIチップ）" width="480" height="480">' +
-       '<span class="pz-name">' + esc(p.name) + (pi===G.sente ? '（先手）' : '（後手）') + '</span>' +
+       '<img class="pz-avatar" src="' + oppAvatar() + '" alt="' + (OPP_CHARA ? esc(oppLabel()) : 'AIのアバター（青い電子基盤とAIチップ）') + '" width="480" height="480">' +
+       '<span class="pz-name">' + esc(OPP_CHARA ? oppShort() : p.name) + (pi===G.sente ? '（先手）' : '（後手）') + '</span>' +
        (G.houses ? '<span class="pz-house">' + houseIconHtml(G.houses[pi]) + esc(houseLabel(G.houses[pi])) + '</span>' : '') +
-       '<span class="pz-lv">AI ' + diffName() + '</span>' +
+       '<span class="pz-lv">' + (OPP_CHARA ? '' : 'AI ') + diffName() + '</span>' +
        '<span class="yogyoku">' + scoreHtmlOf(pi) + '</span></div>';
   h += zoneMainHtml(pi);
   el.innerHTML = h;

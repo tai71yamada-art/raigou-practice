@@ -23,13 +23,14 @@
       im.src = src;
     });
   }
-  const lockBtns = ['startGoBtn','ruleBtn','houseBtn','diffBtn','orderBtn','ougiBtn','aiOugiBtn'].map(function(id){ return document.getElementById(id); }).filter(Boolean);
+  const lockBtns = ['startGoBtn','ruleBtn','houseBtn','diffBtn','orderBtn','ougiBtn','aiOugiBtn','modeStoryBtn','modePracticeBtn','storyNewBtn'].map(function(id){ return document.getElementById(id); }).filter(Boolean);
   lockBtns.forEach(function(b){ b.disabled = true; });
   let finished = false;
   function done(){
     if(finished) return; finished = true;
     set(1, '準備完了');
     lockBtns.forEach(function(b){ b.disabled = false; });
+    if(typeof syncStoryButtons === 'function') syncStoryButtons();
     try{ VS_THUNDER.preload(); JINGLE.preload(); }catch(_){}
     function close(){ if(screen){ screen.classList.add('done'); setTimeout(function(){ screen.hidden = true; }, 450); } }
     /* スマホは、画面を一度タップするまで音を出せない決まりになっている。

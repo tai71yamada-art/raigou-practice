@@ -7,7 +7,7 @@ function applyHouseClasses(){
   [['aiZone', 1], ['humanZone', 0]].forEach(function(pair){
     const el = document.getElementById(pair[0]);
     if(!el || !G.houses) return;
-    HOUSES.concat([AI_HOUSE]).forEach(function(h){ el.classList.remove('house-' + h.id); });
+    HOUSES.concat(STORY_HOUSES, [AI_HOUSE]).forEach(function(h){ el.classList.remove('house-' + h.id); });
     el.classList.add('house-' + G.houses[pair[1]]);
   });
 }

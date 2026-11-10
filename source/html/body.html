@@ -14,11 +14,15 @@
     <div class="wrap">
 
       <!-- ======== start screen ======== -->
-      <div id="startScreen">
+      <div id="startScreen" data-mode="select">
         <div class="screen-card">
           <div class="hero-pop">
                         <img class="hero-img hero-wide hero-art" src="{{asset:img/key-visual.webp}}" alt="雷轟 -天弓- 雷光の中で構える 空晴 ふうか・飛雪 ささめ・八雲 ひなた・時雨 いづな・雷藏 くらら" width="800" height="1026" />
             <div class="start-actions">
+              <button type="button" class="start-act-btn mode-btn in-select" id="modeStoryBtn" disabled><span class="sa-label">STORY</span><span class="sa-value">ストーリーモード</span></button>
+              <button type="button" class="start-act-btn mode-btn in-select" id="modePracticeBtn" disabled><span class="sa-label">PRACTICE</span><span class="sa-value">練習モード</span></button>
+              <button type="button" class="start-act-btn mode-btn in-story" id="storyContBtn" disabled><span class="sa-label">CONTINUE</span><span class="sa-value">続きから</span></button>
+              <button type="button" class="start-act-btn mode-btn in-story" id="storyNewBtn" disabled><span class="sa-label">NEW GAME</span><span class="sa-value">はじめから</span></button>
               <button type="button" class="start-act-btn rule-btn" id="ruleBtn" aria-haspopup="dialog" disabled><span class="sa-label">ルール</span><span class="sa-value" id="ruleBtnVal">基本ルール</span></button>
               <button type="button" class="start-act-btn rule-btn house-btn" id="houseBtn" aria-haspopup="dialog" disabled><span class="sa-label">キャラ</span><span class="sa-value" id="houseBtnVal">雷藏 くらら</span></button>
               <button type="button" class="start-act-btn rule-btn ougi-btn" id="ougiBtn" aria-haspopup="dialog" disabled hidden><span class="sa-label">奥義駒</span><span class="sa-value" id="ougiBtnVal">未選択</span></button>
@@ -27,10 +31,14 @@
               <button type="button" class="start-act-btn" id="orderBtn" aria-haspopup="dialog" disabled><span class="sa-label">先手 / 後手</span><span class="sa-value" id="orderBtnVal">先手</span></button>
               <button type="button" class="start-act-btn start-go" id="startGoBtn" disabled><span class="sa-value">対戦開始</span></button>
               <div class="resume-row" id="resumeRow" hidden><span id="resumeInfo"></span><button type="button" class="resume-discard" id="resumeDiscardBtn">消して新しく始める</button></div>
+              <button type="button" class="mode-back" id="modeBackBtn">◀ モード選択にもどる</button>
             </div>
           </div>
-          <h1 class="serif">雷轟 練習アプリ</h1>
-          <p class="sub">ボードゲーム「雷轟（らいごう）」を1人で練習するための試作品です。あなた対AIの2人戦で遊べます。「キャラ」で選んだキャラクターが、あなたの分身として対戦画面の自分エリアに表示されます。AIは電子基盤のアバターで、AIエリアに表示されます。</p>
+          <h1 class="serif not-practice">雷轟 -天弓-</h1>
+          <p class="sub in-select">遊ぶモードを選んでください。ストーリーモードでは、物語を読みながら対戦を進めます。練習モードでは、キャラクターやAIの強さを選んで、好きなだけ対戦できます。</p>
+          <p class="sub in-story">赤月 いろはの物語です。物語の途中では、どこでもセーブできます。対戦に負けた時は、その対戦をやり直せます。</p>
+          <h1 class="serif in-practice">雷轟 練習アプリ</h1>
+          <p class="sub in-practice">ボードゲーム「雷轟（らいごう）」を1人で練習するための試作品です。あなた対AIの2人戦で遊べます。「キャラ」で選んだキャラクターが、あなたの分身として対戦画面の自分エリアに表示されます。AIは電子基盤のアバターで、AIエリアに表示されます。</p>
           <div class="guide-entry">
             <button class="ghost-btn" id="startKomaBtn" type="button">駒一覧</button>
             <button class="ghost-btn" id="startYakuBtn" type="button">役一覧</button>
@@ -38,6 +46,7 @@
             <button class="ghost-btn" id="startSettingsBtn" type="button">設定</button>
           </div>
 
+          <div class="in-practice">
           <h2 class="serif">遊び方の要点</h2>
           <p>手番は「現 → 選 → 積・発」の順に進みます。現では体内の駒を手に移し（0〜2個）、選では雷山から1〜2個引いて体内か空いている手に置きます。そのあと、手の駒がある限り「積む」「発する」をくり返せます（同じ言霊の「効果」は1手番に1回まで。雷放と雷停は別の効果なので同じ手番に両方使えます。霧でまねた効果も、その効果を使ったことになります）。終わりたくなったら「隠」ボタンを押すと相手の手番に進みます。現と選はポップアップで進めます。</p>
           <p>塔は桜門に6段まで積めます。下の駒より重い駒を積むこともできますが、その塔は「不穏の塔」になり、解放しても得点にならず、持ち主の陽玉が1点減ります。6段目を積むと自動で解放して得点計算します。内駒は体内3個・手2箇所まで（合計5個）です。満杯のまま選を迎えると禁忌で、陽玉が1点減り、内駒を2個捨てて選をやり直します。陽玉が0点になると負けです。</p>
@@ -52,6 +61,7 @@
             <li>勝利ジングル：ビクトリー（Azell）</li>
             <li>敗北ジングル：魔王魂</li>
           </ul>
+          </div>
         </div>
       </div>
 
@@ -149,7 +159,7 @@
           <p class="result-score" id="resultScore"></p>
           <p id="resultDetail"></p>
           <div class="result-stats" id="resultStats"></div>
-          <div class="result-btns"><button class="big-btn" id="rematchBtn" type="button">再戦</button><button class="big-btn sub-btn" id="againBtn" type="button">スタートに戻る</button></div>
+          <div class="result-btns"><button class="big-btn" id="rematchBtn" type="button">再戦</button><button class="big-btn sub-btn" id="againBtn" type="button">スタートに戻る</button><button class="big-btn story-res win" id="storyNextBtn" type="button">物語を進める</button><button class="big-btn story-res lose" id="storyRetryBtn" type="button">もう一度挑む</button><button class="big-btn sub-btn story-res lose" id="storyQuitBtn" type="button">タイトルに戻る</button></div>
         </div>
       </div>
 

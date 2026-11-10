@@ -116,6 +116,12 @@ document.getElementById('startGoBtn').addEventListener('click', function(){ if(h
 function startBattle(){
   if(vsPlaying) return;
   if(startRule === 'kyogi' && startOugi.length !== OUGI_BRING){ openOugiPicker('me', true); return; }
+  launchBattle(startOrder === 'sente', startDiff);
+}
+/* VS の演出のあと、対戦画面に切り替えて対局を始める。opts を省くとスタート画面の設定を使う。
+   ストーリーの対戦は opts（ルール・自分のキャラ・相手の家・奥義駒）を渡す */
+function launchBattle(sente, diff, opts){
+  if(vsPlaying) return;
   JINGLE.stop();
   vsPlaying = true;
   closeStartSetting();
@@ -126,8 +132,10 @@ function startBattle(){
     document.getElementById('resultScreen').hidden = true;
     document.getElementById('gameScreen').hidden = false;
     window.scrollTo(0, 0);
+    if(typeof ADV !== 'undefined') ADV.hide();
     BGM.start();
-    newGame(startOrder === 'sente', startDiff);
+    newGame(sente, diff, opts);
+    const ds = document.getElementById('diffSelect'); if(ds) ds.value = diff;
     /* 幕（VS）の裏で対戦画面に切り替えてから、幕をフェードアウト（スタート画面が一瞬見えないように） */
     requestAnimationFrame(function(){ requestAnimationFrame(function(){
       const root = document.getElementById('vsRoot'), v = root && root.querySelector('.vs');
@@ -166,6 +174,7 @@ function quitGame(){
   document.getElementById('resultScreen').hidden = true;
   document.getElementById('startScreen').hidden = false;
   window.scrollTo(0, 0);
+  if(STORY_BATTLE.active){ STORY_BATTLE.finish(); setStartMode('select'); }   // ストーリーの対戦をやめた時は、モード選択へ
 }
 document.getElementById('restartBtn').addEventListener('click', confirmQuit);
 document.getElementById('againBtn').addEventListener('click', backToStart);

@@ -49,7 +49,7 @@ async function playCutIn(name, actorPi){
   const info = INFO[name] || ['KOTODAMA',''];
   const whoText = actor ? esc(actor.name) + (name === '雷神化' ? '' : (ougiByName(name) ? ' の奥義' : ' の言霊')) : '';
   let img = '';
-  if(actor && isAI) img = '<img class="fsc-img" src="' + AI_IMG + '" alt="">';
+  if(actor && isAI) img = '<img class="fsc-img' + (OPP_CHARA ? ' opp-chara' : '') + '" src="' + oppCutImg() + '" alt="">';
   else if(actor) img = '<img class="fsc-img" src="' + CUT_IMG_ME + '" alt="">';
   const cls = 'fsc' + (isAI ? ' ai' : '') + (actor ? '' : ' noimg');
   root.innerHTML = '<div class="' + cls + '" role="status" aria-label="' + esc((whoText ? whoText + '：' : '') + name) + '">' +
@@ -73,7 +73,7 @@ async function playOugiRelease(pi){
   const p = P(pi), isAI = !!(p && p.isAI);
   if(!isAI) setMeFace('act');
   SFX.play('cut');
-  const still = isAI ? AI_EYES_IMG : EYES_IMG_ME;
+  const still = isAI ? oppEyesImg() : EYES_IMG_ME;
   const media = (!isAI && EYES_VIDEO_ME)
     ? '<video class="our-media" muted playsinline preload="auto" poster="' + still + '" src="' + EYES_VIDEO_ME + '"></video>'
     : '<img class="our-media our-still" src="' + still + '" alt="">';

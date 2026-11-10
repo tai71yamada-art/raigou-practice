@@ -87,7 +87,7 @@ function newGame(humanSente, difficulty, opts){
   G.kn = [new Set(), new Set()]; G.cutHints = [[[],[],[]],[[],[],[]]];
   G.hatsuGame = {}; G.statsSaved = false;
   G.rules = RULESETS[opts.rule] || RULESETS.basic;
-  G.houses = [ opts.house || 'rakura', AI_HOUSE.id ];
+  G.houses = [ opts.house || 'rakura', opts.aiHouse || AI_HOUSE.id ];   // aiHouse＝ストーリーの対戦相手の家（省略するといつものAI）
   VIEW.applyHouseClasses();
   G.actedSlots = new Set(); G.inGassen = false; G.lastTowerEffect = null;
   G.excludedOugi = []; G.kakuZero = [false, false]; G.kakuNow = false; G.openIds = new Set(); G.deckOpen = new Set(); G.homura = null; G.metsu = null; G.fuuSkip = [false, false]; G.fuuNow = false; G.metsuSkip = false; G.ippatsu = false;
