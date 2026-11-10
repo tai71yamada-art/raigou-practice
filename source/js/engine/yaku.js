@@ -97,7 +97,7 @@ function releaseTower(pi, gi, bonus){
     if(G.tally) G.tally.fuon[pi]++;
     if(!G.finishing) VIEW.fxFuonBanner(pi, gi, tiles.slice());
     tiles.forEach(function(t){ G.canyon.push(t); });
-    p.gates[gi] = []; p.seals[gi] = null;
+    p.gates[gi] = []; clearSeal(p, gi);
     if(G.cutHints) G.cutHints[pi][gi] = [];
     log(p.name + 'の桜門' + (gi+1) + 'の塔は不穏の塔でした。得点にならず、' + p.name + 'の陽玉-1点（残り' + p.score + '点）。駒は全部峡谷へ行きます。', 'bad');
     VIEW.render();
@@ -110,7 +110,7 @@ function releaseTower(pi, gi, bonus){
   // 解放時は中身が公開されるので、積まれていた駒も分かる形で残す
   const contents = tiles.map(function(t){ return tileLabel(t); }).join('・');
   const snapshot = tiles.slice();
-  p.gates[gi] = []; p.seals[gi] = null;
+  p.gates[gi] = []; clearSeal(p, gi);
   if(G.cutHints) G.cutHints[pi][gi] = [];
   if(!G.finishing) VIEW.fxReleaseBanner(pi, gi, snapshot, s, pts, (s.pts > 0 ? (bonus||0) : 0));
   if(s.pts > 0){

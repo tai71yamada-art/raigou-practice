@@ -29,7 +29,7 @@ async function joArrange(actor, handSlot, handTiles, pool, counts){
     if(!p.hand[s]){ p.hand[s] = rest.pop(); }
   }
   p.body = rest; sortBody(p);
-  G.canyon.push(joTile);
+  discardUsed(joTile);
   if(actor === 0 && G.hatsuGame) G.hatsuGame['浄'] = (G.hatsuGame['浄'] || 0) + 1;
   G.used.add('浄');
   log(p.name + 'の浄：内駒を' + counts.discardCount + '個捨てて、' + counts.drawnCount + '個引き直し、置き直しました。');

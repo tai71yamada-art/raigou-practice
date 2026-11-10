@@ -57,9 +57,11 @@ async function primRai(actor, handSlot, mode, target){
         const d = P(defender);
         const defTileName = d.hand[def.slot] ? d.hand[def.slot].name : '轟';
         const atkTileName = p.hand[counter.slot] ? p.hand[counter.slot].name : '轟';
+        G.metsuSkip = true;   // 雷轟合戦に入るために使った駒は、滅に蓄積しない
         consumeHand(d, def.slot);
         consumeHand(p, counter.slot);
         consumeHand(p, handSlot);
+        G.metsuSkip = false;
         log(d.name + 'は「' + defTileName + '」を轟として使い、' + p.name + 'も「' + atkTileName + '」を轟として使いました。両者が轟を使ったので雷轟合戦になります。使った雷と轟は全部峡谷へ行きます。', 'score');
         VIEW.render();
         await resolveRaigouBattle({ attacker: actor, defender: defender, mode: mode, originalTarget: { pi: target.pi, gi: target.gi } });
@@ -97,6 +99,7 @@ async function primRai(actor, handSlot, mode, target){
   }
   consumeHand(p, handSlot);
   await applyRaiTo(actor, mode, targetPi, targetGi, goBonus ? 2 : 0, goBonus && mode === 'hou', goBonus ? 'go' : 'rai');
+  if(mode === 'tei') metsuHoldForSeal(targetPi, targetGi, [t]);   // 雷停は効果が終わる時に滅へ数える
   VIEW.render();
   return true;
 }

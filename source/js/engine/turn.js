@@ -7,13 +7,15 @@ function startTurn(){
   G.ippatsu = false;
   G.kakuNow = !!(G.kakuZero && G.kakuZero[G.turn]);   // 奥義「赫」：この手番は0現
   if(G.kakuNow) G.kakuZero[G.turn] = false;
+  G.fuuNow = !!(G.fuuSkip && G.fuuSkip[G.turn]);   // 奥義「封」：この手番は選なし
+  if(G.fuuNow) G.fuuSkip[G.turn] = false;
   G.genMoves = 0;
   G.phase = 'gen';
   G.isFinalTurn = !!(G.endIn !== null && G.finalTurnActive);
   VIEW.resetTurnUi();
   const p = cur();
   // 自分の手番の開始時点で残っている封印は、この手番の終わりに解ける
-  p.seals = p.seals.map(function(s){ return s ? { old:true } : null; });
+  p.seals = p.seals.map(function(s){ return s ? Object.assign({}, s, { old:true }) : null; });
   logTurn(G.turnNo + '手番目：' + p.name + 'の手番' + (G.isFinalTurn ? '（最終手番です・選はありません）' : (G.finalRound ? '（雷山は尽きました。終了の合図が出ています）' : '')));
   VIEW.render();
   if(p.isAI){
@@ -43,8 +45,10 @@ async function endTurn(){
   const actorPi = G.turn;
   // 自分の塔の古い封印を解く
   for(let gi=0; gi<3; gi++){
-    if(p.seals[gi] && p.seals[gi].old){ p.seals[gi] = null; log(p.name + 'の桜門' + (gi+1) + 'の塔の封印が解けました。', 'sys'); }
+    if(p.seals[gi] && p.seals[gi].old){ clearSeal(p, gi); log(p.name + 'の桜門' + (gi+1) + 'の塔の封印が解けました。', 'sys'); }
   }
+  if(G.over) return;
+  if(typeof metsuCheck === 'function') await metsuCheck(actorPi);   // 奥義「滅」：この手番の処理が全部終わってから
   if(G.over) return;
   // 「隠」の宣言：プレイヤーが隠ボタンを押した時も、AIが手番終了を選んだ時も、
   // 中央に「隠」のカットインを出してから次の手番へ移る

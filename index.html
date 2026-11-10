@@ -1458,6 +1458,14 @@
       @keyframes burnGlow{ 50%{ box-shadow:0 0 0 2px #ffb03a, 0 0 22px rgba(255,140,40,.85); } }
       .gl-fire{ color:#fff; background:#e5501e; border-radius:4px; padding:0 4px; font-weight:bold; margin-right:2px; }
       .ho-zone{ min-height:58px; border:1px dashed #555; border-radius:8px; padding:6px; display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+      /* 競技雷轟：奥義用のスペース（効果が続いている奥義を出す。何も無い時は詰める） */
+      .actionbar.ougi-space{ height:auto; max-height:66px; overflow-y:auto; padding:5px 10px; }
+      .actionbar.ougi-space.empty{ display:none; }
+      .os-item{ font-size:.74rem; line-height:1.45; }
+      .os-item small{ color:var(--sub, #aaa); margin-left:4px; }
+      .os-tag{ display:inline-block; min-width:1.6em; text-align:center; font-weight:bold; border-radius:4px; padding:0 4px; margin-right:6px; background:#555; color:#fff; }
+      .os-tag.os-metsu{ background:#6b2fb3; }
+      .os-tag.os-fire{ background:#e5501e; }
 </style>
   </head>
   <body>
@@ -1711,6 +1719,8 @@ const VIEW = {
   /* 演出（終わるまで待つものは Promise を返す） */
   playCutIn: function(name, actorPi){ return Promise.resolve(); },
   playOugiRelease: function(pi){ return Promise.resolve(); },
+  chooseMetsuTower: function(owner, turnPi, gis){ return Promise.resolve(gis[0]); },
+  showKamiReveal: function(){ return Promise.resolve(); },
   arrangeHo: function(pi, tiles, hc){ return Promise.resolve(null); },
   showRinReveal: function(){ return Promise.resolve(); },
   showWaReveal: function(pi, gi, tiles, sum, delta){ return Promise.resolve(); },
@@ -1965,7 +1975,7 @@ function newGame(humanSente, difficulty, opts){
   G.houses = [ opts.house || 'rakura', AI_HOUSE.id ];
   VIEW.applyHouseClasses();
   G.actedSlots = new Set(); G.inGassen = false; G.lastTowerEffect = null;
-  G.excludedOugi = []; G.kakuZero = [false, false]; G.kakuNow = false; G.openIds = new Set(); G.deckOpen = new Set(); G.homura = null; G.ippatsu = false;
+  G.excludedOugi = []; G.kakuZero = [false, false]; G.kakuNow = false; G.openIds = new Set(); G.deckOpen = new Set(); G.homura = null; G.metsu = null; G.fuuSkip = [false, false]; G.fuuNow = false; G.metsuSkip = false; G.ippatsu = false;
   if(G.rules.ougi) setupOugi(opts.ougi);
   // 初期の体内：先手1枚、後手2枚
   const gote = opp(G.sente);
@@ -2079,7 +2089,7 @@ function releaseTower(pi, gi, bonus){
     if(G.tally) G.tally.fuon[pi]++;
     if(!G.finishing) VIEW.fxFuonBanner(pi, gi, tiles.slice());
     tiles.forEach(function(t){ G.canyon.push(t); });
-    p.gates[gi] = []; p.seals[gi] = null;
+    p.gates[gi] = []; clearSeal(p, gi);
     if(G.cutHints) G.cutHints[pi][gi] = [];
     log(p.name + 'の桜門' + (gi+1) + 'の塔は不穏の塔でした。得点にならず、' + p.name + 'の陽玉-1点（残り' + p.score + '点）。駒は全部峡谷へ行きます。', 'bad');
     VIEW.render();
@@ -2092,7 +2102,7 @@ function releaseTower(pi, gi, bonus){
   // 解放時は中身が公開されるので、積まれていた駒も分かる形で残す
   const contents = tiles.map(function(t){ return tileLabel(t); }).join('・');
   const snapshot = tiles.slice();
-  p.gates[gi] = []; p.seals[gi] = null;
+  p.gates[gi] = []; clearSeal(p, gi);
   if(G.cutHints) G.cutHints[pi][gi] = [];
   if(!G.finishing) VIEW.fxReleaseBanner(pi, gi, snapshot, s, pts, (s.pts > 0 ? (bonus||0) : 0));
   if(s.pts > 0){
@@ -2146,13 +2156,15 @@ function startTurn(){
   G.ippatsu = false;
   G.kakuNow = !!(G.kakuZero && G.kakuZero[G.turn]);   // 奥義「赫」：この手番は0現
   if(G.kakuNow) G.kakuZero[G.turn] = false;
+  G.fuuNow = !!(G.fuuSkip && G.fuuSkip[G.turn]);   // 奥義「封」：この手番は選なし
+  if(G.fuuNow) G.fuuSkip[G.turn] = false;
   G.genMoves = 0;
   G.phase = 'gen';
   G.isFinalTurn = !!(G.endIn !== null && G.finalTurnActive);
   VIEW.resetTurnUi();
   const p = cur();
   // 自分の手番の開始時点で残っている封印は、この手番の終わりに解ける
-  p.seals = p.seals.map(function(s){ return s ? { old:true } : null; });
+  p.seals = p.seals.map(function(s){ return s ? Object.assign({}, s, { old:true }) : null; });
   logTurn(G.turnNo + '手番目：' + p.name + 'の手番' + (G.isFinalTurn ? '（最終手番です・選はありません）' : (G.finalRound ? '（雷山は尽きました。終了の合図が出ています）' : '')));
   VIEW.render();
   if(p.isAI){
@@ -2182,8 +2194,10 @@ async function endTurn(){
   const actorPi = G.turn;
   // 自分の塔の古い封印を解く
   for(let gi=0; gi<3; gi++){
-    if(p.seals[gi] && p.seals[gi].old){ p.seals[gi] = null; log(p.name + 'の桜門' + (gi+1) + 'の塔の封印が解けました。', 'sys'); }
+    if(p.seals[gi] && p.seals[gi].old){ clearSeal(p, gi); log(p.name + 'の桜門' + (gi+1) + 'の塔の封印が解けました。', 'sys'); }
   }
+  if(G.over) return;
+  if(typeof metsuCheck === 'function') await metsuCheck(actorPi);   // 奥義「滅」：この手番の処理が全部終わってから
   if(G.over) return;
   // 「隠」の宣言：プレイヤーが隠ボタンを押した時も、AIが手番終了を選んだ時も、
   // 中央に「隠」のカットインを出してから次の手番へ移る
@@ -2325,8 +2339,33 @@ function consumeHand(p, slot){
   const t = p.hand[slot]; p.hand[slot] = null;
   if(t) markActed(p, slot);
   if(t && G.players && p === P(0) && G.hatsuGame) G.hatsuGame[t.name] = (G.hatsuGame[t.name] || 0) + 1;
-  if(t) G.canyon.push(t);
+  if(t) discardUsed(t);
   return t;
+}
+/* 効果を適用した言霊の行き先。滅が効果を続けている間は峡谷へ行かず、滅の横に蓄積する
+   （奥義駒は蓄積しない。雷轟合戦中・合戦に入るために使った駒も蓄積しない） */
+function discardUsed(t){
+  if(G.metsu && !t.ougi && !G.inGassen && !G.metsuSkip){ G.metsu.stack.push(t); return 'metsu'; }
+  G.canyon.push(t); return 'canyon';
+}
+/* 封印を外す。滅の間に雷停で使った駒（封印に預けた駒）は、効果が終わったこの時に滅へ蓄積（滅が無ければ峡谷へ） */
+function clearSeal(p, gi){
+  const s = p.seals[gi];
+  p.seals[gi] = null;
+  if(s && s.held && s.held.length){
+    s.held.forEach(function(t){ if(G.metsu && !t.ougi) G.metsu.stack.push(t); else G.canyon.push(t); });
+    if(G.metsu) log('雷停の効果が終わったので、使った「' + s.held.map(tileLabel).join('」「') + '」を滅の横に蓄積しました（蓄積の重さ ' + metsuSum() + '）。', 'sys');
+  }
+}
+function metsuSum(){ return G.metsu ? G.metsu.stack.reduce(function(a, t){ return a + t.w; }, 0) : 0; }
+/* 雷停に使った駒が滅の蓄積に入っていたら、封印に預け直す（効果が終わる時に数える） */
+function metsuHoldForSeal(pi, gi, tiles){
+  if(!G.metsu || !P(pi).seals[gi]) return;
+  const s = P(pi).seals[gi];
+  tiles.forEach(function(t){
+    const k = t ? G.metsu.stack.indexOf(t) : -1;
+    if(k >= 0){ G.metsu.stack.splice(k, 1); (s.held = s.held || []).push(t); }
+  });
 }
 function isRaiLike(t){ return t && t.kind==='gen' && (t.name==='雷' || t.name==='霧' || t.name==='鳴'); }
 function isGoLike(t){ return t && t.kind==='gen' && (t.name==='轟' || t.name==='霧' || t.name==='鳴'); }
@@ -2556,9 +2595,11 @@ async function primRai(actor, handSlot, mode, target){
         const d = P(defender);
         const defTileName = d.hand[def.slot] ? d.hand[def.slot].name : '轟';
         const atkTileName = p.hand[counter.slot] ? p.hand[counter.slot].name : '轟';
+        G.metsuSkip = true;   // 雷轟合戦に入るために使った駒は、滅に蓄積しない
         consumeHand(d, def.slot);
         consumeHand(p, counter.slot);
         consumeHand(p, handSlot);
+        G.metsuSkip = false;
         log(d.name + 'は「' + defTileName + '」を轟として使い、' + p.name + 'も「' + atkTileName + '」を轟として使いました。両者が轟を使ったので雷轟合戦になります。使った雷と轟は全部峡谷へ行きます。', 'score');
         VIEW.render();
         await resolveRaigouBattle({ attacker: actor, defender: defender, mode: mode, originalTarget: { pi: target.pi, gi: target.gi } });
@@ -2596,6 +2637,7 @@ async function primRai(actor, handSlot, mode, target){
   }
   consumeHand(p, handSlot);
   await applyRaiTo(actor, mode, targetPi, targetGi, goBonus ? 2 : 0, goBonus && mode === 'hou', goBonus ? 'go' : 'rai');
+  if(mode === 'tei') metsuHoldForSeal(targetPi, targetGi, [t]);   // 雷停は効果が終わる時に滅へ数える
   VIEW.render();
   return true;
 }
@@ -2773,9 +2815,11 @@ async function primRaigou(actor, handSlot, gi, partnerSlotOpt, modeOpt){
     const d = P(defender);
     const defTileName = d.hand[resp.slot] ? d.hand[resp.slot].name : '轟';
     log(p.name + (mode === 'hou' ? 'の雷轟解放：' : 'の雷＋轟（雷停）：') + pairLabel + 'を合わせて、自分の桜門' + (gi+1) + 'の塔を' + (mode === 'hou' ? '解放' : '封印') + 'しようとしました。', 'sys');
+    G.metsuSkip = true;   // 雷轟合戦に入るために使った駒は、滅に蓄積しない
     consumeHand(p, handSlot);
     consumeHand(p, goSlot);
     consumeHand(d, resp.slot);
+    G.metsuSkip = false;
     log(d.name + 'は「' + defTileName + '」を轟として使って受けました。両者が轟を使ったので雷轟合戦になります。使った雷と轟は全部峡谷へ行きます。', 'score');
     VIEW.render();
     await resolveRaigouBattle({ attacker: actor, defender: defender, mode: mode, originalTarget: { pi: actor, gi: gi } });
@@ -2783,10 +2827,12 @@ async function primRaigou(actor, handSlot, gi, partnerSlotOpt, modeOpt){
     return true;
   }
   if(mode === 'tei'){
+    const usedPair = [p.hand[handSlot], p.hand[goSlot]];
     consumeHand(p, handSlot);
     consumeHand(p, goSlot);
     onTowerEffect({ source:'go', mode:'tei', pi: actor, gi: gi, actor: actor });
     p.seals[gi] = { old:false };
+    metsuHoldForSeal(actor, gi, usedPair);
     log(p.name + 'の雷＋轟（雷停）：' + pairLabel + 'を合わせて、自分の桜門' + (gi+1) + 'の塔を封印しました（' + p.name + 'の次の手番が終わるまで）。', 'score');
     VIEW.render();
     await VIEW.fxSealFx(actor, gi);
@@ -2953,7 +2999,7 @@ async function joArrange(actor, handSlot, handTiles, pool, counts){
     if(!p.hand[s]){ p.hand[s] = rest.pop(); }
   }
   p.body = rest; sortBody(p);
-  G.canyon.push(joTile);
+  discardUsed(joTile);
   if(actor === 0 && G.hatsuGame) G.hatsuGame['浄'] = (G.hatsuGame['浄'] || 0) + 1;
   G.used.add('浄');
   log(p.name + 'の浄：内駒を' + counts.discardCount + '個捨てて、' + counts.drawnCount + '個引き直し、置き直しました。');
@@ -2968,7 +3014,7 @@ async function joArrange(actor, handSlot, handTiles, pool, counts){
    ・奥義駒はすべて重さ9の言霊。発したら峡谷へ行く。陣で防げるのは雷・蛇・斬だけなので、奥義は防げない。
    効果を作った奥義駒は ougi-data.js の implemented を true にする（選択画面に出るのは true の駒だけ）。 */
 const OUGI_BRING = 2;   // 持ち込む奥義駒の数
-['覇','天','啓','和','禅','楼','幻','鳴','赫','涼','風','凛','鳳','焔','姫'].forEach(function(n){ const o = ougiByName(n); if(o) o.implemented = true; });
+['覇','天','啓','和','禅','楼','幻','鳴','赫','涼','風','凛','鳳','焔','姫','滅','封','神'].forEach(function(n){ const o = ougiByName(n); if(o) o.implemented = true; });
 
 function ougiReadyList(){ return OUGI_DATA.filter(function(o){ return o.implemented && !o.kyogiBanned; }); }
 /* 奥義駒は自分と相手で重ならないのが決まり。ただし作り終えた駒が4種類そろうまでは、重なりを認める */
@@ -3071,7 +3117,12 @@ function ougiUsable(pi, slot){
   if(t.name === '幻') return genAvailable().length ? '' : '除外された駒がありません（奥義駒は選べません）';
   if(t.name === '鳴' || t.name === '赫' || t.name === '涼') return '';
   if(t.name === '風') return G.deck.length >= 3 ? '' : '雷山の駒が3個未満です';
-  if(t.name === '鳳') return '';
+  if(t.name === '鳳' || t.name === '封') return '';
+  if(t.name === '滅') return canPlayPersistent() ? '' : 'ほかの持続奥義が効果を続けているので発せません';
+  if(t.name === '神'){
+    if(G.actedSlots && G.actedSlots.size) return '一発奥義：この手番にほかの駒を積・発したあとは発せません';
+    return kamiTargets(pi).length ? '' : '対象にできる相手の塔がありません（封印中の塔は選べません）';
+  }
   if(t.name === '焔'){
     if(G.actedSlots && G.actedSlots.size) return '一発奥義：この手番にほかの駒を積・発したあとは発せません';
     return homuraTargets().length ? '' : '対象にできる塔がありません（封印中の塔は選べません）';
@@ -3152,7 +3203,7 @@ async function primKei(actor, slot, tpi, gi, k, part, destGi){
   const n = tower.length, lower = tower.slice(0, k), upper = tower.slice(k);
   if(part === 'bottom'){ q.gates[gi] = upper; q.gates[destGi] = lower; }
   else { q.gates[gi] = lower; q.gates[destGi] = upper; }
-  q.seals[destGi] = null;
+  clearSeal(q, destGi);
   if(G.cutHints){ G.cutHints[tpi][gi] = []; G.cutHints[tpi][destGi] = []; }
   consumeHand(p, slot);
   log(p.name + 'の奥義「啓」：' + q.name + 'の桜門' + (gi+1) + 'の塔（' + n + '段）を下' + k + '段と上' + (n - k) + '段に分け、' +
@@ -3178,7 +3229,7 @@ async function primWa(actor, slot, gi){
   G.used.add('和');
   await VIEW.playCutIn('和', actor);
   const snap = tiles.slice(), r = waResult(snap);
-  p.gates[gi] = []; p.seals[gi] = null;
+  p.gates[gi] = []; clearSeal(p, gi);
   if(G.cutHints) G.cutHints[actor][gi] = [];
   snap.forEach(function(x){ if(G.kn){ G.kn[0].add(x.id); G.kn[1].add(x.id); } });
   consumeHand(p, slot);
@@ -3386,7 +3437,7 @@ async function primRin(actor, slot, gi){
   if(win) releaseTower(actor, gi, 2);
   else {
     snap.forEach(function(y){ G.canyon.push(y); });
-    p.gates[gi] = []; p.seals[gi] = null;
+    p.gates[gi] = []; clearSeal(p, gi);
     if(G.cutHints) G.cutHints[actor][gi] = [];
   }
   await VIEW.render();
@@ -3498,6 +3549,108 @@ async function primHime(actor, slot, bodyIdx){
   if(p.isAI) log(p.name + 'の奥義「姫」：' + q.name + 'の体内の駒を1つ取り、' + handLabel(slot) + 'に置きました。姫は' + q.name + 'の体内へ移りました。', 'bad');
   else log(p.name + 'の奥義「姫」：' + q.name + 'の体内から「' + tileLabel(x) + '」を取り、' + handLabel(slot) + 'に置きました。姫は' + q.name + 'の体内へ移りました。', 'score');
   if(actor !== 0) VIEW.setMeFace('hit');
+  await VIEW.render();
+  return true;
+}
+
+/* ================= 滅・封・神 ================= */
+/* ---- 滅（持続奥義）：頭に表向きで置く。以後、効果を適用した言霊（奥義駒を除く）は峡谷へ行かず滅の横に蓄積する
+   （responses.js の discardUsed）。雷停に使った駒は、封印が解けて効果が終わる時に数える（clearSeal）。
+   蓄積の重さが10以上になった手番の最後に、滅を置いた人が手番プレイヤーの塔を1つ選び、全て峡谷へ。
+   そのあと滅と蓄積した駒を峡谷へ置き、効果が終わる。 G.metsu = {owner, stack} ---- */
+const METSU_LIMIT = 10;
+async function primMetsu(actor, slot){
+  const p = P(actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '滅' || !canPlayPersistent()) return false;
+  G.used.add('滅');
+  await VIEW.playCutIn('滅', actor);
+  p.hand[slot] = null;
+  markActed(p, slot);
+  if(G.players && p === P(0) && G.hatsuGame) G.hatsuGame['滅'] = (G.hatsuGame['滅'] || 0) + 1;
+  p.head = t;
+  G.metsu = { owner:actor, stack:[] };
+  log(p.name + 'の奥義「滅」：滅を頭に置きました（持続奥義）。これから効果を適用した言霊は峡谷へ行かず、滅の横に蓄積します。蓄積の重さが' + METSU_LIMIT + '以上になった手番の最後に、' + p.name + 'がその手番の人の塔を1つ選んで、全て峡谷へ置きます。', 'bad');
+  await VIEW.render();
+  return true;
+}
+/* 手番の最後（隠の前・封印が解けた後）に呼ぶ。choose(ownerPi, turnPi, gis) は塔の番号を返す */
+async function metsuCheck(turnPi){
+  if(!G.metsu || metsuSum() < METSU_LIMIT) return;
+  const owner = G.metsu.owner, op = P(owner), tp = P(turnPi);
+  const gis = [0,1,2].filter(function(gi){ return tp.gates[gi].length > 0; });
+  log('滅：蓄積の重さが' + metsuSum() + 'になりました。滅の効果が発動します。', 'bad');
+  if(gis.length){
+    let gi = op.isAI ? aiMetsuPick(owner, turnPi, gis) : await VIEW.chooseMetsuTower(owner, turnPi, gis);
+    if(gis.indexOf(gi) < 0) gi = gis[0];
+    const tw = tp.gates[gi];
+    tw.forEach(function(x){ G.canyon.push(x); });
+    log('滅：' + op.name + 'が' + tp.name + 'の桜門' + (gi+1) + 'の塔（' + tw.map(tileLabel).join('・') + '）を選び、全て峡谷へ置きました。', 'bad');
+    tp.gates[gi] = []; clearSeal(tp, gi);
+    if(G.cutHints) G.cutHints[turnPi][gi] = [];
+    homuraCheck();
+    if(turnPi === 0 && owner !== 0) VIEW.setMeFace('hit');
+  } else {
+    log('滅：' + tp.name + 'には塔が無いので、壊す塔はありません。', 'sys');
+  }
+  G.metsu.stack.forEach(function(x){ G.canyon.push(x); });
+  if(op.head){ G.canyon.push(op.head); op.head = null; }
+  G.metsu = null;
+  log('滅：滅と蓄積した駒を峡谷へ置き、効果が終わりました。', 'sys');
+  await VIEW.render();
+}
+/* ---- 封：自分以外のプレイヤーは、次の手番に「選」を行えない ---- */
+async function primFuu(actor, slot){
+  const p = P(actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '封') return false;
+  G.used.add('封');
+  await VIEW.playCutIn('封', actor);
+  consumeHand(p, slot);
+  if(!G.fuuSkip) G.fuuSkip = [false, false];
+  G.fuuSkip[1 - actor] = true;
+  log(p.name + 'の奥義「封」：' + P(1 - actor).name + 'は、次の手番に「選」を行えません。', 'bad');
+  if(actor !== 0) VIEW.setMeFace('hit');
+  await VIEW.render();
+  return true;
+}
+/* ---- 神（一発奥義）：相手の塔を1つ選び、役名（桜花・蓮花・奇数蓮花・偶数蓮花）を宣言して公開する。
+   的中なら塔を奪って自分の完成役にする（点数は基礎点のみ）。外れなら、塔の持ち主が塔の解放を処理する ---- */
+const KAMI_ROLES = ['桜花', '蓮花', '奇数蓮花', '偶数蓮花'];
+function kamiTargets(pi){
+  const q = P(1 - pi), out = [];
+  for(let gi = 0; gi < 3; gi++) if(q.gates[gi].length && !q.seals[gi]) out.push({ pi:1 - pi, gi:gi });
+  return out;
+}
+function kamiRoleOf(tiles){
+  if(isFuon(tiles)) return null;
+  const r = roleOf(tiles.map(function(t){ return t.w; }));
+  return r ? r : null;
+}
+async function primKami(actor, slot, gi, roleName){
+  const p = P(actor), qi = 1 - actor, q = P(qi), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '神' || KAMI_ROLES.indexOf(roleName) < 0) return false;
+  if(!kamiTargets(actor).some(function(x){ return x.gi === gi; })) return false;
+  G.used.add('神');
+  await VIEW.playCutIn('神', actor);
+  consumeHand(p, slot);
+  G.ippatsu = true;
+  const tiles = q.gates[gi].slice();
+  tiles.forEach(function(x){ if(G.kn){ G.kn[0].add(x.id); G.kn[1].add(x.id); } });
+  const r = kamiRoleOf(tiles), hit = !!(r && r.name === roleName);
+  log(p.name + 'の奥義「神」：' + q.name + 'の桜門' + (gi+1) + 'の塔を「' + roleName + '」と宣言して公開しました（' + tiles.map(tileLabel).join('・') + '）。' +
+      (hit ? '的中です。' : '外れです。'), hit ? 'score' : 'sys');
+  await VIEW.showKamiReveal(actor, gi, tiles, roleName, r ? r.name : '', hit);
+  if(hit){
+    p.score += r.base;
+    G.released.push({ pi:actor, gi:-1, role:r.name, pts:r.base, base:r.base, height:0, dye:0, bonus:0, tiles:tiles, kami:true });
+    q.gates[gi] = []; clearSeal(q, gi);
+    if(G.cutHints) G.cutHints[qi][gi] = [];
+    log(p.name + 'は塔を奪い、自分の完成役「' + r.name + '」にしました（基礎点のみ ' + r.base + '点） → ' + p.name + 'の陽玉は' + p.score + '点。', 'score');
+    if(qi === 0) VIEW.setMeFace('hit');
+  } else {
+    log(q.name + 'が桜門' + (gi+1) + 'の塔の解放を処理します。', 'sys');
+    releaseTower(qi, gi, 0);
+  }
+  homuraCheck();
   await VIEW.render();
   return true;
 }
@@ -3892,7 +4045,8 @@ async function aiTurn(){
   await VIEW.render();
   await VIEW.aiWait(350);
   if(G.over) return;
-  if(!(G.finalRound || G.deck.length === 0)){
+  if(G.fuuNow && !(G.finalRound || G.deck.length === 0)){ log('AIは奥義「封」の効果で、この手番は「選」を行えません。', 'sys'); VIEW.aiBand('選：奥義「封」の効果で選なし'); }
+  if(!(G.finalRound || G.deck.length === 0 || G.fuuNow)){
     if(totalInner(p) >= innerCap(p)){
       const ok = await applyTaboo(me, function(pp){ return Promise.resolve(withSeat(me, function(){ return aiPickDiscards(pp); })); });
       if(!ok || G.over) return;
@@ -4562,7 +4716,7 @@ async function aiExecute(act, me){
 /* ================= AI：競技雷轟（開・奥義） ================= */
 /* 開するかどうか。雷神化は手が1つ増えて内駒の上限も増えるので、開できる時は基本的にすぐ開く。
    Lv.1・Lv.2 はときどき見送る */
-const AI_OUGI_LIKE = { '覇':1.0, '天':0.9, '啓':0.8, '和':0.6, '禅':0.7, '楼':0.9, '幻':0.6, '鳴':0.85, '赫':0.4, '涼':0.35, '風':0.7, '凛':0.7, '鳳':0.5, '焔':0.6, '姫':0.6 };
+const AI_OUGI_LIKE = { '覇':1.0, '天':0.9, '啓':0.8, '和':0.6, '禅':0.7, '楼':0.9, '幻':0.6, '鳴':0.85, '赫':0.4, '涼':0.35, '風':0.7, '凛':0.7, '鳳':0.5, '焔':0.6, '姫':0.6, '滅':0.5, '封':0.5, '神':0.6 };
 function aiPickKai(){
   const p = P(AI_SEAT);
   if(!canKai(AI_SEAT)) return null;
@@ -4701,6 +4855,20 @@ function aiOugiActs(p, s, t, dp, avail, acts){
     const b = aiHimePick(me);
     const g = b.v - 0.4;   // 相手に姫（奥義駒）を渡す分を引く
     if(g > 0.15) acts.push({ kind:'ougi', name:'姫', hand:s, idx:b.idx, gain:g });
+  } else if(t.name === '滅'){
+    const len = function(pp){ return pp.gates.reduce(function(a, g){ return a + g.length; }, 0); };
+    const g = 0.4 + 0.15 * (len(P(1 - me)) - len(p));
+    if(g > 0.5) acts.push({ kind:'ougi', name:'滅', hand:s, gain:g });
+  } else if(t.name === '封'){
+    if(G.finalRound || G.deck.length < 2) return;
+    const q = P(1 - me);
+    const free = innerCap(q) - totalInner(q);
+    const g = 0.2 + 0.25 * Math.min(2, free);
+    if(g > 0.5) acts.push({ kind:'ougi', name:'封', hand:s, gain:g });
+  } else if(t.name === '神'){
+    if(G.actedSlots && G.actedSlots.size) return;
+    const b = aiKamiBest(me);
+    if(b && b.gain > 0.3) acts.push({ kind:'ougi', name:'神', hand:s, gi:b.gi, role:b.role, gain:b.gain });
   }
 }
 /* 鳳：受け取る駒と渡す駒の価値の差 */
@@ -4742,6 +4910,29 @@ function aiHimePick(me){
     const unk = q.body.findIndex(function(x){ return !aiKnows(x, me); });
     if(unk >= 0 && best.v <= 0.55) best = { idx:unk, v:0.55 };
   }
+  return best;
+}
+/* 滅：手番の人の塔から、壊す塔を選ぶ（相手なら一番価値の高い塔、自分なら一番低い塔） */
+function aiMetsuPick(owner, turnPi, gis){
+  const tp = P(turnPi);
+  const val = function(gi){ const tw = tp.gates[gi]; return (tw.length >= 3 && !isFuon(tw) ? scoreTower(tw).pts : 0) + 0.4 * tw.length; };
+  const sorted = gis.slice().sort(function(a, b){ return val(b) - val(a); });
+  return owner === turnPi ? sorted[sorted.length - 1] : sorted[0];
+}
+/* 神：中身が全部分かっている相手の塔なら、結果が確実に読める */
+function aiKamiBest(me){
+  const q = P(1 - me);
+  let best = null;
+  kamiTargets(me).forEach(function(x){
+    const tw = q.gates[x.gi];
+    if(!tw.every(function(t){ return aiKnows(t, me); })) return;
+    const r = kamiRoleOf(tw), loss = (tw.length >= 3 && !isFuon(tw) ? scoreTower(tw).pts : 0) + 0.3 * tw.length;
+    let g, role;
+    if(r){ g = r.base + loss - 0.8; role = r.name; }
+    else if(isFuon(tw)){ g = 1 + 0.3 * tw.length - 0.8; role = '桜花'; }
+    else { g = 0.3 * tw.length - 0.8; role = '桜花'; }
+    if(!best || g > best.gain) best = { gi:x.gi, role:role, gain:g };
+  });
   return best;
 }
 /* 凛：雷山の一番上が音無である見込み（表向きなら確実に分かる） */
@@ -4801,6 +4992,9 @@ function aiOugiText(act){
   if(act.name === '啓') return '奥義「啓」：' + who(act.target.pi) + 'の桜門' + (act.target.gi + 1) + 'の塔を2つに分ける';
   if(act.name === '和') return '奥義「和」：自分の桜門' + (act.gi + 1) + 'の塔を公開する';
   if(act.name === '禅') return '奥義「禅」：体内の最も重い駒を移し合う';
+  if(act.name === '滅') return '奥義「滅」：滅を頭に置く（持続奥義）';
+  if(act.name === '封') return '奥義「封」：相手の次の手番の選を止める';
+  if(act.name === '神') return '奥義「神」：あなたの桜門' + (act.gi + 1) + 'の塔を「' + act.role + '」と宣言する';
   if(act.name === '鳳') return '奥義「鳳」：内駒を全て入れ替える';
   if(act.name === '焔') return '奥義「焔」：' + who(act.pi) + 'の桜門' + (act.gi + 1) + 'を炎上させる';
   if(act.name === '姫') return '奥義「姫」：相手の体内の駒と入れ替わる';
@@ -4838,6 +5032,9 @@ async function aiOugiExecute(act, me){
   });
   else if(act.name === '凛') await primRin(me, act.hand, act.gi);
   else if(act.name === '鳳') await primHo(me, act.hand, hoArrangeFor);
+  else if(act.name === '滅') await primMetsu(me, act.hand);
+  else if(act.name === '封') await primFuu(me, act.hand);
+  else if(act.name === '神') await primKami(me, act.hand, act.gi, act.role);
   else if(act.name === '焔') await primHomura(me, act.hand, act.pi, act.gi);
   else if(act.name === '姫') await primHime(me, act.hand, act.idx);
 }
@@ -4867,7 +5064,7 @@ function aiSpeedFactor(){ const o = AI_SPEEDS.find(function(x){ return x.v === S
 function aiWait(ms){ return wait(ms * aiSpeedFactor()); }
 
 /* ================= アプリのバージョン（build.py が source/VERSION の値を入れる） ================= */
-const APP_VERSION = 'v52';   // build.py が VERSION ファイルの値を入れる（sw.js も同じ値になる）
+const APP_VERSION = 'v53';   // build.py が VERSION ファイルの値を入れる（sw.js も同じ値になる）
 /* ================= 効果音（音声ファイルは使わず、その場で合成） ================= */
 const SFX = (function(){
   let ctx = null;
@@ -5518,7 +5715,9 @@ function renderActionbar(){
   const bar = document.getElementById('actionbar');
   if(!bar) return;
   if(!G.started) { bar.innerHTML=''; return; }
-  if(G.over){ bar.innerHTML = '<p class="hint">対戦は終わりました。結果の画面を見てください。</p>'; return; }
+  if(G.over){ bar.innerHTML = '<p class="hint">対戦は終わりました。結果の画面を見てください。</p>'; bar.classList.remove('ougi-space','empty'); return; }
+  if(rulesNow().ougi){ renderOugiSpace(bar); return; }
+  bar.classList.remove('ougi-space','empty');
   if(G.turn !== 0 || G.busy){
     bar.innerHTML = '<p class="hint">' + (G.isFinalTurn ? '<b>最終手番です（選はありません）。</b>' : '') + 'AIが考えています…（駒の動きとログで追えます）</p>';
     return;
@@ -5532,6 +5731,28 @@ function renderActionbar(){
     return;
   }
   bar.innerHTML = '<p class="hint">' + (G.isFinalTurn ? '<b>最終手番です（選はありません）。</b>' : '') + '<b>積・発</b>：手の駒をタップすると、その場で使える操作が出ます。桜門をタップすると塔を拡大できます。終わる時は右下の<b>「隠」</b>を押したまま上にスワイプしてください。</p>';
+}
+
+/* 競技雷轟：手順の説明の代わりに、効果が続いている奥義を出す。何も無い時は詰める */
+function renderOugiSpace(bar){
+  const items = [];
+  const who = function(pi){ return pi === 0 ? 'あなた' : 'AI'; };
+  if(G.isFinalTurn) items.push('<span class="os-tag">最終手番</span>この手番は選がありません。');
+  if(G.metsu){
+    const held = [];
+    [0,1].forEach(function(pi){ P(pi).seals.forEach(function(s){ if(s && s.held) s.held.forEach(function(t){ held.push(t); }); }); });
+    items.push('<span class="os-tag os-metsu">滅</span>' + who(G.metsu.owner) + 'の持続奥義　蓄積 <b>' + metsuSum() + '／' + METSU_LIMIT + '</b>' +
+      (G.metsu.stack.length ? '：' + G.metsu.stack.map(tileLabel).join('・') : '') +
+      (held.length ? '<small>（雷停中：' + held.map(tileLabel).join('・') + '）</small>' : ''));
+  }
+  if(G.homura) items.push('<span class="os-tag os-fire">焔</span>' + who(G.homura.pi) + 'の桜門' + (G.homura.gi + 1) + 'が炎上中（' + P(G.homura.pi).gates[G.homura.gi].length + '段）');
+  if(G.fuuNow) items.push('<span class="os-tag">封</span>この手番、' + who(G.turn) + 'は選を行えません。');
+  if(G.fuuSkip) [0,1].forEach(function(pi){ if(G.fuuSkip[pi]) items.push('<span class="os-tag">封</span>次の手番、' + who(pi) + 'は選を行えません。'); });
+  if(G.kakuNow) items.push('<span class="os-tag">赫</span>この手番、' + who(G.turn) + 'は0現です。');
+  if(G.kakuZero) [0,1].forEach(function(pi){ if(G.kakuZero[pi]) items.push('<span class="os-tag">赫</span>次の手番、' + who(pi) + 'は0現です。'); });
+  bar.classList.add('ougi-space');
+  bar.classList.toggle('empty', !items.length);
+  bar.innerHTML = items.map(function(x){ return '<div class="os-item">' + x + '</div>'; }).join('');
 }
 /* ================= ポップアップ共通部品 ================= */
 function confirmYesNo(title, text){
@@ -5848,7 +6069,8 @@ async function humanFlow(){
   }
   await humanGenPopup();
   if(G.over){ G.acting = false; render(); return; }
-  if(!(G.finalRound || G.deck.length === 0)){
+  if(G.fuuNow && !(G.finalRound || G.deck.length === 0)) log('あなたは奥義「封」の効果で、この手番は「選」を行えません。', 'sys');
+  if(!(G.finalRound || G.deck.length === 0 || G.fuuNow)){
     G.phase = 'sen'; render();
     if(totalInner(P(0)) >= innerCap(P(0))){
       const ok = await applyTaboo(0, humanTabooChoice);
@@ -6749,7 +6971,10 @@ async function playCutIn(name, actorPi){
     '凛':['OUGI','塔を公開し、雷山の駒で役の点数が決まる'],
     '鳳':['OUGI','相手と内駒を全て入れ替える'],
     '焔':['OUGI','桜門を炎上させる（一発奥義）'],
-    '姫':['OUGI','相手の体内の駒と入れ替わる']
+    '姫':['OUGI','相手の体内の駒と入れ替わる'],
+    '滅':['OUGI','使った言霊を蓄積する（持続奥義）'],
+    '封':['OUGI','相手は次の手番に「選」を行えない'],
+    '神':['OUGI','役名を当てて塔を奪う（一発奥義）']
   };
   const info = INFO[name] || ['KOTODAMA',''];
   const whoText = actor ? esc(actor.name) + (name === '雷神化' ? '' : (ougiByName(name) ? ' の奥義' : ' の言霊')) : '';
@@ -8022,6 +8247,28 @@ async function runOugiFlow(slot){
     await primKaku(0, slot);
     return;
   }
+  if(t.name === '滅'){
+    const ok = await confirmYesNo('奥義「滅」の確認', '滅を頭に置きます（<b>持続奥義</b>）。これから、あなたもAIも、効果を適用した言霊は峡谷へ行かず滅の横に蓄積します（奥義駒は蓄積しません。雷停に使った駒は、封印が解けた時に数えます）。<br>蓄積の重さが<b>10以上</b>になった手番の最後に、<b>あなたがその手番の人の塔を1つ選び</b>、全て峡谷へ置きます。そのあと滅と蓄積した駒を峡谷へ置き、効果が終わります。');
+    if(!ok) return;
+    await primMetsu(0, slot);
+    return;
+  }
+  if(t.name === '封'){
+    const ok = await confirmYesNo('奥義「封」の確認', 'AIは、<b>次の手番に「選」を行えなくなります</b>（雷山から駒を引けません）。');
+    if(!ok) return;
+    await primFuu(0, slot);
+    return;
+  }
+  if(t.name === '神'){
+    while(true){
+      const tgt = await pickTowerModal('奥義「神」：公開する塔を選ぶ', 'AIの塔を1つ選び、役名を宣言して公開します（封印中の塔は選べません）。<b>的中なら塔を奪ってあなたの完成役</b>にします（基礎点のみ）。<b>外れならAIがその塔を解放します</b>。<b>一発奥義</b>なので、この手番はほかの駒を積・発できなくなります。', kamiTargets(0));
+      if(!tgt) return;
+      const role = await pickKamiRole(tgt.gi);
+      if(!role) continue;
+      await primKami(0, slot, tgt.gi, role);
+      return;
+    }
+  }
   if(t.name === '鳳'){
     const ok = await confirmYesNo('奥義「鳳」の確認', 'あなたとAIの<b>内駒（体内と手）を全て入れ替えます</b>。入れ替えた駒は両方に分かります。そのあと、受け取った駒を体内か手の好きな場所に置き直します（AIも同じように置き直します）。');
     if(!ok) return;
@@ -8371,6 +8618,44 @@ function pickHimeModal(){
     });
   });
 }
+
+/* 神：宣言する役名を選ぶ */
+function pickKamiRole(gi){
+  return new Promise(function(resolve){
+    const n = P(1).gates[gi].length;
+    let h = '<h3 class="serif">奥義「神」：役名を宣言する</h3>';
+    h += '<p>AIの桜門' + (gi+1) + 'の塔（' + n + '段）が、どの役になっているかを宣言します。</p><div class="act-list">';
+    KAMI_ROLES.forEach(function(r){ h += '<button type="button" class="btn act-btn" data-kami="' + r + '">「' + r + '」と宣言する</button>'; });
+    h += '</div><div class="btn-row"><button type="button" class="btn" id="kamiNo">塔を選び直す</button></div>';
+    showModal(h);
+    document.getElementById('kamiNo').addEventListener('click', function(){ closeModal(); resolve(null); });
+    document.querySelectorAll('[data-kami]').forEach(function(b){ b.addEventListener('click', function(){ closeModal(); resolve(b.getAttribute('data-kami')); }); });
+  });
+}
+/* 神：公開した塔と結果を見せる（あなた・AIどちらが発した時も） */
+function showKamiReveal(actor, gi, tiles, declared, actual, hit){
+  return new Promise(function(resolve){
+    const p = P(actor), q = P(1 - actor);
+    let h = '<h3 class="serif">奥義「神」：' + esc(q.name) + 'の桜門' + (gi+1) + 'の塔</h3>';
+    h += '<div class="modal-center"><div class="big-gate"><div class="big-stack">';
+    for(let i = tiles.length - 1; i >= 0; i--) h += tileHtml(tiles[i], '', { ntid:true });
+    h += '</div></div></div>';
+    h += '<p class="wa-result">宣言：<b>' + esc(declared) + '</b> ／ 実際：<b>' + (actual ? esc(actual) : (isFuon(tiles) ? '不穏の塔' : '役なし')) + '</b></p>';
+    h += '<p class="wa-result">' + (hit ? '<b class="wa-plus">的中</b>：' + esc(p.name) + 'が塔を奪い、完成役にします。' : '<b class="wa-minus">外れ</b>：' + esc(q.name) + 'がこの塔を解放します。') + '</p>';
+    h += '<div class="btn-row"><button type="button" class="btn primary" id="kamiOk">閉じる</button></div>';
+    showModal(h);
+    document.getElementById('kamiOk').addEventListener('click', function(){ closeModal(); resolve(); });
+  });
+}
+/* 滅：あなたが滅を置いた時、手番の人の塔から壊す塔を選ぶ（必ず1つ選ぶ） */
+async function chooseMetsuTowerUI(owner, turnPi, gis){
+  while(true){
+    const pr = pickTowerModal('奥義「滅」：壊す塔を選ぶ', '蓄積の重さが10以上になりました。' + (turnPi === 0 ? 'あなた' : 'AI') + 'の塔を1つ選んでください。選んだ塔の駒は全て峡谷へ置きます。', gis.map(function(gi){ return { pi:turnPi, gi:gi }; }));
+    const cancel = document.getElementById('ptCancel'); if(cancel) cancel.remove();   // 必ず1つ選ぶので「やめる」は出さない
+    const tgt = await pr;
+    if(tgt) return tgt.gi;
+  }
+}
 /* ================= 駒一覧・役一覧（ガイド） =================
    サマリー（言霊の効果・役の種類・駒の個数・駒の重さ）をもとにした資料画面。
    対戦状態には一切触れないので、試合中・スタート画面のどちらからでも開閉できる。 */
@@ -8630,6 +8915,8 @@ Object.assign(VIEW, {
   setMeFace: function(){ return setMeFace.apply(null, arguments); },
   playCutIn: function(){ return playCutIn.apply(null, arguments); },
   playOugiRelease: function(){ return playOugiRelease.apply(null, arguments); },
+  chooseMetsuTower: function(){ return chooseMetsuTowerUI.apply(null, arguments); },
+  showKamiReveal: function(){ return showKamiReveal.apply(null, arguments); },
   arrangeHo: function(){ return arrangeHo.apply(null, arguments); },
   showRinReveal: function(){ return showRinReveal.apply(null, arguments); },
   showWaReveal: function(){ return showWaReveal.apply(null, arguments); },

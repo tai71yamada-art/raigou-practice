@@ -1,7 +1,7 @@
 /* ================= AI：競技雷轟（開・奥義） ================= */
 /* 開するかどうか。雷神化は手が1つ増えて内駒の上限も増えるので、開できる時は基本的にすぐ開く。
    Lv.1・Lv.2 はときどき見送る */
-const AI_OUGI_LIKE = { '覇':1.0, '天':0.9, '啓':0.8, '和':0.6, '禅':0.7, '楼':0.9, '幻':0.6, '鳴':0.85, '赫':0.4, '涼':0.35, '風':0.7, '凛':0.7, '鳳':0.5, '焔':0.6, '姫':0.6 };
+const AI_OUGI_LIKE = { '覇':1.0, '天':0.9, '啓':0.8, '和':0.6, '禅':0.7, '楼':0.9, '幻':0.6, '鳴':0.85, '赫':0.4, '涼':0.35, '風':0.7, '凛':0.7, '鳳':0.5, '焔':0.6, '姫':0.6, '滅':0.5, '封':0.5, '神':0.6 };
 function aiPickKai(){
   const p = P(AI_SEAT);
   if(!canKai(AI_SEAT)) return null;
@@ -140,6 +140,20 @@ function aiOugiActs(p, s, t, dp, avail, acts){
     const b = aiHimePick(me);
     const g = b.v - 0.4;   // 相手に姫（奥義駒）を渡す分を引く
     if(g > 0.15) acts.push({ kind:'ougi', name:'姫', hand:s, idx:b.idx, gain:g });
+  } else if(t.name === '滅'){
+    const len = function(pp){ return pp.gates.reduce(function(a, g){ return a + g.length; }, 0); };
+    const g = 0.4 + 0.15 * (len(P(1 - me)) - len(p));
+    if(g > 0.5) acts.push({ kind:'ougi', name:'滅', hand:s, gain:g });
+  } else if(t.name === '封'){
+    if(G.finalRound || G.deck.length < 2) return;
+    const q = P(1 - me);
+    const free = innerCap(q) - totalInner(q);
+    const g = 0.2 + 0.25 * Math.min(2, free);
+    if(g > 0.5) acts.push({ kind:'ougi', name:'封', hand:s, gain:g });
+  } else if(t.name === '神'){
+    if(G.actedSlots && G.actedSlots.size) return;
+    const b = aiKamiBest(me);
+    if(b && b.gain > 0.3) acts.push({ kind:'ougi', name:'神', hand:s, gi:b.gi, role:b.role, gain:b.gain });
   }
 }
 /* 鳳：受け取る駒と渡す駒の価値の差 */
@@ -181,6 +195,29 @@ function aiHimePick(me){
     const unk = q.body.findIndex(function(x){ return !aiKnows(x, me); });
     if(unk >= 0 && best.v <= 0.55) best = { idx:unk, v:0.55 };
   }
+  return best;
+}
+/* 滅：手番の人の塔から、壊す塔を選ぶ（相手なら一番価値の高い塔、自分なら一番低い塔） */
+function aiMetsuPick(owner, turnPi, gis){
+  const tp = P(turnPi);
+  const val = function(gi){ const tw = tp.gates[gi]; return (tw.length >= 3 && !isFuon(tw) ? scoreTower(tw).pts : 0) + 0.4 * tw.length; };
+  const sorted = gis.slice().sort(function(a, b){ return val(b) - val(a); });
+  return owner === turnPi ? sorted[sorted.length - 1] : sorted[0];
+}
+/* 神：中身が全部分かっている相手の塔なら、結果が確実に読める */
+function aiKamiBest(me){
+  const q = P(1 - me);
+  let best = null;
+  kamiTargets(me).forEach(function(x){
+    const tw = q.gates[x.gi];
+    if(!tw.every(function(t){ return aiKnows(t, me); })) return;
+    const r = kamiRoleOf(tw), loss = (tw.length >= 3 && !isFuon(tw) ? scoreTower(tw).pts : 0) + 0.3 * tw.length;
+    let g, role;
+    if(r){ g = r.base + loss - 0.8; role = r.name; }
+    else if(isFuon(tw)){ g = 1 + 0.3 * tw.length - 0.8; role = '桜花'; }
+    else { g = 0.3 * tw.length - 0.8; role = '桜花'; }
+    if(!best || g > best.gain) best = { gi:x.gi, role:role, gain:g };
+  });
   return best;
 }
 /* 凛：雷山の一番上が音無である見込み（表向きなら確実に分かる） */
@@ -240,6 +277,9 @@ function aiOugiText(act){
   if(act.name === '啓') return '奥義「啓」：' + who(act.target.pi) + 'の桜門' + (act.target.gi + 1) + 'の塔を2つに分ける';
   if(act.name === '和') return '奥義「和」：自分の桜門' + (act.gi + 1) + 'の塔を公開する';
   if(act.name === '禅') return '奥義「禅」：体内の最も重い駒を移し合う';
+  if(act.name === '滅') return '奥義「滅」：滅を頭に置く（持続奥義）';
+  if(act.name === '封') return '奥義「封」：相手の次の手番の選を止める';
+  if(act.name === '神') return '奥義「神」：あなたの桜門' + (act.gi + 1) + 'の塔を「' + act.role + '」と宣言する';
   if(act.name === '鳳') return '奥義「鳳」：内駒を全て入れ替える';
   if(act.name === '焔') return '奥義「焔」：' + who(act.pi) + 'の桜門' + (act.gi + 1) + 'を炎上させる';
   if(act.name === '姫') return '奥義「姫」：相手の体内の駒と入れ替わる';
@@ -277,6 +317,9 @@ async function aiOugiExecute(act, me){
   });
   else if(act.name === '凛') await primRin(me, act.hand, act.gi);
   else if(act.name === '鳳') await primHo(me, act.hand, hoArrangeFor);
+  else if(act.name === '滅') await primMetsu(me, act.hand);
+  else if(act.name === '封') await primFuu(me, act.hand);
+  else if(act.name === '神') await primKami(me, act.hand, act.gi, act.role);
   else if(act.name === '焔') await primHomura(me, act.hand, act.pi, act.gi);
   else if(act.name === '姫') await primHime(me, act.hand, act.idx);
 }

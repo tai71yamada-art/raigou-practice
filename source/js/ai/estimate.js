@@ -157,7 +157,8 @@ async function aiTurn(){
   await VIEW.render();
   await VIEW.aiWait(350);
   if(G.over) return;
-  if(!(G.finalRound || G.deck.length === 0)){
+  if(G.fuuNow && !(G.finalRound || G.deck.length === 0)){ log('AIは奥義「封」の効果で、この手番は「選」を行えません。', 'sys'); VIEW.aiBand('選：奥義「封」の効果で選なし'); }
+  if(!(G.finalRound || G.deck.length === 0 || G.fuuNow)){
     if(totalInner(p) >= innerCap(p)){
       const ok = await applyTaboo(me, function(pp){ return Promise.resolve(withSeat(me, function(){ return aiPickDiscards(pp); })); });
       if(!ok || G.over) return;

@@ -9,7 +9,8 @@ async function humanFlow(){
   }
   await humanGenPopup();
   if(G.over){ G.acting = false; render(); return; }
-  if(!(G.finalRound || G.deck.length === 0)){
+  if(G.fuuNow && !(G.finalRound || G.deck.length === 0)) log('あなたは奥義「封」の効果で、この手番は「選」を行えません。', 'sys');
+  if(!(G.finalRound || G.deck.length === 0 || G.fuuNow)){
     G.phase = 'sen'; render();
     if(totalInner(P(0)) >= innerCap(P(0))){
       const ok = await applyTaboo(0, humanTabooChoice);

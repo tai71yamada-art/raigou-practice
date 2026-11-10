@@ -28,9 +28,11 @@ async function primRaigou(actor, handSlot, gi, partnerSlotOpt, modeOpt){
     const d = P(defender);
     const defTileName = d.hand[resp.slot] ? d.hand[resp.slot].name : '轟';
     log(p.name + (mode === 'hou' ? 'の雷轟解放：' : 'の雷＋轟（雷停）：') + pairLabel + 'を合わせて、自分の桜門' + (gi+1) + 'の塔を' + (mode === 'hou' ? '解放' : '封印') + 'しようとしました。', 'sys');
+    G.metsuSkip = true;   // 雷轟合戦に入るために使った駒は、滅に蓄積しない
     consumeHand(p, handSlot);
     consumeHand(p, goSlot);
     consumeHand(d, resp.slot);
+    G.metsuSkip = false;
     log(d.name + 'は「' + defTileName + '」を轟として使って受けました。両者が轟を使ったので雷轟合戦になります。使った雷と轟は全部峡谷へ行きます。', 'score');
     VIEW.render();
     await resolveRaigouBattle({ attacker: actor, defender: defender, mode: mode, originalTarget: { pi: actor, gi: gi } });
@@ -38,10 +40,12 @@ async function primRaigou(actor, handSlot, gi, partnerSlotOpt, modeOpt){
     return true;
   }
   if(mode === 'tei'){
+    const usedPair = [p.hand[handSlot], p.hand[goSlot]];
     consumeHand(p, handSlot);
     consumeHand(p, goSlot);
     onTowerEffect({ source:'go', mode:'tei', pi: actor, gi: gi, actor: actor });
     p.seals[gi] = { old:false };
+    metsuHoldForSeal(actor, gi, usedPair);
     log(p.name + 'の雷＋轟（雷停）：' + pairLabel + 'を合わせて、自分の桜門' + (gi+1) + 'の塔を封印しました（' + p.name + 'の次の手番が終わるまで）。', 'score');
     VIEW.render();
     await VIEW.fxSealFx(actor, gi);

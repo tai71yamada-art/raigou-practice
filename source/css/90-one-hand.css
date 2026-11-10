@@ -354,3 +354,11 @@
       @keyframes burnGlow{ 50%{ box-shadow:0 0 0 2px #ffb03a, 0 0 22px rgba(255,140,40,.85); } }
       .gl-fire{ color:#fff; background:#e5501e; border-radius:4px; padding:0 4px; font-weight:bold; margin-right:2px; }
       .ho-zone{ min-height:58px; border:1px dashed #555; border-radius:8px; padding:6px; display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+      /* 競技雷轟：奥義用のスペース（効果が続いている奥義を出す。何も無い時は詰める） */
+      .actionbar.ougi-space{ height:auto; max-height:66px; overflow-y:auto; padding:5px 10px; }
+      .actionbar.ougi-space.empty{ display:none; }
+      .os-item{ font-size:.74rem; line-height:1.45; }
+      .os-item small{ color:var(--sub, #aaa); margin-left:4px; }
+      .os-tag{ display:inline-block; min-width:1.6em; text-align:center; font-weight:bold; border-radius:4px; padding:0 4px; margin-right:6px; background:#555; color:#fff; }
+      .os-tag.os-metsu{ background:#6b2fb3; }
+      .os-tag.os-fire{ background:#e5501e; }

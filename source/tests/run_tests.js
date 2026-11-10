@@ -8,7 +8,7 @@
    3. AI同士の対局：いろいろなレベルで最後まで進むか。毎手番、駒が消えたり増えたりしていないか
    3b. 途中保存：手番の始めで保存して別の場所で戻し、続きが保存しなかった時と全く同じになるか
    4. いつもの対局：決まった乱数で対局した結果が、前回の記録と同じか（意図しない変更の検出）
-   5. 競技雷轟：開・雷神化・奥義（覇・天・啓・和・禅・楼・幻・鳴・赫・涼・風・凛・鳳・焔・姫）の動きと、AI同士の対局での決まりごと */
+   5. 競技雷轟：開・雷神化・奥義（覇・天・啓・和・禅・楼・幻・鳴・赫・涼・風・凛・鳳・焔・姫・滅・封・神）の動きと、AI同士の対局での決まりごと */
 'use strict';
 const fs = require('fs'), path = require('path');
 const H = require('./headless');
@@ -416,9 +416,51 @@ function section(t){ console.log('\n■ ' + t); }
       Y.P(0).hand[0] = Y.mkOugiTile('姫');
       ok(Y.ougiUsable(0, 0) !== '', '姫：相手の体内に駒が無い時は発できない');
     }
+    {
+      const X = fresh();
+      X.P(0).hand = [X.mkOugiTile('滅'), mk(X, '斬')[0]];
+      X.P(1).gates = [mk(X, '六 五 四'), mk(X, '二'), []];
+      await X.primMetsu(0, 0);
+      ok(X.P(0).head && X.P(0).head.name === '滅' && X.G.metsu, '滅：頭に置く（持続奥義）');
+      await X.primZan(0, 1, { pi:1, gi:0, end:'top' });
+      ok(X.metsuSum() === 3 && !X.G.canyon.some(function(t){ return t.name === '斬'; }), '滅：効果を適用した言霊は峡谷へ行かず蓄積する');
+      X.G.metsu.stack.push(mk(X, '浄')[0]);
+      await X.metsuCheck(1);
+      ok(!X.G.metsu && !X.P(0).head && X.P(1).gates.filter(function(g){ return g.length; }).length === 1, '滅：蓄積が10以上になった手番の最後に、手番の人の塔を1つ壊して終わる');
+      const Y = fresh();
+      Y.P(0).hand = [Y.mkOugiTile('滅'), mk(Y, '雷')[0]];
+      Y.P(1).gates = [mk(Y, '六 五 四'), mk(Y, '三'), []];
+      await Y.primMetsu(0, 0);
+      Y.G.metsu.stack.push(mk(Y, '浄')[0]);
+      await Y.primRai(0, 1, 'tei', { pi:1, gi:0 });
+      ok(Y.metsuSum() === 8 && Y.P(1).seals[0] && Y.P(1).seals[0].held.length === 1, '滅：雷停に使った雷は、まだ数えない');
+      Y.P(1).seals[0].old = true;
+      Y.clearSeal(Y.P(1), 0);
+      ok(Y.metsuSum() === 9, '滅：雷停の効果が終わった時に、雷を蓄積する');
+    }
+    {
+      const X = fresh();
+      X.P(0).hand[0] = X.mkOugiTile('封');
+      await X.primFuu(0, 0);
+      ok(X.G.fuuSkip[1] && !X.G.fuuSkip[0], '封：相手の次の手番は選なし');
+    }
+    {
+      const X = fresh();
+      X.P(1).gates = [mk(X, '五 四 三'), mk(X, '六 二'), []];
+      X.P(0).hand[0] = X.mkOugiTile('神');
+      const s0 = X.P(0).score;
+      await X.primKami(0, 0, 0, '蓮花');
+      ok(X.P(0).score === s0 + 1 && X.P(1).gates[0].length === 0 && X.G.released.some(function(r){ return r.pi === 0 && r.kami; }), '神：的中なら塔を奪い、基礎点だけ得る');
+      const Y = fresh();
+      Y.P(1).gates = [mk(Y, '五 四 三'), [], []];
+      Y.P(0).hand[0] = Y.mkOugiTile('神');
+      const s1 = Y.P(0).score, t1 = Y.P(1).score;
+      await Y.primKami(0, 0, 0, '桜花');
+      ok(Y.P(0).score === s1 && Y.P(1).score > t1 && Y.P(1).gates[0].length === 0, '神：外れなら、塔の持ち主がその塔を解放する');
+    }
     /* AI同士の競技雷轟：毎手番、駒の数・塔の高さ・内駒の上限を確かめる */
     const NK = QUICK ? 21 : 84;
-    let kGames = 0, kBad = 0, kFirst = '', kai = 0, hatsu = { '覇':0, '天':0, '啓':0, '和':0, '禅':0, '楼':0, '幻':0, '鳴':0, '赫':0, '涼':0, '風':0, '凛':0, '鳳':0, '焔':0, '姫':0 }, kTurns = 0;
+    let kGames = 0, kBad = 0, kFirst = '', kai = 0, hatsu = { '覇':0, '天':0, '啓':0, '和':0, '禅':0, '楼':0, '幻':0, '鳴':0, '赫':0, '涼':0, '風':0, '凛':0, '鳳':0, '焔':0, '姫':0, '滅':0, '封':0, '神':0 }, kTurns = 0;
     for(let i = 0; i < NK; i++){
       const eng = H.createEngine(3000 + i);
       const G = eng.E.G, P = eng.E.P;
@@ -427,7 +469,7 @@ function section(t){ console.log('\n■ ' + t); }
         if(!G.players || !G.players.length) return;
         const ids = [];
         const add = function(t){ if(t) ids.push(t.id); };
-        G.deck.forEach(add); G.canyon.forEach(add); (G.excludedOugi || []).forEach(add); add(G.excluded); if(G.homura) add(G.homura.tile);
+        G.deck.forEach(add); G.canyon.forEach(add); (G.excludedOugi || []).forEach(add); add(G.excluded); if(G.homura) add(G.homura.tile); if(G.metsu) G.metsu.stack.forEach(add); [0,1].forEach(function(pi){ add(P(pi).head); P(pi).seals.forEach(function(s){ if(s && s.held) s.held.forEach(add); }); });
         G.released.forEach(function(r){ r.tiles.forEach(add); });
         for(let pi = 0; pi < 2; pi++){
           const p = P(pi);

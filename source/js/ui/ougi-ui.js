@@ -210,6 +210,28 @@ async function runOugiFlow(slot){
     await primKaku(0, slot);
     return;
   }
+  if(t.name === '滅'){
+    const ok = await confirmYesNo('奥義「滅」の確認', '滅を頭に置きます（<b>持続奥義</b>）。これから、あなたもAIも、効果を適用した言霊は峡谷へ行かず滅の横に蓄積します（奥義駒は蓄積しません。雷停に使った駒は、封印が解けた時に数えます）。<br>蓄積の重さが<b>10以上</b>になった手番の最後に、<b>あなたがその手番の人の塔を1つ選び</b>、全て峡谷へ置きます。そのあと滅と蓄積した駒を峡谷へ置き、効果が終わります。');
+    if(!ok) return;
+    await primMetsu(0, slot);
+    return;
+  }
+  if(t.name === '封'){
+    const ok = await confirmYesNo('奥義「封」の確認', 'AIは、<b>次の手番に「選」を行えなくなります</b>（雷山から駒を引けません）。');
+    if(!ok) return;
+    await primFuu(0, slot);
+    return;
+  }
+  if(t.name === '神'){
+    while(true){
+      const tgt = await pickTowerModal('奥義「神」：公開する塔を選ぶ', 'AIの塔を1つ選び、役名を宣言して公開します（封印中の塔は選べません）。<b>的中なら塔を奪ってあなたの完成役</b>にします（基礎点のみ）。<b>外れならAIがその塔を解放します</b>。<b>一発奥義</b>なので、この手番はほかの駒を積・発できなくなります。', kamiTargets(0));
+      if(!tgt) return;
+      const role = await pickKamiRole(tgt.gi);
+      if(!role) continue;
+      await primKami(0, slot, tgt.gi, role);
+      return;
+    }
+  }
   if(t.name === '鳳'){
     const ok = await confirmYesNo('奥義「鳳」の確認', 'あなたとAIの<b>内駒（体内と手）を全て入れ替えます</b>。入れ替えた駒は両方に分かります。そのあと、受け取った駒を体内か手の好きな場所に置き直します（AIも同じように置き直します）。');
     if(!ok) return;
@@ -558,4 +580,42 @@ function pickHimeModal(){
       b.addEventListener('click', function(){ closeModal(); resolve(parseInt(b.getAttribute('data-hime'), 10)); });
     });
   });
+}
+
+/* 神：宣言する役名を選ぶ */
+function pickKamiRole(gi){
+  return new Promise(function(resolve){
+    const n = P(1).gates[gi].length;
+    let h = '<h3 class="serif">奥義「神」：役名を宣言する</h3>';
+    h += '<p>AIの桜門' + (gi+1) + 'の塔（' + n + '段）が、どの役になっているかを宣言します。</p><div class="act-list">';
+    KAMI_ROLES.forEach(function(r){ h += '<button type="button" class="btn act-btn" data-kami="' + r + '">「' + r + '」と宣言する</button>'; });
+    h += '</div><div class="btn-row"><button type="button" class="btn" id="kamiNo">塔を選び直す</button></div>';
+    showModal(h);
+    document.getElementById('kamiNo').addEventListener('click', function(){ closeModal(); resolve(null); });
+    document.querySelectorAll('[data-kami]').forEach(function(b){ b.addEventListener('click', function(){ closeModal(); resolve(b.getAttribute('data-kami')); }); });
+  });
+}
+/* 神：公開した塔と結果を見せる（あなた・AIどちらが発した時も） */
+function showKamiReveal(actor, gi, tiles, declared, actual, hit){
+  return new Promise(function(resolve){
+    const p = P(actor), q = P(1 - actor);
+    let h = '<h3 class="serif">奥義「神」：' + esc(q.name) + 'の桜門' + (gi+1) + 'の塔</h3>';
+    h += '<div class="modal-center"><div class="big-gate"><div class="big-stack">';
+    for(let i = tiles.length - 1; i >= 0; i--) h += tileHtml(tiles[i], '', { ntid:true });
+    h += '</div></div></div>';
+    h += '<p class="wa-result">宣言：<b>' + esc(declared) + '</b> ／ 実際：<b>' + (actual ? esc(actual) : (isFuon(tiles) ? '不穏の塔' : '役なし')) + '</b></p>';
+    h += '<p class="wa-result">' + (hit ? '<b class="wa-plus">的中</b>：' + esc(p.name) + 'が塔を奪い、完成役にします。' : '<b class="wa-minus">外れ</b>：' + esc(q.name) + 'がこの塔を解放します。') + '</p>';
+    h += '<div class="btn-row"><button type="button" class="btn primary" id="kamiOk">閉じる</button></div>';
+    showModal(h);
+    document.getElementById('kamiOk').addEventListener('click', function(){ closeModal(); resolve(); });
+  });
+}
+/* 滅：あなたが滅を置いた時、手番の人の塔から壊す塔を選ぶ（必ず1つ選ぶ） */
+async function chooseMetsuTowerUI(owner, turnPi, gis){
+  while(true){
+    const pr = pickTowerModal('奥義「滅」：壊す塔を選ぶ', '蓄積の重さが10以上になりました。' + (turnPi === 0 ? 'あなた' : 'AI') + 'の塔を1つ選んでください。選んだ塔の駒は全て峡谷へ置きます。', gis.map(function(gi){ return { pi:turnPi, gi:gi }; }));
+    const cancel = document.getElementById('ptCancel'); if(cancel) cancel.remove();   // 必ず1つ選ぶので「やめる」は出さない
+    const tgt = await pr;
+    if(tgt) return tgt.gi;
+  }
 }

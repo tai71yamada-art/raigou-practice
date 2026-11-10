@@ -41,7 +41,10 @@ async function playCutIn(name, actorPi){
     '凛':['OUGI','塔を公開し、雷山の駒で役の点数が決まる'],
     '鳳':['OUGI','相手と内駒を全て入れ替える'],
     '焔':['OUGI','桜門を炎上させる（一発奥義）'],
-    '姫':['OUGI','相手の体内の駒と入れ替わる']
+    '姫':['OUGI','相手の体内の駒と入れ替わる'],
+    '滅':['OUGI','使った言霊を蓄積する（持続奥義）'],
+    '封':['OUGI','相手は次の手番に「選」を行えない'],
+    '神':['OUGI','役名を当てて塔を奪う（一発奥義）']
   };
   const info = INFO[name] || ['KOTODAMA',''];
   const whoText = actor ? esc(actor.name) + (name === '雷神化' ? '' : (ougiByName(name) ? ' の奥義' : ' の言霊')) : '';

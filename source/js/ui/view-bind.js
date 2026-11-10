@@ -6,6 +6,8 @@ Object.assign(VIEW, {
   setMeFace: function(){ return setMeFace.apply(null, arguments); },
   playCutIn: function(){ return playCutIn.apply(null, arguments); },
   playOugiRelease: function(){ return playOugiRelease.apply(null, arguments); },
+  chooseMetsuTower: function(){ return chooseMetsuTowerUI.apply(null, arguments); },
+  showKamiReveal: function(){ return showKamiReveal.apply(null, arguments); },
   arrangeHo: function(){ return arrangeHo.apply(null, arguments); },
   showRinReveal: function(){ return showRinReveal.apply(null, arguments); },
   showWaReveal: function(){ return showWaReveal.apply(null, arguments); },

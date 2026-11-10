@@ -7,8 +7,33 @@ function consumeHand(p, slot){
   const t = p.hand[slot]; p.hand[slot] = null;
   if(t) markActed(p, slot);
   if(t && G.players && p === P(0) && G.hatsuGame) G.hatsuGame[t.name] = (G.hatsuGame[t.name] || 0) + 1;
-  if(t) G.canyon.push(t);
+  if(t) discardUsed(t);
   return t;
+}
+/* 効果を適用した言霊の行き先。滅が効果を続けている間は峡谷へ行かず、滅の横に蓄積する
+   （奥義駒は蓄積しない。雷轟合戦中・合戦に入るために使った駒も蓄積しない） */
+function discardUsed(t){
+  if(G.metsu && !t.ougi && !G.inGassen && !G.metsuSkip){ G.metsu.stack.push(t); return 'metsu'; }
+  G.canyon.push(t); return 'canyon';
+}
+/* 封印を外す。滅の間に雷停で使った駒（封印に預けた駒）は、効果が終わったこの時に滅へ蓄積（滅が無ければ峡谷へ） */
+function clearSeal(p, gi){
+  const s = p.seals[gi];
+  p.seals[gi] = null;
+  if(s && s.held && s.held.length){
+    s.held.forEach(function(t){ if(G.metsu && !t.ougi) G.metsu.stack.push(t); else G.canyon.push(t); });
+    if(G.metsu) log('雷停の効果が終わったので、使った「' + s.held.map(tileLabel).join('」「') + '」を滅の横に蓄積しました（蓄積の重さ ' + metsuSum() + '）。', 'sys');
+  }
+}
+function metsuSum(){ return G.metsu ? G.metsu.stack.reduce(function(a, t){ return a + t.w; }, 0) : 0; }
+/* 雷停に使った駒が滅の蓄積に入っていたら、封印に預け直す（効果が終わる時に数える） */
+function metsuHoldForSeal(pi, gi, tiles){
+  if(!G.metsu || !P(pi).seals[gi]) return;
+  const s = P(pi).seals[gi];
+  tiles.forEach(function(t){
+    const k = t ? G.metsu.stack.indexOf(t) : -1;
+    if(k >= 0){ G.metsu.stack.splice(k, 1); (s.held = s.held || []).push(t); }
+  });
 }
 function isRaiLike(t){ return t && t.kind==='gen' && (t.name==='雷' || t.name==='霧' || t.name==='鳴'); }
 function isGoLike(t){ return t && t.kind==='gen' && (t.name==='轟' || t.name==='霧' || t.name==='鳴'); }

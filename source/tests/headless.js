@@ -26,7 +26,7 @@ const ENGINE_CODE = engineFiles().map(function(f){ return fs.readFileSync(path.j
   ' sortBody:sortBody, totalInner:totalInner, innerCap:innerCap, buildDeck:buildDeck,' +
   ' serializeGame:serializeGame, restoreGame:restoreGame, startTurn:function(){ return startTurn(); },' +
   ' getStartTurn:function(){ return startTurn; }, setStartTurn:function(f){ startTurn = f; },' +
-  ' canKai:canKai, doKai:doKai, primHa:primHa, primTen:primTen, primKei:primKei, primWa:primWa, primZen:primZen, primRou:primRou, primGen:primGen, primKaku:primKaku, primRyou:primRyou, primKaze:primKaze, primRin:primRin, primHo:primHo, primHomura:primHomura, primHime:primHime, homuraTick:homuraTick, primZan:primZan, primRai:primRai, mkOugiTile:mkOugiTile, ougiUsable:ougiUsable, ougiReadyList:ougiReadyList,' +
+  ' canKai:canKai, doKai:doKai, primHa:primHa, primTen:primTen, primKei:primKei, primWa:primWa, primZen:primZen, primRou:primRou, primGen:primGen, primKaku:primKaku, primRyou:primRyou, primKaze:primKaze, primRin:primRin, primHo:primHo, primHomura:primHomura, primHime:primHime, primMetsu:primMetsu, primFuu:primFuu, primKami:primKami, metsuCheck:metsuCheck, metsuSum:metsuSum, clearSeal:clearSeal, homuraTick:homuraTick, primZan:primZan, primRai:primRai, mkOugiTile:mkOugiTile, ougiUsable:ougiUsable, ougiReadyList:ougiReadyList,' +
   ' RULESETS:RULESETS, setRaijinka:setRaijinka, canActFromSlot:canActFromSlot, primStack:primStack, drawTiles:drawTiles, isOpenTile:isOpenTile, rinTowers:rinTowers };';
 
 function createEngine(seed){
