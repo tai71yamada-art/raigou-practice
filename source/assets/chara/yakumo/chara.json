@@ -1,0 +1,8 @@
+{
+ "name": "八雲 ひなた",
+ "yomi": "やくも ひなた",
+ "color": "#ff7a3d",
+ "colorSoft": "#ffe0cf",
+ "css": "html[data-chara=\"yakumo\"] #resultScreen[data-res=\"win\"] .result-hero img{ right:-8%; top:64px; height:90%; } html[data-chara=\"yakumo\"] #resultScreen[data-res=\"draw\"] .result-hero img{ right:-12%; }",
+ "cssNote": "勝利の絵は刀を肩にかついで横に広く「勝利」の文字に重なるので小さめに。引き分け（立ち絵）は刀の手が点数の行にかかるので少し右へ"
+}
