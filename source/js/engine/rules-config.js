@@ -24,6 +24,7 @@ function raiPartnerSlot(p, slot){
 }
 /* 積・発に使った手の管理（手番プレイヤーのみ）。手が2か所の基本ルールでは制限にかからない */
 function canActFromSlot(p, slot){
+  if(G.ippatsu && G.players && p === P(G.turn)) return false;   // 一発奥義を発した手番
   if(!G.actedSlots || p !== P(G.turn)) return true;
   return G.actedSlots.has(slot) || G.actedSlots.size < ACT_HAND_MAX;
 }

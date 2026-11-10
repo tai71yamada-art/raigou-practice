@@ -1,7 +1,7 @@
 /* ================= AI：競技雷轟（開・奥義） ================= */
 /* 開するかどうか。雷神化は手が1つ増えて内駒の上限も増えるので、開できる時は基本的にすぐ開く。
    Lv.1・Lv.2 はときどき見送る */
-const AI_OUGI_LIKE = { '覇':1.0, '天':0.9, '啓':0.8 };
+const AI_OUGI_LIKE = { '覇':1.0, '天':0.9, '啓':0.8, '和':0.6, '禅':0.7, '楼':0.9 };
 function aiPickKai(){
   const p = P(AI_SEAT);
   if(!canKai(AI_SEAT)) return null;
@@ -70,17 +70,86 @@ function aiOugiActs(p, s, t, dp, avail, acts){
       }
     });
     if(best && best.gain > 0.7) acts.push(best);
+  } else if(t.name === '和'){
+    /* 重さの合計が11か33の塔だけ（それ以外は陽玉が減る） */
+    waTowers(me).forEach(function(gi){
+      const tw = p.gates[gi], r = waResult(tw);
+      if(r.delta <= 0) return;
+      const g = r.delta - Math.max(0, aiOwnVal(tw, avail)) * 0.8;
+      if(g > 0.6) acts.push({ kind:'ougi', name:'和', hand:s, gi:gi, gain:g });
+    });
+  } else if(t.name === '禅'){
+    const g = aiZenGain(me);
+    if(g > 0.5) acts.push({ kind:'ougi', name:'禅', hand:s, gain:g });
+  } else if(t.name === '楼'){
+    if(G.actedSlots && G.actedSlots.size) return;
+    let best = null;
+    rouTowers(me).forEach(function(gi){
+      const tw = p.gates[gi], base = aiOwnVal(tw, avail);
+      const r = aiBestOrder(tw, avail);
+      const g = r.val - base - 0.8;   // 一発奥義なので、この手番のほかの手をあきらめる分を引く
+      if(!best || g > best.gain) best = { kind:'ougi', name:'楼', hand:s, gi:gi, order:r.order, gain:g };
+    });
+    if(best && best.gain > 0.4) acts.push(best);
   }
+}
+/* 禅で相手に渡す駒と、受け取る駒の見込み */
+function aiZenGain(me){
+  const p = P(me), q = P(1 - me);
+  const give = zenChoices(me).map(function(i){ return p.body[i]; });
+  const giveV = give.length ? Math.min.apply(null, give.map(function(t){ return aiTileDesire(t, p); })) : 0;
+  let recvV = 0;
+  const rc = zenChoices(1 - me);
+  if(rc.length){
+    const known = rc.map(function(i){ return q.body[i]; }).filter(function(t){ return aiKnows(t, me); });
+    recvV = known.length ? Math.max.apply(null, known.map(function(t){ return aiTileDesire(t, p); })) : 0.45;
+  }
+  return recvV - giveV + (rc.length ? 0.25 : 0);   // 相手の一番重い駒を取り上げる分を少し足す
+}
+function aiZenPick(pi, choices){
+  return withSeat(pi, function(){ return aiZenPickRaw(pi, choices); });
+}
+function aiZenPickRaw(pi, choices){
+  const p = P(pi);
+  let best = choices[0], bv = Infinity;
+  choices.forEach(function(i){ const v = aiTileDesire(p.body[i], p); if(v < bv){ bv = v; best = i; } });
+  return best;
+}
+/* 楼：塔の並べ方を全部試して、いちばん価値が高い並び（不穏にならないもの）を探す */
+function aiBestOrder(tw, avail){
+  const n = tw.length, idx = tw.map(function(_, i){ return i; });
+  let best = { val:-Infinity, order:idx.slice() };
+  const seen = {};
+  (function perm(cur, rest){
+    if(!rest.length){
+      const tiles = cur.map(function(i){ return tw[i]; });
+      const key = tiles.map(function(t){ return t.kind + t.name; }).join(',');
+      if(seen[key]) return; seen[key] = 1;
+      if(isFuon(tiles)) return;
+      const v = n >= 6 ? scoreTower(tiles).pts : towerValue(tiles, avail);
+      if(v > best.val) best = { val:v, order:cur.slice() };
+      return;
+    }
+    for(let k = 0; k < rest.length; k++){ cur.push(rest[k]); perm(cur, rest.slice(0, k).concat(rest.slice(k + 1))); cur.pop(); }
+  })([], idx);
+  if(best.val === -Infinity) best.val = -1;
+  return best;
 }
 function aiOugiText(act){
   const who = function(pi){ return pi === AI_SEAT ? '自分' : 'あなた'; };
   if(act.name === '覇') return '奥義「覇」：全ての塔の' + (act.end === 'top' ? '一番上' : '一番下') + 'を捨てる';
   if(act.name === '天') return '奥義「天」：自分の桜門' + (act.gi + 1) + 'の塔の一番上を入れ替える';
   if(act.name === '啓') return '奥義「啓」：' + who(act.target.pi) + 'の桜門' + (act.target.gi + 1) + 'の塔を2つに分ける';
+  if(act.name === '和') return '奥義「和」：自分の桜門' + (act.gi + 1) + 'の塔を公開する';
+  if(act.name === '禅') return '奥義「禅」：体内の最も重い駒を移し合う';
+  if(act.name === '楼') return '奥義「楼」：自分の桜門' + (act.gi + 1) + 'の塔を積み直す';
   return '奥義';
 }
 async function aiOugiExecute(act, me){
   if(act.name === '覇') await primHa(me, act.hand, act.end);
   else if(act.name === '天') await primTen(me, act.hand, act.gi, act.loc);
   else if(act.name === '啓') await primKei(me, act.hand, act.target.pi, act.target.gi, act.k, act.part, act.dest);
+  else if(act.name === '和') await primWa(me, act.hand, act.gi);
+  else if(act.name === '禅') await primZen(me, act.hand, function(){ return Promise.resolve(withSeat(me, function(){ return aiZenGain(me) > 0.5; })); });
+  else if(act.name === '楼') await primRou(me, act.hand, act.gi, act.order);
 }

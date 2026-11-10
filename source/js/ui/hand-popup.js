@@ -2,6 +2,10 @@
 function buildHandActs(t, s){
   const p = P(0);
   const acts = [];
+  if(G.ippatsu){
+    acts.push({ kind:'blocked', label:'この手番は一発奥義を発したので、ほかの駒を積・発できません', disabled:true });
+    return acts;
+  }
   if(!canActFromSlot(p, s)){
     acts.push({ kind:'blocked', label:'この手番は、もう2か所の手で積・発しました（積・発できる手は最大2か所）', disabled:true });
     return acts;

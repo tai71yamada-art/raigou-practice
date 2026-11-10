@@ -8,7 +8,7 @@
    3. AI同士の対局：いろいろなレベルで最後まで進むか。毎手番、駒が消えたり増えたりしていないか
    3b. 途中保存：手番の始めで保存して別の場所で戻し、続きが保存しなかった時と全く同じになるか
    4. いつもの対局：決まった乱数で対局した結果が、前回の記録と同じか（意図しない変更の検出）
-   5. 競技雷轟：開・雷神化・奥義（覇・天・啓）の動きと、AI同士の対局での決まりごと */
+   5. 競技雷轟：開・雷神化・奥義（覇・天・啓・和・禅・楼）の動きと、AI同士の対局での決まりごと */
 'use strict';
 const fs = require('fs'), path = require('path');
 const H = require('./headless');
@@ -253,9 +253,55 @@ function section(t){ console.log('\n■ ' + t); }
       Z.P(0).hand[0] = Z.mkOugiTile('啓');
       ok(Z.ougiUsable(0, 0) !== '', '啓：2段以上の塔と空いた桜門を両方持つ人がいないと発できない');
     }
+    {
+      const X = fresh();
+      X.P(0).gates = [mk(X, '五 四 二'), mk(X, '六 五'), []];
+      X.P(0).hand[0] = X.mkOugiTile('和');
+      const s0 = X.P(0).score;
+      await X.primWa(0, 0, 0);
+      ok(X.P(0).score === s0 + 2 && X.P(0).gates[0].length === 0 && X.G.canyon.length === 4, '和：重さの合計が11なら陽玉+2、公開した駒と和は峡谷へ');
+      const Y = fresh();
+      Y.P(0).gates = [mk(Y, '五 四 三'), [], []];
+      Y.P(0).hand[0] = Y.mkOugiTile('和');
+      const s1 = Y.P(0).score;
+      await Y.primWa(0, 0, 0);
+      ok(Y.P(0).score === s1 - 1, '和：合計が11・33以外なら陽玉-1');
+      const Z = fresh();
+      Z.P(0).gates = [mk(Z, '五 四'), [], []]; Z.P(0).hand[0] = Z.mkOugiTile('和');
+      ok(Z.ougiUsable(0, 0) !== '', '和：3段以上の塔が無い時は発できない');
+    }
+    {
+      const X = fresh();
+      X.P(0).body = mk(X, '六 三'); X.P(1).body = mk(X, '五 一');
+      X.P(0).hand[0] = X.mkOugiTile('禅');
+      await X.primZen(0, 0, function(){ return Promise.resolve(false); });
+      ok(names(X.P(0).body) === '五 三' && names(X.P(1).body) === '六 一', '禅：体内の最も重い駒を相手と移し合う');
+      const Y = fresh();
+      Y.P(0).body = mk(Y, '六 三'); Y.P(1).body = mk(Y, '五 一');
+      Y.P(0).hand[0] = Y.mkOugiTile('禅');
+      await Y.primZen(0, 0, function(){ return Promise.resolve(true); });
+      ok(names(Y.P(0).body) === '六 三' && names(Y.P(1).body) === '五 一', '禅：望めばもう1度だけ適用できる');
+      const Z = fresh();
+      Z.P(0).body = mk(Z, '四'); Z.P(0).hand[0] = Z.mkOugiTile('禅');
+      await Z.primZen(0, 0, function(){ return Promise.resolve(false); });
+      ok(Z.P(0).body.length === 0 && names(Z.P(1).body) === '四', '禅：相手の体内が空でも、自分の駒は移る');
+    }
+    {
+      const X = fresh();
+      X.P(0).gates = [mk(X, '五 四 三'), [], []];
+      X.P(0).hand = [X.mkOugiTile('楼'), mk(X, '一')[0]];
+      await X.primRou(0, 0, 0, [2, 0, 1]);
+      ok(names(X.P(0).gates[0]) === '三 五 四', '楼：塔を好きな順番に積み直す');
+      ok(!X.canActFromSlot(X.P(0), 1), '楼：一発奥義なので、その手番はほかの駒を積・発できない');
+      const Y = fresh();
+      Y.P(0).gates = [mk(Y, '五 四'), [], []];
+      Y.P(0).hand = [Y.mkOugiTile('楼'), mk(Y, '一')[0]];
+      await Y.primStack(0, 1, 1);
+      ok(Y.ougiUsable(0, 0) !== '', '楼：ほかの駒を積・発したあとは発せない');
+    }
     /* AI同士の競技雷轟：毎手番、駒の数・塔の高さ・内駒の上限を確かめる */
     const NK = QUICK ? 21 : 84;
-    let kGames = 0, kBad = 0, kFirst = '', kai = 0, hatsu = { '覇':0, '天':0, '啓':0 }, kTurns = 0;
+    let kGames = 0, kBad = 0, kFirst = '', kai = 0, hatsu = { '覇':0, '天':0, '啓':0, '和':0, '禅':0, '楼':0 }, kTurns = 0;
     for(let i = 0; i < NK; i++){
       const eng = H.createEngine(3000 + i);
       const G = eng.E.G, P = eng.E.P;
@@ -287,8 +333,9 @@ function section(t){ console.log('\n■ ' + t); }
     ok(kGames === NK, '競技雷轟の' + NK + '局がすべて最後まで終わる', kGames + '局');
     ok(kBad === 0, '競技雷轟：駒の数・塔の高さ・手の数に矛盾がない（' + kTurns + '手番を確認）', kFirst);
     ok(kai > 0, 'AIが開する（' + kai + '回）');
-    ok(hatsu['覇'] + hatsu['天'] + hatsu['啓'] > 0, 'AIが奥義を発する（覇' + hatsu['覇'] + '・天' + hatsu['天'] + '・啓' + hatsu['啓'] + '）');
-    console.log('  （' + NK + '局で 開 ' + kai + '回、覇 ' + hatsu['覇'] + '・天 ' + hatsu['天'] + '・啓 ' + hatsu['啓'] + '回）');
+    const hs = Object.keys(hatsu).map(function(n){ return n + hatsu[n]; }).join('・');
+    ok(Object.keys(hatsu).some(function(n){ return hatsu[n] > 0; }), 'AIが奥義を発する（' + hs + '）');
+    console.log('  （' + NK + '局で 開 ' + kai + '回、' + hs + '回）');
   }
 
   console.log('\n結果：' + pass + '件 OK、' + fail + '件 NG（' + ((Date.now() - t0) / 1000).toFixed(1) + '秒）');

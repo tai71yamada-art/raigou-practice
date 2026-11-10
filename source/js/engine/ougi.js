@@ -6,7 +6,7 @@
    ・奥義駒はすべて重さ9の言霊。発したら峡谷へ行く。陣で防げるのは雷・蛇・斬だけなので、奥義は防げない。
    効果を作った奥義駒は ougi-data.js の implemented を true にする（選択画面に出るのは true の駒だけ）。 */
 const OUGI_BRING = 2;   // 持ち込む奥義駒の数
-['覇','天','啓'].forEach(function(n){ const o = ougiByName(n); if(o) o.implemented = true; });
+['覇','天','啓','和','禅','楼'].forEach(function(n){ const o = ougiByName(n); if(o) o.implemented = true; });
 
 function ougiReadyList(){ return OUGI_DATA.filter(function(o){ return o.implemented && !o.kyogiBanned; }); }
 /* 奥義駒は自分と相手で重ならないのが決まり。ただし作り終えた駒が4種類そろうまでは、重なりを認める */
@@ -100,6 +100,12 @@ function ougiUsable(pi, slot){
     return tenSources(pi, slot).length ? '' : '入れ替える駒がありません';
   }
   if(t.name === '啓') return keiTargets().length ? '' : '2段以上の塔と空いた桜門を両方持つ人がいません';
+  if(t.name === '和') return waTowers(pi).length ? '' : '3段以上の自分の塔がありません';
+  if(t.name === '禅') return (P(0).body.length || P(1).body.length) ? '' : 'どちらの体内にも駒がありません';
+  if(t.name === '楼'){
+    if(G.actedSlots && G.actedSlots.size) return '一発奥義：この手番にほかの駒を積・発したあとは発せません';
+    return rouTowers(pi).length ? '' : '2段以上の自分の塔がありません';
+  }
   return 'この奥義駒は準備中です';
 }
 
@@ -175,6 +181,104 @@ async function primKei(actor, slot, tpi, gi, k, part, destGi){
   consumeHand(p, slot);
   log(p.name + 'の奥義「啓」：' + q.name + 'の桜門' + (gi+1) + 'の塔（' + n + '段）を下' + k + '段と上' + (n - k) + '段に分け、' +
       (part === 'bottom' ? '下' : '上') + 'の部分を桜門' + (destGi+1) + 'へ移しました。');
+  await VIEW.render();
+  return true;
+}
+
+/* ================= 和・禅・楼 ================= */
+/* 一発奥義（楼など）を発した手番は、ほかの駒を積・発できない。G.ippatsu は手番の始めに戻す */
+function waTowers(pi){ const out = []; P(pi).gates.forEach(function(g, gi){ if(g.length >= 3 && !P(pi).seals[gi]) out.push(gi); }); return out; }
+function rouTowers(pi){ const out = []; P(pi).gates.forEach(function(g, gi){ if(g.length >= 2 && !P(pi).seals[gi]) out.push(gi); }); return out; }
+function waResult(tiles){
+  const sum = tiles.reduce(function(a, t){ return a + t.w; }, 0);
+  return { sum:sum, delta: sum === 11 ? 2 : (sum === 33 ? 4 : -1) };
+}
+/* ---- 和：自分の3段以上の塔を1つ選んで全て公開。重さの合計が11なら陽玉+2、33なら+4、それ以外は-1。公開した駒は峡谷へ ---- */
+async function primWa(actor, slot, gi){
+  const p = P(actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '和') return false;
+  const tiles = p.gates[gi];
+  if(!tiles || tiles.length < 3 || p.seals[gi]) return false;
+  G.used.add('和');
+  await VIEW.playCutIn('和', actor);
+  const snap = tiles.slice(), r = waResult(snap);
+  p.gates[gi] = []; p.seals[gi] = null;
+  if(G.cutHints) G.cutHints[actor][gi] = [];
+  snap.forEach(function(x){ if(G.kn){ G.kn[0].add(x.id); G.kn[1].add(x.id); } });
+  consumeHand(p, slot);
+  p.score += r.delta;
+  log(p.name + 'の奥義「和」：桜門' + (gi+1) + 'の塔（' + snap.map(tileLabel).join('・') + '）を公開しました。重さの合計は' + r.sum + 'なので、' +
+      (r.delta > 0 ? '陽玉+' + r.delta + '点' : '陽玉-1点') + '（' + p.score + '点）。公開した駒は峡谷へ置きました。', r.delta > 0 ? 'score' : 'bad');
+  await VIEW.showWaReveal(actor, gi, snap, r.sum, r.delta);
+  snap.forEach(function(x){ G.canyon.push(x); });
+  VIEW.render();
+  if(r.delta < 0) checkLose(actor);
+  return true;
+}
+/* ---- 禅：全員が体内の最も重い駒を1つ選び、右隣（2人戦では相手）の体内へ移す。使用者が望めば、もう1度だけ ----
+   最も重い駒が複数ある時は、その持ち主が選ぶ（人は画面で、AIは自分にとって価値の低い方） */
+function zenChoices(pi){
+  const b = P(pi).body;
+  if(!b.length) return [];
+  const mw = Math.max.apply(null, b.map(function(t){ return t.w; }));
+  const seen = {}, out = [];
+  b.forEach(function(t, i){ if(t.w === mw && !seen[t.kind + t.name]){ seen[t.kind + t.name] = 1; out.push(i); } });
+  return out;
+}
+async function zenOnce(actor){
+  const picks = [null, null];
+  for(let pi = 0; pi < 2; pi++){
+    const ch = zenChoices(pi);
+    if(!ch.length) continue;
+    let idx = ch[0];
+    if(ch.length > 1){
+      if(P(pi).isAI) idx = aiZenPick(pi, ch);
+      else idx = await VIEW.chooseZenTile(ch);
+    }
+    picks[pi] = P(pi).body[idx];
+  }
+  for(let pi = 0; pi < 2; pi++){ const x = picks[pi]; if(x){ const b = P(pi).body; b.splice(b.indexOf(x), 1); } }
+  for(let pi = 0; pi < 2; pi++){ const x = picks[pi]; if(x){ P(1 - pi).body.push(x); if(G.kn){ G.kn[0].add(x.id); G.kn[1].add(x.id); } } }
+  sortBody(P(0)); sortBody(P(1));
+  const parts = [];
+  for(let pi = 0; pi < 2; pi++) parts.push(picks[pi] ? P(pi).name + 'は「' + tileLabel(picks[pi]) + '」を' + P(1 - pi).name + 'の体内へ移しました。' : P(pi).name + 'は体内に駒がないので、移す駒はありませんでした。');
+  log('禅：' + parts.join(''));
+  if(actor !== 0 && picks[0]) VIEW.setMeFace('hit');
+  await VIEW.render();
+  return picks;
+}
+async function primZen(actor, slot, wantAgain){
+  const p = P(actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '禅') return false;
+  if(!P(0).body.length && !P(1).body.length) return false;
+  G.used.add('禅');
+  await VIEW.playCutIn('禅', actor);
+  consumeHand(p, slot);
+  log(p.name + 'の奥義「禅」：全員が体内の最も重い駒を、相手の体内へ移します。');
+  await zenOnce(actor);
+  if(P(0).body.length || P(1).body.length){
+    const again = await wantAgain();
+    if(again){ log(p.name + 'は「禅」をもう1度適用しました。'); await zenOnce(actor); }
+  }
+  return true;
+}
+/* ---- 楼（一発奥義）：自分の塔を1つ選び、好きな順番で積み直す。order＝新しい並び（下から、元の位置の番号） ---- */
+async function primRou(actor, slot, gi, order){
+  const p = P(actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '楼') return false;
+  if(G.actedSlots && G.actedSlots.size) return false;
+  const tw = p.gates[gi];
+  if(!tw || tw.length < 2 || p.seals[gi] || !order || order.length !== tw.length) return false;
+  const chk = order.slice().sort(function(a, b){ return a - b; });
+  if(chk.some(function(v, i){ return v !== i; })) return false;
+  G.used.add('楼');
+  await VIEW.playCutIn('楼', actor);
+  p.gates[gi] = order.map(function(i){ return tw[i]; });
+  if(G.cutHints) G.cutHints[actor][gi] = [];
+  if(G.revealedTopIds) tw.forEach(function(x){ G.revealedTopIds.delete(x.id); });
+  consumeHand(p, slot);
+  G.ippatsu = true;
+  log(p.name + 'の奥義「楼」（一発奥義）：桜門' + (gi+1) + 'の塔（' + tw.length + '段）を好きな順番に積み直しました。この手番は、ほかの駒を積・発できません。');
   await VIEW.render();
   return true;
 }

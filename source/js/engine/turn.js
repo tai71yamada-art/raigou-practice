@@ -3,6 +3,7 @@ function startTurn(){
   G.turnNo++;
   G.used = new Set();
   G.actedSlots = new Set();
+  G.ippatsu = false;
   G.genMoves = 0;
   G.phase = 'gen';
   G.isFinalTurn = !!(G.endIn !== null && G.finalTurnActive);

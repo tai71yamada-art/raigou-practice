@@ -29,7 +29,10 @@ async function playCutIn(name, actorPi){
     '雷神化':['RAIJINKA','奥義駒を開いた ― 月が3か所目の手に'],
     '覇':['OUGI','全ての塔の端の駒を捨て駒にする'],
     '天':['OUGI','塔の一番上の駒を入れ替える'],
-    '啓':['OUGI','塔を上下2つに分ける']
+    '啓':['OUGI','塔を上下2つに分ける'],
+    '和':['OUGI','塔を公開し、重さの合計で陽玉が増減する'],
+    '禅':['OUGI','体内の最も重い駒を相手へ移す'],
+    '楼':['OUGI','塔を好きな順番に積み直す（一発奥義）']
   };
   const info = INFO[name] || ['KOTODAMA',''];
   const whoText = actor ? esc(actor.name) + (name === '雷神化' ? '' : (ougiByName(name) ? ' の奥義' : ' の言霊')) : '';

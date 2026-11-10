@@ -337,3 +337,11 @@
       .big-stack .tile.kei-move{ outline:3px solid var(--main-hi,var(--main)); outline-offset:-1px; }
       /* スタート画面の題字（雷轟 -天弓-） */
       #startScreen .hero-en.hero-title{ font-family:'Zen Antique', serif; font-weight:400; font-size:1.5rem; letter-spacing:.12em; text-indent:.12em; line-height:1.2; margin:0 0 8px; }
+      /* 和・楼 */
+      .wa-row{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:6px 0 10px; }
+      .wa-row .tile{ width:44px; height:44px; font-size:1rem; }
+      .wa-result{ text-align:center; font-size:1.05rem; margin:10px 0 4px; }
+      .wa-plus{ color:#2e8b57; font-size:1.2rem; }
+      .wa-minus{ color:var(--accent); font-size:1.2rem; }
+      .tile-btn.rou-used{ opacity:.3; }
+      p.warn{ color:var(--accent); font-weight:bold; text-align:center; }

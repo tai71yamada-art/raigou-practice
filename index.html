@@ -1441,6 +1441,14 @@
       .big-stack .tile.kei-move{ outline:3px solid var(--main-hi,var(--main)); outline-offset:-1px; }
       /* スタート画面の題字（雷轟 -天弓-） */
       #startScreen .hero-en.hero-title{ font-family:'Zen Antique', serif; font-weight:400; font-size:1.5rem; letter-spacing:.12em; text-indent:.12em; line-height:1.2; margin:0 0 8px; }
+      /* 和・楼 */
+      .wa-row{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:6px 0 10px; }
+      .wa-row .tile{ width:44px; height:44px; font-size:1rem; }
+      .wa-result{ text-align:center; font-size:1.05rem; margin:10px 0 4px; }
+      .wa-plus{ color:#2e8b57; font-size:1.2rem; }
+      .wa-minus{ color:var(--accent); font-size:1.2rem; }
+      .tile-btn.rou-used{ opacity:.3; }
+      p.warn{ color:var(--accent); font-weight:bold; text-align:center; }
 </style>
   </head>
   <body>
@@ -1694,6 +1702,8 @@ const VIEW = {
   /* 演出（終わるまで待つものは Promise を返す） */
   playCutIn: function(name, actorPi){ return Promise.resolve(); },
   playOugiRelease: function(pi){ return Promise.resolve(); },
+  showWaReveal: function(pi, gi, tiles, sum, delta){ return Promise.resolve(); },
+  chooseZenTile: function(choices){ return Promise.resolve(choices[0]); },
   playClash: function(meIdx, oppIdx){ return Promise.resolve(); },
   playHideCutIn: function(actorPi){ return Promise.resolve(); },
   playJinFx: function(){ return Promise.resolve(); },
@@ -1878,6 +1888,7 @@ function raiPartnerSlot(p, slot){
 }
 /* 積・発に使った手の管理（手番プレイヤーのみ）。手が2か所の基本ルールでは制限にかからない */
 function canActFromSlot(p, slot){
+  if(G.ippatsu && G.players && p === P(G.turn)) return false;   // 一発奥義を発した手番
   if(!G.actedSlots || p !== P(G.turn)) return true;
   return G.actedSlots.has(slot) || G.actedSlots.size < ACT_HAND_MAX;
 }
@@ -2119,6 +2130,7 @@ function startTurn(){
   G.turnNo++;
   G.used = new Set();
   G.actedSlots = new Set();
+  G.ippatsu = false;
   G.genMoves = 0;
   G.phase = 'gen';
   G.isFinalTurn = !!(G.endIn !== null && G.finalTurnActive);
@@ -2931,7 +2943,7 @@ async function joArrange(actor, handSlot, handTiles, pool, counts){
    ・奥義駒はすべて重さ9の言霊。発したら峡谷へ行く。陣で防げるのは雷・蛇・斬だけなので、奥義は防げない。
    効果を作った奥義駒は ougi-data.js の implemented を true にする（選択画面に出るのは true の駒だけ）。 */
 const OUGI_BRING = 2;   // 持ち込む奥義駒の数
-['覇','天','啓'].forEach(function(n){ const o = ougiByName(n); if(o) o.implemented = true; });
+['覇','天','啓','和','禅','楼'].forEach(function(n){ const o = ougiByName(n); if(o) o.implemented = true; });
 
 function ougiReadyList(){ return OUGI_DATA.filter(function(o){ return o.implemented && !o.kyogiBanned; }); }
 /* 奥義駒は自分と相手で重ならないのが決まり。ただし作り終えた駒が4種類そろうまでは、重なりを認める */
@@ -3025,6 +3037,12 @@ function ougiUsable(pi, slot){
     return tenSources(pi, slot).length ? '' : '入れ替える駒がありません';
   }
   if(t.name === '啓') return keiTargets().length ? '' : '2段以上の塔と空いた桜門を両方持つ人がいません';
+  if(t.name === '和') return waTowers(pi).length ? '' : '3段以上の自分の塔がありません';
+  if(t.name === '禅') return (P(0).body.length || P(1).body.length) ? '' : 'どちらの体内にも駒がありません';
+  if(t.name === '楼'){
+    if(G.actedSlots && G.actedSlots.size) return '一発奥義：この手番にほかの駒を積・発したあとは発せません';
+    return rouTowers(pi).length ? '' : '2段以上の自分の塔がありません';
+  }
   return 'この奥義駒は準備中です';
 }
 
@@ -3100,6 +3118,104 @@ async function primKei(actor, slot, tpi, gi, k, part, destGi){
   consumeHand(p, slot);
   log(p.name + 'の奥義「啓」：' + q.name + 'の桜門' + (gi+1) + 'の塔（' + n + '段）を下' + k + '段と上' + (n - k) + '段に分け、' +
       (part === 'bottom' ? '下' : '上') + 'の部分を桜門' + (destGi+1) + 'へ移しました。');
+  await VIEW.render();
+  return true;
+}
+
+/* ================= 和・禅・楼 ================= */
+/* 一発奥義（楼など）を発した手番は、ほかの駒を積・発できない。G.ippatsu は手番の始めに戻す */
+function waTowers(pi){ const out = []; P(pi).gates.forEach(function(g, gi){ if(g.length >= 3 && !P(pi).seals[gi]) out.push(gi); }); return out; }
+function rouTowers(pi){ const out = []; P(pi).gates.forEach(function(g, gi){ if(g.length >= 2 && !P(pi).seals[gi]) out.push(gi); }); return out; }
+function waResult(tiles){
+  const sum = tiles.reduce(function(a, t){ return a + t.w; }, 0);
+  return { sum:sum, delta: sum === 11 ? 2 : (sum === 33 ? 4 : -1) };
+}
+/* ---- 和：自分の3段以上の塔を1つ選んで全て公開。重さの合計が11なら陽玉+2、33なら+4、それ以外は-1。公開した駒は峡谷へ ---- */
+async function primWa(actor, slot, gi){
+  const p = P(actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '和') return false;
+  const tiles = p.gates[gi];
+  if(!tiles || tiles.length < 3 || p.seals[gi]) return false;
+  G.used.add('和');
+  await VIEW.playCutIn('和', actor);
+  const snap = tiles.slice(), r = waResult(snap);
+  p.gates[gi] = []; p.seals[gi] = null;
+  if(G.cutHints) G.cutHints[actor][gi] = [];
+  snap.forEach(function(x){ if(G.kn){ G.kn[0].add(x.id); G.kn[1].add(x.id); } });
+  consumeHand(p, slot);
+  p.score += r.delta;
+  log(p.name + 'の奥義「和」：桜門' + (gi+1) + 'の塔（' + snap.map(tileLabel).join('・') + '）を公開しました。重さの合計は' + r.sum + 'なので、' +
+      (r.delta > 0 ? '陽玉+' + r.delta + '点' : '陽玉-1点') + '（' + p.score + '点）。公開した駒は峡谷へ置きました。', r.delta > 0 ? 'score' : 'bad');
+  await VIEW.showWaReveal(actor, gi, snap, r.sum, r.delta);
+  snap.forEach(function(x){ G.canyon.push(x); });
+  VIEW.render();
+  if(r.delta < 0) checkLose(actor);
+  return true;
+}
+/* ---- 禅：全員が体内の最も重い駒を1つ選び、右隣（2人戦では相手）の体内へ移す。使用者が望めば、もう1度だけ ----
+   最も重い駒が複数ある時は、その持ち主が選ぶ（人は画面で、AIは自分にとって価値の低い方） */
+function zenChoices(pi){
+  const b = P(pi).body;
+  if(!b.length) return [];
+  const mw = Math.max.apply(null, b.map(function(t){ return t.w; }));
+  const seen = {}, out = [];
+  b.forEach(function(t, i){ if(t.w === mw && !seen[t.kind + t.name]){ seen[t.kind + t.name] = 1; out.push(i); } });
+  return out;
+}
+async function zenOnce(actor){
+  const picks = [null, null];
+  for(let pi = 0; pi < 2; pi++){
+    const ch = zenChoices(pi);
+    if(!ch.length) continue;
+    let idx = ch[0];
+    if(ch.length > 1){
+      if(P(pi).isAI) idx = aiZenPick(pi, ch);
+      else idx = await VIEW.chooseZenTile(ch);
+    }
+    picks[pi] = P(pi).body[idx];
+  }
+  for(let pi = 0; pi < 2; pi++){ const x = picks[pi]; if(x){ const b = P(pi).body; b.splice(b.indexOf(x), 1); } }
+  for(let pi = 0; pi < 2; pi++){ const x = picks[pi]; if(x){ P(1 - pi).body.push(x); if(G.kn){ G.kn[0].add(x.id); G.kn[1].add(x.id); } } }
+  sortBody(P(0)); sortBody(P(1));
+  const parts = [];
+  for(let pi = 0; pi < 2; pi++) parts.push(picks[pi] ? P(pi).name + 'は「' + tileLabel(picks[pi]) + '」を' + P(1 - pi).name + 'の体内へ移しました。' : P(pi).name + 'は体内に駒がないので、移す駒はありませんでした。');
+  log('禅：' + parts.join(''));
+  if(actor !== 0 && picks[0]) VIEW.setMeFace('hit');
+  await VIEW.render();
+  return picks;
+}
+async function primZen(actor, slot, wantAgain){
+  const p = P(actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '禅') return false;
+  if(!P(0).body.length && !P(1).body.length) return false;
+  G.used.add('禅');
+  await VIEW.playCutIn('禅', actor);
+  consumeHand(p, slot);
+  log(p.name + 'の奥義「禅」：全員が体内の最も重い駒を、相手の体内へ移します。');
+  await zenOnce(actor);
+  if(P(0).body.length || P(1).body.length){
+    const again = await wantAgain();
+    if(again){ log(p.name + 'は「禅」をもう1度適用しました。'); await zenOnce(actor); }
+  }
+  return true;
+}
+/* ---- 楼（一発奥義）：自分の塔を1つ選び、好きな順番で積み直す。order＝新しい並び（下から、元の位置の番号） ---- */
+async function primRou(actor, slot, gi, order){
+  const p = P(actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '楼') return false;
+  if(G.actedSlots && G.actedSlots.size) return false;
+  const tw = p.gates[gi];
+  if(!tw || tw.length < 2 || p.seals[gi] || !order || order.length !== tw.length) return false;
+  const chk = order.slice().sort(function(a, b){ return a - b; });
+  if(chk.some(function(v, i){ return v !== i; })) return false;
+  G.used.add('楼');
+  await VIEW.playCutIn('楼', actor);
+  p.gates[gi] = order.map(function(i){ return tw[i]; });
+  if(G.cutHints) G.cutHints[actor][gi] = [];
+  if(G.revealedTopIds) tw.forEach(function(x){ G.revealedTopIds.delete(x.id); });
+  consumeHand(p, slot);
+  G.ippatsu = true;
+  log(p.name + 'の奥義「楼」（一発奥義）：桜門' + (gi+1) + 'の塔（' + tw.length + '段）を好きな順番に積み直しました。この手番は、ほかの駒を積・発できません。');
   await VIEW.render();
   return true;
 }
@@ -4158,7 +4274,7 @@ async function aiExecute(act, me){
 /* ================= AI：競技雷轟（開・奥義） ================= */
 /* 開するかどうか。雷神化は手が1つ増えて内駒の上限も増えるので、開できる時は基本的にすぐ開く。
    Lv.1・Lv.2 はときどき見送る */
-const AI_OUGI_LIKE = { '覇':1.0, '天':0.9, '啓':0.8 };
+const AI_OUGI_LIKE = { '覇':1.0, '天':0.9, '啓':0.8, '和':0.6, '禅':0.7, '楼':0.9 };
 function aiPickKai(){
   const p = P(AI_SEAT);
   if(!canKai(AI_SEAT)) return null;
@@ -4227,19 +4343,88 @@ function aiOugiActs(p, s, t, dp, avail, acts){
       }
     });
     if(best && best.gain > 0.7) acts.push(best);
+  } else if(t.name === '和'){
+    /* 重さの合計が11か33の塔だけ（それ以外は陽玉が減る） */
+    waTowers(me).forEach(function(gi){
+      const tw = p.gates[gi], r = waResult(tw);
+      if(r.delta <= 0) return;
+      const g = r.delta - Math.max(0, aiOwnVal(tw, avail)) * 0.8;
+      if(g > 0.6) acts.push({ kind:'ougi', name:'和', hand:s, gi:gi, gain:g });
+    });
+  } else if(t.name === '禅'){
+    const g = aiZenGain(me);
+    if(g > 0.5) acts.push({ kind:'ougi', name:'禅', hand:s, gain:g });
+  } else if(t.name === '楼'){
+    if(G.actedSlots && G.actedSlots.size) return;
+    let best = null;
+    rouTowers(me).forEach(function(gi){
+      const tw = p.gates[gi], base = aiOwnVal(tw, avail);
+      const r = aiBestOrder(tw, avail);
+      const g = r.val - base - 0.8;   // 一発奥義なので、この手番のほかの手をあきらめる分を引く
+      if(!best || g > best.gain) best = { kind:'ougi', name:'楼', hand:s, gi:gi, order:r.order, gain:g };
+    });
+    if(best && best.gain > 0.4) acts.push(best);
   }
+}
+/* 禅で相手に渡す駒と、受け取る駒の見込み */
+function aiZenGain(me){
+  const p = P(me), q = P(1 - me);
+  const give = zenChoices(me).map(function(i){ return p.body[i]; });
+  const giveV = give.length ? Math.min.apply(null, give.map(function(t){ return aiTileDesire(t, p); })) : 0;
+  let recvV = 0;
+  const rc = zenChoices(1 - me);
+  if(rc.length){
+    const known = rc.map(function(i){ return q.body[i]; }).filter(function(t){ return aiKnows(t, me); });
+    recvV = known.length ? Math.max.apply(null, known.map(function(t){ return aiTileDesire(t, p); })) : 0.45;
+  }
+  return recvV - giveV + (rc.length ? 0.25 : 0);   // 相手の一番重い駒を取り上げる分を少し足す
+}
+function aiZenPick(pi, choices){
+  return withSeat(pi, function(){ return aiZenPickRaw(pi, choices); });
+}
+function aiZenPickRaw(pi, choices){
+  const p = P(pi);
+  let best = choices[0], bv = Infinity;
+  choices.forEach(function(i){ const v = aiTileDesire(p.body[i], p); if(v < bv){ bv = v; best = i; } });
+  return best;
+}
+/* 楼：塔の並べ方を全部試して、いちばん価値が高い並び（不穏にならないもの）を探す */
+function aiBestOrder(tw, avail){
+  const n = tw.length, idx = tw.map(function(_, i){ return i; });
+  let best = { val:-Infinity, order:idx.slice() };
+  const seen = {};
+  (function perm(cur, rest){
+    if(!rest.length){
+      const tiles = cur.map(function(i){ return tw[i]; });
+      const key = tiles.map(function(t){ return t.kind + t.name; }).join(',');
+      if(seen[key]) return; seen[key] = 1;
+      if(isFuon(tiles)) return;
+      const v = n >= 6 ? scoreTower(tiles).pts : towerValue(tiles, avail);
+      if(v > best.val) best = { val:v, order:cur.slice() };
+      return;
+    }
+    for(let k = 0; k < rest.length; k++){ cur.push(rest[k]); perm(cur, rest.slice(0, k).concat(rest.slice(k + 1))); cur.pop(); }
+  })([], idx);
+  if(best.val === -Infinity) best.val = -1;
+  return best;
 }
 function aiOugiText(act){
   const who = function(pi){ return pi === AI_SEAT ? '自分' : 'あなた'; };
   if(act.name === '覇') return '奥義「覇」：全ての塔の' + (act.end === 'top' ? '一番上' : '一番下') + 'を捨てる';
   if(act.name === '天') return '奥義「天」：自分の桜門' + (act.gi + 1) + 'の塔の一番上を入れ替える';
   if(act.name === '啓') return '奥義「啓」：' + who(act.target.pi) + 'の桜門' + (act.target.gi + 1) + 'の塔を2つに分ける';
+  if(act.name === '和') return '奥義「和」：自分の桜門' + (act.gi + 1) + 'の塔を公開する';
+  if(act.name === '禅') return '奥義「禅」：体内の最も重い駒を移し合う';
+  if(act.name === '楼') return '奥義「楼」：自分の桜門' + (act.gi + 1) + 'の塔を積み直す';
   return '奥義';
 }
 async function aiOugiExecute(act, me){
   if(act.name === '覇') await primHa(me, act.hand, act.end);
   else if(act.name === '天') await primTen(me, act.hand, act.gi, act.loc);
   else if(act.name === '啓') await primKei(me, act.hand, act.target.pi, act.target.gi, act.k, act.part, act.dest);
+  else if(act.name === '和') await primWa(me, act.hand, act.gi);
+  else if(act.name === '禅') await primZen(me, act.hand, function(){ return Promise.resolve(withSeat(me, function(){ return aiZenGain(me) > 0.5; })); });
+  else if(act.name === '楼') await primRou(me, act.hand, act.gi, act.order);
 }
 /* ================= 設定（端末に保存） ================= */
 /* ホーム画面に追加したときのオフライン用（https で公開した時だけ動く） */
@@ -4267,7 +4452,7 @@ function aiSpeedFactor(){ const o = AI_SPEEDS.find(function(x){ return x.v === S
 function aiWait(ms){ return wait(ms * aiSpeedFactor()); }
 
 /* ================= アプリのバージョン（build.py が source/VERSION の値を入れる） ================= */
-const APP_VERSION = 'v48';   // build.py が VERSION ファイルの値を入れる（sw.js も同じ値になる）
+const APP_VERSION = 'v49';   // build.py が VERSION ファイルの値を入れる（sw.js も同じ値になる）
 /* ================= 効果音（音声ファイルは使わず、その場で合成） ================= */
 const SFX = (function(){
   let ctx = null;
@@ -5123,6 +5308,10 @@ function pickHebiModal(items){
 function buildHandActs(t, s){
   const p = P(0);
   const acts = [];
+  if(G.ippatsu){
+    acts.push({ kind:'blocked', label:'この手番は一発奥義を発したので、ほかの駒を積・発できません', disabled:true });
+    return acts;
+  }
   if(!canActFromSlot(p, s)){
     acts.push({ kind:'blocked', label:'この手番は、もう2か所の手で積・発しました（積・発できる手は最大2か所）', disabled:true });
     return acts;
@@ -6125,7 +6314,10 @@ async function playCutIn(name, actorPi){
     '雷神化':['RAIJINKA','奥義駒を開いた ― 月が3か所目の手に'],
     '覇':['OUGI','全ての塔の端の駒を捨て駒にする'],
     '天':['OUGI','塔の一番上の駒を入れ替える'],
-    '啓':['OUGI','塔を上下2つに分ける']
+    '啓':['OUGI','塔を上下2つに分ける'],
+    '和':['OUGI','塔を公開し、重さの合計で陽玉が増減する'],
+    '禅':['OUGI','体内の最も重い駒を相手へ移す'],
+    '楼':['OUGI','塔を好きな順番に積み直す（一発奥義）']
   };
   const info = INFO[name] || ['KOTODAMA',''];
   const whoText = actor ? esc(actor.name) + (name === '雷神化' ? '' : (ougiByName(name) ? ' の奥義' : ' の言霊')) : '';
@@ -7366,6 +7558,110 @@ async function runOugiFlow(slot){
       return;
     }
   }
+  if(t.name === '和'){
+    while(true){
+      const tgt = await pickTowerModal('奥義「和」：公開する塔を選ぶ', '3段以上の自分の塔を1つ選びます。塔の駒を全て公開し、重さの合計が<b>11なら陽玉+2点、33なら+4点、それ以外は-1点</b>です。公開した駒は峡谷へ置きます。', waTowers(0).map(function(gi){ return { pi:0, gi:gi }; }));
+      if(!tgt) return;
+      const tw = P(0).gates[tgt.gi], r = waResult(tw);
+      const ok = await confirmYesNo('奥義「和」の確認', '<div class="wa-row">' + tw.map(function(x){ return tileHtml(x, '', { ntid:true }); }).join('') + '</div>' +
+        '桜門' + (tgt.gi+1) + 'の塔（' + tw.length + '段）を公開します。重さの合計は<b>' + r.sum + '</b>なので、陽玉は<b>' + (r.delta > 0 ? '+' + r.delta : '-1') + '点</b>になります。');
+      if(!ok) continue;
+      await primWa(0, slot, tgt.gi);
+      return;
+    }
+  }
+  if(t.name === '禅'){
+    const ok = await confirmYesNo('奥義「禅」の確認', 'あなたとAIが、それぞれ体内の<b>最も重い駒</b>を1つ選び、相手の体内へ同時に移します。移した駒は、両方に公開されます。適用したあと、もう1度だけ続けて適用するかを選べます。');
+    if(!ok) return;
+    await primZen(0, slot, function(){
+      return confirmYesNoPlain('奥義「禅」', 'もう1度、体内の最も重い駒を移し合いますか？', 'もう1度移す', 'ここでやめる');
+    });
+    return;
+  }
+  if(t.name === '楼'){
+    while(true){
+      const tgt = await pickTowerModal('奥義「楼」：積み直す塔を選ぶ', '2段以上の自分の塔を1つ選び、好きな順番に積み直します。<b>一発奥義</b>なので、この手番はほかの駒を積・発できなくなります。', rouTowers(0).map(function(gi){ return { pi:0, gi:gi }; }));
+      if(!tgt) return;
+      const order = await pickRouOrderModal(tgt.gi);
+      if(!order) continue;
+      await primRou(0, slot, tgt.gi, order);
+      return;
+    }
+  }
+}
+/* はい／いいえだけの確認（「選び直す」の添え書きなし・確認の省略の対象外） */
+function confirmYesNoPlain(title, text, yesLabel, noLabel){
+  return new Promise(function(resolve){
+    let h = '<h3 class="serif">' + esc(title) + '</h3><p>' + text + '</p>';
+    h += '<div class="btn-row"><button type="button" class="btn primary" id="cpYes">' + esc(yesLabel) + '</button><button type="button" class="btn" id="cpNo">' + esc(noLabel) + '</button></div>';
+    showModal(h);
+    document.getElementById('cpYes').addEventListener('click', function(){ closeModal(); resolve(true); });
+    document.getElementById('cpNo').addEventListener('click', function(){ closeModal(); resolve(false); });
+  });
+}
+/* 和：公開した塔と結果を見せる（あなた・AIどちらが発した時も） */
+function showWaReveal(actor, gi, tiles, sum, delta){
+  return new Promise(function(resolve){
+    const p = P(actor);
+    let h = '<h3 class="serif">奥義「和」：' + esc(p.name) + 'の桜門' + (gi+1) + 'の塔</h3>';
+    h += '<div class="modal-center"><div class="big-gate"><div class="big-stack">';
+    for(let i = tiles.length - 1; i >= 0; i--) h += tileHtml(tiles[i], '', { ntid:true });
+    h += '</div></div></div>';
+    h += '<p class="wa-result">重さの合計 <b>' + sum + '</b> → ' + esc(p.name) + 'の陽玉 <b class="' + (delta > 0 ? 'wa-plus' : 'wa-minus') + '">' + (delta > 0 ? '+' + delta : '-1') + '点</b></p>';
+    h += '<p class="sub">公開した駒は峡谷へ置きます。</p>';
+    h += '<div class="btn-row"><button type="button" class="btn primary" id="waOk">閉じる</button></div>';
+    showModal(h);
+    document.getElementById('waOk').addEventListener('click', function(){ closeModal(); resolve(); });
+  });
+}
+/* 禅：最も重い駒が何種類かある時、移す駒をあなたが選ぶ。choices＝あなたの体内の番号 */
+function chooseZenTile(choices){
+  return new Promise(function(resolve){
+    let h = '<h3 class="serif">奥義「禅」：移す駒を選ぶ</h3>';
+    h += '<p>あなたの体内で最も重い駒が何種類かあります。AIの体内へ移す駒を1つ選んでください。</p><div class="pick-list">';
+    choices.forEach(function(i){ h += '<button type="button" class="tile-btn" data-zen-i="' + i + '">' + tileHtml(P(0).body[i], 'clickable', { ntid:true }) + '</button>'; });
+    h += '</div>';
+    showModal(h);
+    const box = document.querySelector('#modalRoot [data-peekbtn]');
+    if(box) box.remove();   // 選ぶまで閉じられない処理なので、盤面を見るボタンは出さない
+    document.querySelectorAll('[data-zen-i]').forEach(function(b){
+      b.addEventListener('click', function(){ closeModal(); resolve(parseInt(b.getAttribute('data-zen-i'), 10)); });
+    });
+  });
+}
+/* 楼：下から順に駒を押して、新しい並びを作る */
+function pickRouOrderModal(gi){
+  return new Promise(function(resolve){
+    const tw = P(0).gates[gi], n = tw.length;
+    let order = [];
+    function draw(){
+      let h = '<h3 class="serif">奥義「楼」：積み直す順番を決める</h3>';
+      h += '<p>桜門' + (gi+1) + 'の塔（' + n + '段）です。<b>下に置く駒から順に</b>押してください。</p>';
+      h += '<div class="gate-group-label">今の塔の駒</div><div class="pick-list">';
+      tw.forEach(function(x, i){
+        const used = order.indexOf(i) >= 0;
+        h += '<button type="button" class="tile-btn' + (used ? ' rou-used' : '') + '" data-rou-i="' + i + '"' + (used ? ' disabled' : '') + '>' + tileHtml(x, used ? '' : 'clickable', { ntid:true }) + '</button>';
+      });
+      h += '</div>';
+      h += '<div class="gate-group-label">新しい塔（' + order.length + '／' + n + '段）</div><div class="modal-center"><div class="big-gate"><div class="big-stack">';
+      if(!order.length) h += '<div class="gate-empty">（まだ空）</div>';
+      for(let k = order.length - 1; k >= 0; k--) h += tileHtml(tw[order[k]], '', { ntid:true });
+      h += '</div></div></div>';
+      const done = order.length === n;
+      if(done && isFuon(order.map(function(i){ return tw[i]; }))) h += '<p class="warn">この並びは不穏の塔になります。</p>';
+      h += '<div class="btn-row"><button type="button" class="btn primary" id="rouOk"' + (done ? '' : ' disabled') + '>この順番で積み直す</button>' +
+           '<button type="button" class="btn" id="rouReset"' + (order.length ? '' : ' disabled') + '>最初から</button>' +
+           '<button type="button" class="btn" id="rouCancel">塔を選び直す</button></div>';
+      showModal(h);
+      document.querySelectorAll('[data-rou-i]').forEach(function(b){
+        b.addEventListener('click', function(){ const i = parseInt(b.getAttribute('data-rou-i'), 10); if(order.indexOf(i) < 0){ order.push(i); draw(); } });
+      });
+      document.getElementById('rouReset').addEventListener('click', function(){ order = []; draw(); });
+      document.getElementById('rouCancel').addEventListener('click', function(){ closeModal(); resolve(null); });
+      document.getElementById('rouOk').addEventListener('click', function(){ if(order.length === n){ closeModal(); resolve(order.slice()); } });
+    }
+    draw();
+  });
 }
 function pickHaEnd(){
   return new Promise(function(resolve){
@@ -7704,6 +8000,8 @@ Object.assign(VIEW, {
   setMeFace: function(){ return setMeFace.apply(null, arguments); },
   playCutIn: function(){ return playCutIn.apply(null, arguments); },
   playOugiRelease: function(){ return playOugiRelease.apply(null, arguments); },
+  showWaReveal: function(){ return showWaReveal.apply(null, arguments); },
+  chooseZenTile: function(){ return chooseZenTile.apply(null, arguments); },
   playClash: function(){ return playClash.apply(null, arguments); },
   playHideCutIn: function(){ return playHideCutIn.apply(null, arguments); },
   playJinFx: function(){ return playJinFx.apply(null, arguments); },

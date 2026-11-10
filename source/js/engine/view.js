@@ -20,6 +20,8 @@ const VIEW = {
   /* 演出（終わるまで待つものは Promise を返す） */
   playCutIn: function(name, actorPi){ return Promise.resolve(); },
   playOugiRelease: function(pi){ return Promise.resolve(); },
+  showWaReveal: function(pi, gi, tiles, sum, delta){ return Promise.resolve(); },
+  chooseZenTile: function(choices){ return Promise.resolve(choices[0]); },
   playClash: function(meIdx, oppIdx){ return Promise.resolve(); },
   playHideCutIn: function(actorPi){ return Promise.resolve(); },
   playJinFx: function(){ return Promise.resolve(); },

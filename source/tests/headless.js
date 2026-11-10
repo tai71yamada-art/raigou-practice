@@ -26,7 +26,7 @@ const ENGINE_CODE = engineFiles().map(function(f){ return fs.readFileSync(path.j
   ' sortBody:sortBody, totalInner:totalInner, innerCap:innerCap, buildDeck:buildDeck,' +
   ' serializeGame:serializeGame, restoreGame:restoreGame, startTurn:function(){ return startTurn(); },' +
   ' getStartTurn:function(){ return startTurn; }, setStartTurn:function(f){ startTurn = f; },' +
-  ' canKai:canKai, doKai:doKai, primHa:primHa, primTen:primTen, primKei:primKei, mkOugiTile:mkOugiTile, ougiUsable:ougiUsable, ougiReadyList:ougiReadyList,' +
+  ' canKai:canKai, doKai:doKai, primHa:primHa, primTen:primTen, primKei:primKei, primWa:primWa, primZen:primZen, primRou:primRou, mkOugiTile:mkOugiTile, ougiUsable:ougiUsable, ougiReadyList:ougiReadyList,' +
   ' RULESETS:RULESETS, setRaijinka:setRaijinka, canActFromSlot:canActFromSlot, primStack:primStack };';
 
 function createEngine(seed){
