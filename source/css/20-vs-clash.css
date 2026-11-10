@@ -21,7 +21,7 @@
       .vs .vs-tag{ position:absolute; z-index:15; font-weight:900; font-size:18px; padding:4px 16px; clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%); white-space:nowrap; display:flex; align-items:center; gap:4px; }
       .vs .vs-tag small{ font-family:'Chakra Petch',sans-serif; font-size:11px; letter-spacing:.2em; margin-right:4px; opacity:.75; }
       .vs .vs-tag.ai{ background:#7d6bff; color:#fff; left:16px; top:calc(16px + env(safe-area-inset-top)); }
-      .vs .vs-tag.me{ background:var(--main); color:#101114; right:16px; bottom:calc(18px + env(safe-area-inset-bottom)); }
+      .vs .vs-tag.me{ background:var(--main); color:var(--on-main,#101114); right:16px; bottom:calc(18px + env(safe-area-inset-bottom)); }
       .vs .vs-tag .house-ico{ width:1.1em; height:1.1em; margin-right:2px; }
       .vs .vs-edge{ position:absolute; inset:0; z-index:10; animation:vsPush 1.2s ease-in-out 1s infinite; }
       .vs .cl-bolt{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; filter:drop-shadow(0 0 6px rgba(58,168,255,1)) drop-shadow(0 0 18px rgba(58,168,255,.75)); opacity:0; animation:clOn .1s linear .5s both; }
@@ -64,7 +64,7 @@
       .clash .ai .cl-chara{ left:-14%; top:50%; height:84%; transform:translateY(-50%); -webkit-mask-image:radial-gradient(circle at 50% 50%, #000 40%, transparent 70%); mask-image:radial-gradient(circle at 50% 50%, #000 40%, transparent 70%); }
       .clash .cl-tag{ position:absolute; z-index:15; font-weight:900; font-size:15px; padding:3px 12px; color:#101114; clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%); white-space:nowrap; }
       .clash .cl-tag small{ font-family:'Chakra Petch',sans-serif; font-size:10px; letter-spacing:.2em; margin-right:6px; opacity:.75; }
-      .clash .cl-tag.me{ background:var(--main); right:14px; bottom:14px; }
+      .clash .cl-tag.me{ background:var(--main); color:var(--on-main,#101114); right:14px; bottom:14px; }
       .clash .cl-tag.ai{ background:#7d6bff; color:#fff; left:14px; top:14px; }
       .clash .cl-edge{ position:absolute; inset:0; z-index:10; animation:clPush 1.2s ease-in-out 1s infinite; }
       .clash .cl-bolt{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; filter:drop-shadow(0 0 6px rgba(58,168,255,1)) drop-shadow(0 0 16px rgba(58,168,255,.7)); opacity:0; animation:clOn .1s linear .5s both; }
@@ -81,10 +81,10 @@
         background:linear-gradient(100deg, rgba(12,11,8,.93) 52%, rgba(var(--main-rgb),.93));
         animation:fxCutIn .95s ease both;
       }
-      .fx-cut-who{ color:var(--pop); font-size:1.05rem; letter-spacing:.25em; font-weight:800; font-family:var(--popfont); }
+      .fx-cut-who{ color:var(--main-hi,var(--pop)); font-size:1.05rem; letter-spacing:.25em; font-weight:800; font-family:var(--popfont); }
       .fx-cut-chars{ display:flex; gap:10px; }
       .fx-cut-char{
-        width:96px; height:96px; background:var(--gen); border:3px solid var(--pop); color:#fff3e6;
+        width:96px; height:96px; background:var(--gen); border:3px solid var(--main-hi,var(--pop)); color:#fff3e6;
         display:flex; align-items:center; justify-content:center;
         font-family:"Hiragino Mincho ProN","Yu Mincho",serif; font-size:3.4rem; font-weight:800; border-radius:8px;
         box-shadow:0 8px 30px rgba(0,0,0,.5);
@@ -159,7 +159,7 @@
       .start-act-btn:hover{ transform:translate(-1px,-1px); box-shadow:4px 4px 0 rgba(23,21,18,.9); }
       .start-act-btn .sa-label{ font-size:.72rem; font-weight:800; letter-spacing:.1em; color:var(--ink-soft); }
       .start-act-btn .sa-value{ font-size:1.12rem; font-weight:800; line-height:1.25; }
-      .start-act-btn.start-go{ background:var(--ink); color:var(--pop); }
+      .start-act-btn.start-go{ background:var(--ink); color:var(--main-hi,var(--pop)); }
       .start-act-btn.start-go .sa-value{ font-size:1.18rem; letter-spacing:.06em; }
       .start-act-btn:disabled{ opacity:.45; cursor:not-allowed; transform:none !important; box-shadow:3px 3px 0 rgba(23,21,18,.9); }
       /* スタート設定ポップアップの選択肢 */

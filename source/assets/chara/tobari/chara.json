@@ -1,0 +1,10 @@
+{
+ "name": "帳 しじま",
+ "yomi": "とばり しじま",
+ "color": "#1f3a6e",
+ "colorSoft": "#c9d6f0",
+ "colorHi": "#7393dc",
+ "onMain": "#f2f0ea",
+ "cssNote": "引き分け（立ち絵）は袖が広く「引分」の文字に重なるので右へ",
+ "css": "html[data-chara=\"tobari\"] #resultScreen[data-res=\"draw\"] .result-hero img{ right:-16%; }"
+}

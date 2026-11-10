@@ -11,5 +11,5 @@
       .result-btns{ flex:none; display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:auto; padding-top:10px; }
       .result-btns .big-btn{ width:100%; height:52px; margin:0; padding:0 6px; font-size:1.05rem; white-space:nowrap; }
       #resultScreen #againBtn{ height:52px; }
-      .result-btns .sub-btn{ background:transparent; color:var(--pop); box-shadow:inset 0 0 0 2px var(--pop); }
+      .result-btns .sub-btn{ background:transparent; color:var(--main-hi,var(--pop)); box-shadow:inset 0 0 0 2px var(--main-hi,var(--pop)); }
 

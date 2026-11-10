@@ -63,7 +63,8 @@ def chara_fill(text):
     text = text.replace('{{chara_names}}', '{ ' + ', '.join(cid + ':' + js_str(m['name']) for cid, m in cs) + ' }')
     text = text.replace('{{chara_tiles}}', '{ ' + ', '.join(cid + ":'{{asset:chara/" + cid + "/tile.webp}}'" for cid, _ in cs) + ' }')
     text = text.replace('{{chara_colors}}', '\n'.join(
-        '      html[data-chara="%s"], .chara-tile[data-chara="%s"]{ --main:%s; --main-rgb:%s; --main-soft:%s; }' % (cid, cid, m['color'], rgb(m['color']), m['colorSoft'])
+        '      html[data-chara="%s"], .chara-tile[data-chara="%s"]{ --main:%s; --main-rgb:%s; --main-soft:%s;%s }' % (cid, cid, m['color'], rgb(m['color']), m['colorSoft'],
+            (' --main-hi:%s;' % m['colorHi'] if m.get('colorHi') else '') + (' --on-main:%s;' % m['onMain'] if m.get('onMain') else ''))
         for cid, m in cs))
     text = text.replace('{{chara_css}}', '\n'.join(
         ('      /* ' + m['cssNote'] + ' */\n' if m.get('cssNote') else '') + '      ' + m['css'] for cid, m in cs if m.get('css')))

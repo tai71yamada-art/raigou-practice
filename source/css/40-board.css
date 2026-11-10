@@ -28,8 +28,8 @@
       .fx-bolt{ filter:drop-shadow(0 0 14px rgba(var(--main-rgb),.8)); }
       .fx-flash{ background:rgba(var(--main-rgb),.35); box-shadow:0 0 40px 14px rgba(var(--main-rgb),.45); border-radius:44px 44px 8px 8px; }
       .fx-target{ position:fixed; z-index:183; width:160px; display:flex; flex-direction:column; align-items:center; animation:fxCenter .9s ease both; text-align:center; }
-      .fx-target span{ font-family:var(--num); font-weight:700; font-size:.68rem; letter-spacing:.25em; color:var(--main); }
-      .fx-target b{ font-size:.82rem; font-weight:900; color:#101114; background:var(--main); padding:1px 8px; }
+      .fx-target span{ font-family:var(--num); font-weight:700; font-size:.68rem; letter-spacing:.25em; color:var(--main-hi,var(--main)); }
+      .fx-target b{ font-size:.82rem; font-weight:900; color:var(--on-main,#101114); background:var(--main); padding:1px 8px; }
 
       /* 雷轟合戦（上下分割） */
       .modal-box:has(.battle-split){ padding:0; max-width:420px; overflow:hidden; background:#101114; }
@@ -40,17 +40,17 @@
       .bt-who{ display:flex; flex-direction:column; align-self:stretch; }
       .bt-side.top .bt-who{ align-items:flex-start; }
       .bt-en{ font-family:var(--num); font-weight:700; font-size:.7rem; letter-spacing:.25em; color:#b9afff; }
-      .bt-side.bottom .bt-en{ color:var(--main); }
+      .bt-side.bottom .bt-en{ color:var(--main-hi,var(--main)); }
       .bt-name{ font-weight:900; font-size:.9rem; }
       .bt-tile .tile{ width:96px !important; height:96px !important; font-size:3.6rem !important; opacity:.6; }
       .bt-tile .tile .w{ font-size:.9rem !important; top:6px; right:8px; }
-      .bt-side.win .bt-tile .tile{ opacity:1; outline:3px solid var(--main); outline-offset:3px; box-shadow:0 0 26px rgba(var(--main-rgb),.55); }
+      .bt-side.win .bt-tile .tile{ opacity:1; outline:3px solid var(--main-hi,var(--main)); outline-offset:3px; box-shadow:0 0 26px rgba(var(--main-rgb),.55); }
       .bt-w{ font-size:.75rem; font-weight:700; color:#a9a7a0; }
-      .bt-side.win .bt-w{ color:var(--main); }
+      .bt-side.win .bt-w{ color:var(--main-hi,var(--main)); }
       .bt-mid{ display:flex; flex-direction:column; align-items:center; gap:2px; margin:-8px 0; position:relative; z-index:1; }
       .bt-title{ font-family:var(--kanji); font-size:2.2rem; letter-spacing:.2em; text-shadow:0 0 18px rgba(var(--main-rgb),.6); }
       .bt-sub{ font-size:.72rem; color:#a9a7a0; text-align:center; padding:0 12px; }
-      .bt-result{ margin:12px 16px 0; background:var(--main); color:#101114; padding:10px 14px; display:flex; flex-direction:column; gap:2px; clip-path:var(--cut); }
+      .bt-result{ margin:12px 16px 0; background:var(--main); color:var(--on-main,#101114); padding:10px 14px; display:flex; flex-direction:column; gap:2px; clip-path:var(--cut); }
       .bt-result b{ color:#101114; font-size:1rem; font-weight:900; }
       .bt-result span{ font-size:.78rem; font-weight:700; }
       .bt-result.draw{ background:#2a2d35; color:#f2f0ea; }
@@ -60,18 +60,18 @@
       .battle-split .btn-row .btn{ flex:1; height:50px; clip-path:var(--cut); }
 
       /* 終局・塔の全解放 */
-      .final-reveal .fr-tag{ font-family:var(--num); font-weight:700; font-size:.72rem; letter-spacing:.25em; color:var(--main); }
+      .final-reveal .fr-tag{ font-family:var(--num); font-weight:700; font-size:.72rem; letter-spacing:.25em; color:var(--main-hi,var(--main)); }
       .final-reveal h3{ font-size:1.6rem; margin-top:2px; }
       .fr-lead{ font-size:.82rem; color:#a9a7a0; }
       .fr-card{ background:#17191e; border:1px solid var(--line); padding:10px 12px; margin:10px 0 4px; display:flex; flex-direction:column; gap:8px; }
-      .fr-card.me{ background:#1d1a0c; border-color:var(--main); }
+      .fr-card.me{ background:#1d1a0c; border-color:var(--main-hi,var(--main)); }
       .fr-head{ display:flex; align-items:center; gap:8px; }
       .fr-bar{ width:4px; height:16px; background:#7d6bff; }
       .fr-card.me .fr-bar{ background:var(--main); }
       .fr-name{ font-weight:900; }
       .fr-step{ font-size:.7rem; color:#a9a7a0; }
       .fr-score{ margin-left:auto; font-family:var(--num); font-weight:700; color:#a9a7a0; font-size:.9rem; }
-      .fr-score b{ font-size:1.2rem; color:var(--main); }
+      .fr-score b{ font-size:1.2rem; color:var(--main-hi,var(--main)); }
       .fr-row{ display:flex; align-items:center; gap:8px; min-height:34px; }
       .fr-gate{ font-size:.7rem; color:#a9a7a0; width:40px; flex:none; }
       .fr-tiles{ display:flex; gap:3px; flex-wrap:wrap; }
@@ -82,7 +82,7 @@
       .fr-res small{ color:#8d8b85; font-size:.62rem; }
       .fr-res.none{ color:#8d8b85; }
       .fr-res.bad{ color:#ff6b78; font-weight:900; }
-      .fr-pts{ font-family:var(--num); font-weight:700; font-size:1.15rem; color:var(--main); width:30px; text-align:right; flex:none; }
+      .fr-pts{ font-family:var(--num); font-weight:700; font-size:1.15rem; color:var(--main-hi,var(--main)); width:30px; text-align:right; flex:none; }
       .fr-pts.none{ color:#8d8b85; }
       .fr-pts.bad{ color:#ff6b78; }
       .fr-note{ font-size:.68rem; color:#8d8b85; }
@@ -100,11 +100,11 @@
       .rt-row{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.1fr) minmax(0,1.1fr); gap:8px; align-items:start; padding:8px 0; border-bottom:1px solid #2a2d35; font-size:.85rem; }
       .rt-row:last-child{ border-bottom:none; }
       .rt-head{ font-size:.72rem; font-weight:900; color:#a9a7a0; padding:2px 0 6px; }
-      .rt-head .rt-me{ color:var(--main); }
+      .rt-head .rt-me{ color:var(--main-hi,var(--main)); }
       .rt-k{ color:#a9a7a0; display:flex; flex-direction:column; }
       .rt-k small{ font-size:.6rem; color:#8d8b85; }
       .rt-v.num{ font-family:var(--num); font-weight:700; font-size:1.15rem; }
-      .rt-v.me{ color:var(--main); }
+      .rt-v.me{ color:var(--main-hi,var(--main)); }
       .rt-v.bad{ color:#ff6b78; }
       .rt-v.roles{ display:flex; flex-direction:column; gap:2px; font-weight:700; }
       .rt-v.roles small{ color:#8d8b85; font-weight:500; }

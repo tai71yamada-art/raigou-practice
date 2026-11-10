@@ -22,7 +22,7 @@
         width:min(300px, calc(100vw - 32px)); max-height:calc(100vh - 40px); overflow:auto; z-index:70; box-sizing:border-box; padding:16px; }
       .mid-dock .menu[open] summary::before{ content:''; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:69; cursor:default; }
       .mid-dock .menu[open] .menu-pop .ghost-btn{ width:100%; min-height:42px; }
-      .mid-dock .menu[open] .menu-pop::before{ content:'メニュー'; display:block; text-align:center; font-family:var(--kanji); font-size:1.15rem; padding-bottom:6px; margin-bottom:10px; border-bottom:2px solid var(--main); }
+      .mid-dock .menu[open] .menu-pop::before{ content:'メニュー'; display:block; text-align:center; font-family:var(--kanji); font-size:1.15rem; padding-bottom:6px; margin-bottom:10px; border-bottom:2px solid var(--main-hi,var(--main)); }
       .mid-dock .menu-pop .menu-guide:first-of-type{ border-top:none; margin-top:0; padding-top:0; }
       .mid-dock .menu-pop .end-game-btn{ margin-top:7px; }
       /* 体内は高さを固定（駒が1〜3個のどれでも、画面の長さが変わらない） */
@@ -54,7 +54,7 @@
       @media (max-width:380px){ .tab-row .tab-btn{ padding:7px 8px; font-size:.8rem; } }
       /* 残り駒 */
       .remain-sum{ margin:2px 0 0; font-weight:800; font-family:var(--popfont); }
-      .remain-sum b{ color:var(--main); font-family:var(--num); font-size:1.3rem; margin:0 2px; }
+      .remain-sum b{ color:var(--main-hi,var(--main)); font-family:var(--num); font-size:1.3rem; margin:0 2px; }
       .remain-where{ margin:2px 0 8px; }
       .remain-label{ font-size:.75rem; font-weight:800; color:var(--ink-soft); margin:8px 0 4px; }
       .remain-grid{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:6px; }
@@ -86,7 +86,7 @@
       .set-title{ font-weight:800; font-family:var(--popfont); font-size:.9rem; margin-bottom:6px; }
       .seg{ display:flex; gap:4px; }
       .seg-btn{ flex:1 1 0; height:40px; border:1px solid var(--line); background:var(--panel2); color:var(--ink); font-weight:800; font-family:var(--popfont); font-size:.88rem; }
-      .seg-btn.on{ background:var(--main); color:#101114; border-color:var(--main); }
+      .seg-btn.on{ background:var(--main); color:var(--on-main,#101114); border-color:var(--main-hi,var(--main)); }
       .seg:has(.seg-btn:nth-child(6)) .seg-btn{ font-size:.76rem; letter-spacing:-.02em; padding:0; }
       .seg:has(.seg-btn:nth-child(7)) .seg-btn{ font-size:.7rem; letter-spacing:-.04em; }
       .set-desc{ margin:6px 0 0; font-size:.78rem; }
@@ -95,7 +95,7 @@
       .stats-kpis{ display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:4px; margin:10px 0 4px; }
       .kpi{ background:var(--panel2); padding:6px 2px; text-align:center; }
       .kpi span{ display:block; font-size:.62rem; color:var(--ink-soft); font-weight:700; white-space:nowrap; }
-      .kpi b{ display:block; font-family:var(--num); font-size:1.2rem; color:var(--main); line-height:1.2; }
+      .kpi b{ display:block; font-family:var(--num); font-size:1.2rem; color:var(--main-hi,var(--main)); line-height:1.2; }
       .stats-table .st-row{ display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr 1.2fr; padding:5px 6px; border-bottom:1px solid var(--line); font-family:var(--num); }
       .stats-table .st-row span{ text-align:center; }
       .stats-table .st-row span:first-child{ text-align:left; }
@@ -108,14 +108,14 @@
       .sb-fill{ height:100%; background:var(--main); }
       .stats-bars b{ width:2.6em; text-align:right; font-family:var(--num); }
       .stats-roles .sr-row{ display:flex; justify-content:space-between; padding:6px 4px; border-bottom:1px solid var(--line); }
-      .stats-roles b{ font-family:var(--num); color:var(--main); }
+      .stats-roles b{ font-family:var(--num); color:var(--main-hi,var(--main)); }
       #statsReset.armed{ background:#ff4d5e; color:#101114; }
       .menu-pop label:has(#diffSelect){ display:none; }
       #humanZone .pz-avatar.face-pop{ animation:facePop .35s cubic-bezier(.2,1.6,.4,1); }
       @keyframes facePop{ 0%{ transform:scale(.86); } 100%{ transform:scale(1); } }
       .mid-dock #deckBtn.low{ border-color:#ff4d5e; color:#ff6b78; background:#1d1316; box-shadow:0 0 10px rgba(255,77,94,.25); }
       .mid-dock #deckBtn.low b{ color:#ff6b78; }
-      .mid-dock #canyonBtn{ background:var(--main); color:#101114; border-color:var(--main); padding:0 12px 0 14px; min-width:96px; font-weight:800;
+      .mid-dock #canyonBtn{ background:var(--main); color:var(--on-main,#101114); border-color:var(--main-hi,var(--main)); padding:0 12px 0 14px; min-width:96px; font-weight:800;
         display:inline-flex; align-items:center; justify-content:center; gap:5px; }
       .mid-dock #canyonBtn b{ color:#101114; }
       .mid-dock #canyonBtn::after{ content:'›'; font-size:1.15rem; font-weight:900; line-height:1; margin-left:2px; }
@@ -157,21 +157,21 @@
       .st-recent{ display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:6px 0 2px; }
       .st-recent-label{ font-size:.68rem; color:var(--ink-soft); font-weight:700; margin-right:4px; }
       .st-recent i{ font-style:normal; width:22px; height:22px; display:grid; place-items:center; font-size:.72rem; font-weight:700; background:var(--panel2); color:var(--ink-soft); }
-      .st-recent i.w{ background:var(--main); color:#101114; }
+      .st-recent i.w{ background:var(--main); color:var(--on-main,#101114); }
       .st-recent i.l{ background:#3a2026; color:#ff6b78; }
       .st-best{ display:flex; align-items:baseline; gap:10px; background:var(--panel2); padding:8px 10px; }
-      .st-best b{ font-family:var(--num); font-size:1.4rem; color:var(--main); }
-      .stats-box h4 small{ font-family:var(--num); color:var(--main); margin-left:6px; }
+      .st-best b{ font-family:var(--num); font-size:1.4rem; color:var(--main-hi,var(--main)); }
+      .stats-box h4 small{ font-family:var(--num); color:var(--main-hi,var(--main)); margin-left:6px; }
       .zk-title{ margin:8px 0 4px; font-size:.72rem; color:var(--ink-soft); font-weight:700; }
       .zk-grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:4px; }
       .zk{ display:flex; justify-content:space-between; align-items:center; padding:6px 8px; background:var(--panel2); opacity:.45; }
       .zk span{ font-family:'Zen Antique', serif; }
       .zk b{ font-family:var(--num); font-size:.72rem; color:var(--ink-soft); }
-      .zk.on{ opacity:1; box-shadow:inset 3px 0 0 var(--main); }
-      .zk.on b{ color:var(--main); }
-      .zk-grid.raijin .zk.on{ background:linear-gradient(90deg, rgba(var(--main-rgb),.28), var(--panel2)); box-shadow:inset 0 0 0 1px var(--main), 0 0 10px rgba(var(--main-rgb),.45); }
+      .zk.on{ opacity:1; box-shadow:inset 3px 0 0 var(--main-hi,var(--main)); }
+      .zk.on b{ color:var(--main-hi,var(--main)); }
+      .zk-grid.raijin .zk.on{ background:linear-gradient(90deg, rgba(var(--main-rgb),.28), var(--panel2)); box-shadow:inset 0 0 0 1px var(--main-hi,var(--main)), 0 0 10px rgba(var(--main-rgb),.45); }
       /* 途中保存：メニューの「保存して終了」とスタート画面の「対戦再開」 */
-      .mid-dock .menu-pop .save-quit-btn{ margin-top:7px; background:var(--panel2); color:var(--main); border:1px solid var(--main); font-weight:900; }
+      .mid-dock .menu-pop .save-quit-btn{ margin-top:7px; background:var(--panel2); color:var(--main-hi,var(--main)); border:1px solid var(--main-hi,var(--main)); font-weight:900; }
       .mid-dock .menu-pop .save-quit-btn:disabled{ opacity:.4; }
       .save-quit-note{ margin:4px 0 2px; font-size:.72rem; color:#a9a7a0; text-align:center; }
       .resume-row{ flex-basis:100%; display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; font-size:.76rem; color:#101114; }
@@ -193,9 +193,9 @@
       .house-ico{ display:inline-block; width:1.05em; height:1.05em; vertical-align:-0.16em; margin-right:3px; background:currentColor;
         -webkit-mask-image:var(--mon); mask-image:var(--mon); -webkit-mask-size:contain; mask-size:contain;
         -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; }
-      .house-ico.big{ width:54px; height:54px; margin:0 0 4px; display:block; color:var(--main); }
+      .house-ico.big{ width:54px; height:54px; margin:0 0 4px; display:block; color:var(--main-hi,var(--main)); }
       .pz-house{ font-family:var(--popfont); font-weight:800; font-size:.78rem; color:var(--ink-soft); white-space:nowrap; }
-      #humanZone .pz-house{ color:var(--main); }
+      #humanZone .pz-house{ color:var(--main-hi,var(--main)); }
       #aiZone .pz-house{ color:#c9c1ff; }
       /* スタート画面：ルールと家は2つ並べる */
       .start-act-btn.rule-btn{ flex:1 1 calc(50% - 4px); }
@@ -213,14 +213,14 @@
       .house-pick .set-opt:disabled .house-ico.big{ color:#8a8d96; }
       .house-pick .set-opt.chara-tile.on{ background:var(--main); }
       .house-pick .set-opt.chara-tile{ position:relative; overflow:hidden; display:block; padding:0; min-height:118px; text-align:left; }
-      .chara-tile .house-ico.ct-mon{ position:absolute; left:8px; top:8px; width:34px; height:34px; margin:0; color:var(--main); z-index:2; }
-      .chara-tile.on .house-ico.ct-mon{ color:#101114; }
+      .chara-tile .house-ico.ct-mon{ position:absolute; left:8px; top:8px; width:34px; height:34px; margin:0; color:var(--main-hi,var(--main)); z-index:2; }
+      .chara-tile.on .house-ico.ct-mon{ color:var(--on-main,#101114); }
       .chara-tile .ct-img{ position:absolute; right:-6px; bottom:0; height:100%; max-height:none; width:auto; z-index:1; pointer-events:none; }
       .chara-tile .ct-name{ position:absolute; left:8px; bottom:8px; z-index:3; display:flex; flex-direction:column; line-height:1.1; font-family:'Zen Antique',serif; font-size:1.15rem; color:var(--ink);
         text-shadow:0 0 3px var(--panel2), 0 0 6px var(--panel2); }
       .chara-tile .ct-name small{ font-size:.72rem; letter-spacing:.1em; }
-      .chara-tile.on .ct-name{ color:#101114; text-shadow:0 0 3px var(--main), 0 0 6px var(--main); }
-      .chara-tile .ct-check{ position:absolute; right:6px; top:6px; z-index:3; font-size:.68rem; font-weight:900; padding:1px 6px; background:#101114; color:var(--main); }
+      .chara-tile.on .ct-name{ color:var(--on-main,#101114); text-shadow:0 0 3px var(--main), 0 0 6px var(--main); }
+      .chara-tile .ct-check{ position:absolute; right:6px; top:6px; z-index:3; font-size:.68rem; font-weight:900; padding:1px 6px; background:#101114; color:var(--main-hi,var(--main)); }
       .house-pick .set-opt:disabled .so-head{ font-size:.82rem; letter-spacing:.2em; color:var(--ink-soft); }
       /* タブの右端の「隠」：押したまま上にスワイプで手番終了 */
       .tab-row{ align-items:flex-end; }
@@ -250,11 +250,11 @@
       /* 駒一覧のタブと奥義駒 */
       .guide-tabs{ display:flex; gap:6px; margin:10px 0 4px; }
       .guide-tab{ flex:1 1 0; height:40px; border:1px solid var(--line); background:var(--panel2); color:var(--ink-soft); font-weight:800; font-family:var(--popfont); font-size:.95rem; }
-      .guide-tab.on{ background:var(--main); color:#101114; border-color:var(--main); }
+      .guide-tab.on{ background:var(--main); color:var(--on-main,#101114); border-color:var(--main-hi,var(--main)); }
       .tile.ougi{ background:#101114; color:#ffd23f; border:1.5px solid #ffd23f; font-family:var(--kanji); }
       .tile.ougi .w{ background:#ffd23f; color:#101114; }
       .ougi-owner{ text-align:center; font-size:.85rem; color:var(--ink-soft); margin:0 0 4px; }
-      .guide-badge.ougi-type{ background:var(--main); color:#101114; border-color:var(--main); }
+      .guide-badge.ougi-type{ background:var(--main); color:var(--on-main,#101114); border-color:var(--main-hi,var(--main)); }
       .ougi-notes div{ line-height:1.6; }
       .ougi-old{ margin:8px 0; font-size:.85rem; color:var(--ink-soft); }
       .ougi-old summary{ cursor:pointer; font-weight:800; }

@@ -25,10 +25,10 @@
       .gate .g-info{ display:none; }
       .gl-name{ color:#8d8b85; }
       .gl-n{ color:#a9a7a0; font-weight:700; }
-      .gl-role{ background:var(--main); color:#101114; font-weight:900; padding:0 5px; }
+      .gl-role{ background:var(--main); color:var(--on-main,#101114); font-weight:900; padding:0 5px; }
       .gl-bad{ background:#ff4d5e; color:#101114; font-weight:900; padding:0 5px; }
       .gl-seal{ color:#c9c1ff; font-weight:900; }
-      .gate.has-role{ border:1.5px solid var(--main); background:rgba(var(--main-rgb),.05); box-shadow:0 0 14px rgba(var(--main-rgb),.22); }
+      .gate.has-role{ border:1.5px solid var(--main-hi,var(--main)); background:rgba(var(--main-rgb),.05); box-shadow:0 0 14px rgba(var(--main-rgb),.22); }
       .gate .g-stack{ width:auto; display:flex; flex-direction:column; gap:2px; align-items:center; }
       .gate .g-stack .tile{ margin:0 !important; border-radius:1px; flex-direction:row; line-height:1; animation:none; }
       .gate .g-stack .tile.back::before{ display:none; }
@@ -57,15 +57,15 @@
 
       /* 操作チップ */
       #chipRoot{ position:fixed; inset:0; z-index:60; pointer-events:none; }
-      .hand-chips{ position:fixed; pointer-events:auto; max-width:calc(100vw - 16px); background:#101114; padding:6px; box-shadow:0 0 0 1px var(--main), 0 10px 28px rgba(0,0,0,.6); animation:fxCharaText .18s ease both; }
+      .hand-chips{ position:fixed; pointer-events:auto; max-width:calc(100vw - 16px); background:#101114; padding:6px; box-shadow:0 0 0 1px var(--main-hi,var(--main)), 0 10px 28px rgba(0,0,0,.6); animation:fxCharaText .18s ease both; }
       .hc-row{ display:flex; flex-wrap:wrap; gap:5px; }
-      .hc-chip{ height:38px; padding:0 12px; border:1.5px solid var(--main); background:#101114; color:var(--main); font-weight:900; font-size:.85rem; font-family:var(--popfont); clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px); }
-      .hc-chip.primary{ background:var(--main); color:#101114; border-color:var(--main); }
+      .hc-chip{ height:38px; padding:0 12px; border:1.5px solid var(--main-hi,var(--main)); background:#101114; color:var(--main-hi,var(--main)); font-weight:900; font-size:.85rem; font-family:var(--popfont); clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px); }
+      .hc-chip.primary{ background:var(--main); color:var(--on-main,#101114); border-color:var(--main-hi,var(--main)); }
       .hc-chip.more{ border-color:#3a3d47; color:#f2f0ea; background:#1e2026; font-weight:700; }
       .hc-chip:disabled{ opacity:.35; }
       .hc-note{ font-size:.68rem; color:#a9a7a0; margin-top:5px; max-width:300px; }
-      .hc-arrow{ position:absolute; bottom:-8px; width:0; height:0; border-left:7px solid transparent; border-right:7px solid transparent; border-top:8px solid var(--main); }
-      .hand-chips.below .hc-arrow{ bottom:auto; top:-8px; border-top:none; border-bottom:8px solid var(--main); }
+      .hc-arrow{ position:absolute; bottom:-8px; width:0; height:0; border-left:7px solid transparent; border-right:7px solid transparent; border-top:8px solid var(--main-hi,var(--main)); }
+      .hand-chips.below .hc-arrow{ bottom:auto; top:-8px; border-top:none; border-bottom:8px solid var(--main-hi,var(--main)); }
 
       .pz-head{ flex-wrap:nowrap; }
       .pz-head .pz-name{ white-space:nowrap; }
