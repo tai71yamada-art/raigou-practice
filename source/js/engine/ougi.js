@@ -6,7 +6,7 @@
    ・奥義駒はすべて重さ9の言霊。発したら峡谷へ行く。陣で防げるのは雷・蛇・斬だけなので、奥義は防げない。
    効果を作った奥義駒は ougi-data.js の implemented を true にする（選択画面に出るのは true の駒だけ）。 */
 const OUGI_BRING = 2;   // 持ち込む奥義駒の数
-['覇','天','啓','和','禅','楼','幻','鳴','赫','涼','風','凛'].forEach(function(n){ const o = ougiByName(n); if(o) o.implemented = true; });
+['覇','天','啓','和','禅','楼','幻','鳴','赫','涼','風','凛','鳳','焔','姫'].forEach(function(n){ const o = ougiByName(n); if(o) o.implemented = true; });
 
 function ougiReadyList(){ return OUGI_DATA.filter(function(o){ return o.implemented && !o.kyogiBanned; }); }
 /* 奥義駒は自分と相手で重ならないのが決まり。ただし作り終えた駒が4種類そろうまでは、重なりを認める */
@@ -109,6 +109,12 @@ function ougiUsable(pi, slot){
   if(t.name === '幻') return genAvailable().length ? '' : '除外された駒がありません（奥義駒は選べません）';
   if(t.name === '鳴' || t.name === '赫' || t.name === '涼') return '';
   if(t.name === '風') return G.deck.length >= 3 ? '' : '雷山の駒が3個未満です';
+  if(t.name === '鳳') return '';
+  if(t.name === '焔'){
+    if(G.actedSlots && G.actedSlots.size) return '一発奥義：この手番にほかの駒を積・発したあとは発せません';
+    return homuraTargets().length ? '' : '対象にできる塔がありません（封印中の塔は選べません）';
+  }
+  if(t.name === '姫') return P(1 - pi).body.length ? '' : '相手の体内に駒がありません';
   if(t.name === '凛'){
     if(!G.deck.length) return '雷山に駒がありません';
     return rinTowers(pi).length ? '' : '役が完成している自分の塔がありません';
@@ -171,6 +177,7 @@ async function primTen(actor, slot, gi, loc){
 /* ---- 啓：2段以上の塔と空いた桜門を持つ人を選び、その塔を好きな所で上下2つに分け、片方を空いた桜門へ置く ----
    k＝下の部分の段数（1〜段数-1）。part＝空いた桜門へ移す側（'top'＝上の部分／'bottom'＝下の部分） */
 async function primKei(actor, slot, tpi, gi, k, part, destGi){
+  homuraCheck();
   const p = P(actor), t = p.hand[slot];
   if(!isOugi(t) || t.name !== '啓') return false;
   const q = P(tpi), tower = q.gates[gi];
@@ -420,6 +427,115 @@ async function primRin(actor, slot, gi){
     p.gates[gi] = []; p.seals[gi] = null;
     if(G.cutHints) G.cutHints[actor][gi] = [];
   }
+  await VIEW.render();
+  return true;
+}
+
+/* ================= 鳳・焔・姫 ================= */
+/* ---- 鳳：相手と内駒（体内と手）を全て入れ替え、両方が体内か手の好きな場所に置き直す。
+   arrange(pi, tiles, handCount) は、手に置く駒の番号の配列を返す（体内は3個まで） ---- */
+function hoArrangeOk(tiles, handIdx, handCount){
+  return handIdx.length <= handCount && tiles.length - handIdx.length <= BODY_MAX &&
+         handIdx.every(function(i){ return i >= 0 && i < tiles.length; }) && new Set(handIdx).size === handIdx.length;
+}
+function hoDefaultArrange(tiles, handCount){
+  /* 体内に入りきらない分だけ、軽い順に手へ */
+  const order = tiles.map(function(_, i){ return i; }).sort(function(a, b){ return tiles[a].w - tiles[b].w; });
+  return order.slice(0, Math.max(0, tiles.length - BODY_MAX));
+}
+async function primHo(actor, slot, arrange){
+  const p = P(actor), q = P(1 - actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '鳳') return false;
+  G.used.add('鳳');
+  await VIEW.playCutIn('鳳', actor);
+  consumeHand(p, slot);
+  const mine = p.body.concat(p.hand.filter(Boolean)), theirs = q.body.concat(q.hand.filter(Boolean));
+  p.body = []; q.body = [];
+  p.hand = p.hand.map(function(){ return null; }); q.hand = q.hand.map(function(){ return null; });
+  mine.concat(theirs).forEach(function(x){ if(G.kn){ G.kn[0].add(x.id); G.kn[1].add(x.id); } });
+  log(p.name + 'の奥義「鳳」：' + p.name + 'と' + q.name + 'の内駒を全て入れ替えました（' +
+      p.name + 'へ：' + (theirs.length ? theirs.map(tileLabel).join('・') : 'なし') + '／' + q.name + 'へ：' + (mine.length ? mine.map(tileLabel).join('・') : 'なし') + '）。', 'score');
+  /* 置き直しは、発した人から順に */
+  const plan = [[p, theirs, actor], [q, mine, 1 - actor]];
+  for(let k = 0; k < 2; k++){
+    const pl = plan[k][0], tiles = plan[k][1], pi = plan[k][2], hc = pl.hand.length;
+    let hi = tiles.length ? await arrange(pi, tiles, hc) : [];
+    if(!hi || !hoArrangeOk(tiles, hi, hc)) hi = hoDefaultArrange(tiles, hc);
+    let s = 0;
+    tiles.forEach(function(x, i){
+      if(hi.indexOf(i) >= 0){ while(s < hc && pl.hand[s]) s++; pl.hand[s] = x; }
+      else pl.body.push(x);
+    });
+    sortBody(pl);
+  }
+  if(actor !== 0) VIEW.setMeFace('hit');
+  await VIEW.render();
+  return true;
+}
+/* ---- 焔（一発奥義）：塔がある桜門を1つ選び、炎上させる。隠駒が動くたび（手番が替わるたび）に、
+   その塔の一番下の駒を峡谷へ。塔が無くなると焔も峡谷へ置き、効果が終わる。
+   封印中の塔は選べない。炎上中の塔が封印されている間は、焔の効果も止まる。 G.homura = {pi, gi, tile, by} ---- */
+function homuraTargets(){
+  const out = [];
+  for(let pi = 0; pi < 2; pi++) for(let gi = 0; gi < 3; gi++){
+    if(P(pi).gates[gi].length && !P(pi).seals[gi]) out.push({ pi:pi, gi:gi });
+  }
+  return out;
+}
+function isBurning(pi, gi){ return !!(G.homura && G.homura.pi === pi && G.homura.gi === gi); }
+async function primHomura(actor, slot, pi, gi){
+  const p = P(actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '焔') return false;
+  if(!homuraTargets().some(function(x){ return x.pi === pi && x.gi === gi; })) return false;
+  G.used.add('焔');
+  await VIEW.playCutIn('焔', actor);
+  p.hand[slot] = null;
+  markActed(p, slot);
+  if(G.players && p === P(0) && G.hatsuGame) G.hatsuGame['焔'] = (G.hatsuGame['焔'] || 0) + 1;
+  G.homura = { pi:pi, gi:gi, tile:t, by:actor };
+  G.ippatsu = true;
+  log(p.name + 'の奥義「焔」：' + P(pi).name + 'の桜門' + (gi+1) + 'を炎上させました。手番が替わるたびに、この塔の一番下の駒が峡谷へ置かれます。', 'bad');
+  if(actor !== 0 && pi === 0) VIEW.setMeFace('hit');
+  await VIEW.render();
+  return true;
+}
+/* 手番が替わった時（隠駒が動いた時）の炎上の処理。塔が無くなっていたら焔を峡谷へ */
+function homuraTick(){
+  const h = G.homura;
+  if(!h) return;
+  const p = P(h.pi), tw = p.gates[h.gi];
+  if(!tw.length){ homuraEnd(); return; }
+  if(p.seals[h.gi]){ log('炎上中の' + p.name + 'の桜門' + (h.gi+1) + 'の塔は封印中なので、焔の効果は止まっています。', 'sys'); return; }
+  const x = tw.shift();
+  G.canyon.push(x);
+  if(G.cutHints && G.cutHints[h.pi] && G.cutHints[h.pi][h.gi]) G.cutHints[h.pi][h.gi] = [];
+  log('焔：' + p.name + 'の桜門' + (h.gi+1) + 'の塔の一番下の「' + tileLabel(x) + '」が燃えて、峡谷へ置かれました（残り' + tw.length + '段）。', 'bad');
+  if(!tw.length) homuraEnd();
+}
+/* 炎上中の桜門の塔が（解放などで）無くなっていたら、すぐに焔を峡谷へ。新しく積んだ塔は燃やさない */
+function homuraCheck(){ if(G.homura && !P(G.homura.pi).gates[G.homura.gi].length) homuraEnd(); }
+function homuraEnd(){
+  const h = G.homura; if(!h) return;
+  G.canyon.push(h.tile);
+  G.homura = null;
+  log('焔：桜門の塔が無くなったので、焔を峡谷へ置き、炎上が終わりました。', 'sys');
+}
+/* ---- 姫：相手の体内の駒を1つ選び、姫があった手へ移す。姫は、選んだ駒があった相手の体内へ移る ---- */
+async function primHime(actor, slot, bodyIdx){
+  const p = P(actor), q = P(1 - actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '姫' || !q.body[bodyIdx]) return false;
+  G.used.add('姫');
+  await VIEW.playCutIn('姫', actor);
+  markActed(p, slot);
+  if(G.players && p === P(0) && G.hatsuGame) G.hatsuGame['姫'] = (G.hatsuGame['姫'] || 0) + 1;
+  const x = q.body[bodyIdx];
+  q.body[bodyIdx] = t;
+  p.hand[slot] = x;
+  sortBody(q);
+  if(G.kn){ G.kn[actor].add(x.id); G.kn[0].add(t.id); G.kn[1].add(t.id); }
+  if(p.isAI) log(p.name + 'の奥義「姫」：' + q.name + 'の体内の駒を1つ取り、' + handLabel(slot) + 'に置きました。姫は' + q.name + 'の体内へ移りました。', 'bad');
+  else log(p.name + 'の奥義「姫」：' + q.name + 'の体内から「' + tileLabel(x) + '」を取り、' + handLabel(slot) + 'に置きました。姫は' + q.name + 'の体内へ移りました。', 'score');
+  if(actor !== 0) VIEW.setMeFace('hit');
   await VIEW.render();
   return true;
 }

@@ -90,7 +90,7 @@ function newGame(humanSente, difficulty, opts){
   G.houses = [ opts.house || 'rakura', AI_HOUSE.id ];
   VIEW.applyHouseClasses();
   G.actedSlots = new Set(); G.inGassen = false; G.lastTowerEffect = null;
-  G.excludedOugi = []; G.kakuZero = [false, false]; G.kakuNow = false; G.openIds = new Set(); G.deckOpen = new Set(); G.ippatsu = false;
+  G.excludedOugi = []; G.kakuZero = [false, false]; G.kakuNow = false; G.openIds = new Set(); G.deckOpen = new Set(); G.homura = null; G.ippatsu = false;
   if(G.rules.ougi) setupOugi(opts.ougi);
   // 初期の体内：先手1枚、後手2枚
   const gote = opp(G.sente);

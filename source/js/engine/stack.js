@@ -11,6 +11,7 @@ async function primStack(actor, handSlot, gi){
   if(!t || !canStack(p, gi, t)) return false;
   p.hand[handSlot] = null;
   markActed(p, handSlot);
+  if(typeof homuraCheck === 'function') homuraCheck();
   p.gates[gi].push(t);
   VIEW.sfx('stack');
   const wasOpen = isOpenTile(t);

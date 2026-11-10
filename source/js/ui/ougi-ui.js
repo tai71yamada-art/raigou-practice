@@ -210,6 +210,28 @@ async function runOugiFlow(slot){
     await primKaku(0, slot);
     return;
   }
+  if(t.name === '鳳'){
+    const ok = await confirmYesNo('奥義「鳳」の確認', 'あなたとAIの<b>内駒（体内と手）を全て入れ替えます</b>。入れ替えた駒は両方に分かります。そのあと、受け取った駒を体内か手の好きな場所に置き直します（AIも同じように置き直します）。');
+    if(!ok) return;
+    await primHo(0, slot, hoArrangeFor);
+    return;
+  }
+  if(t.name === '焔'){
+    while(true){
+      const tgt = await pickTowerModal('奥義「焔」：炎上させる桜門を選ぶ', '塔がある桜門を1つ選びます（自分の桜門も選べます。封印中の塔は選べません）。<b>手番が替わるたびに</b>、その塔の一番下の駒が峡谷へ置かれます。塔が無くなると焔も峡谷へ置き、炎上が終わります。<b>一発奥義</b>なので、この手番はほかの駒を積・発できなくなります。', homuraTargets());
+      if(!tgt) return;
+      const ok = await confirmYesNo('奥義「焔」の確認', (tgt.pi === 0 ? 'あなた' : 'AI') + 'の桜門' + (tgt.gi+1) + '（' + P(tgt.pi).gates[tgt.gi].length + '段）を炎上させます。');
+      if(!ok) continue;
+      await primHomura(0, slot, tgt.pi, tgt.gi);
+      return;
+    }
+  }
+  if(t.name === '姫'){
+    const idx = await pickHimeModal();
+    if(idx === null) return;
+    await primHime(0, slot, idx);
+    return;
+  }
   if(t.name === '涼'){
     const ok = await confirmYesNo('奥義「涼」の確認', 'あなたとAIの<b>内駒（体内と手）を全て表向き</b>にします。表になった駒は、積むまで表のままです。');
     if(!ok) return;
@@ -489,5 +511,51 @@ function showRinReveal(actor, gi, tiles, s, x, win){
     h += '<div class="btn-row"><button type="button" class="btn primary" id="rinOk">閉じる</button></div>';
     showModal(h);
     document.getElementById('rinOk').addEventListener('click', function(){ closeModal(); resolve(); });
+  });
+}
+
+/* 鳳：受け取った駒を、手と体内に分ける（体内は3個まで・手は空いている数まで） */
+function arrangeHo(pi, tiles, hc){
+  return new Promise(function(resolve){
+    let hand = hoDefaultArrange(tiles, hc);
+    function draw(){
+      const bodyN = tiles.length - hand.length, ok = hoArrangeOk(tiles, hand, hc);
+      let h = '<h3 class="serif">奥義「鳳」：受け取った駒を置き直す</h3>';
+      h += '<p>駒を押すと、手と体内を切り替えます。手は' + hc + 'か所、体内は3個までです（体内は重い順に並びます）。</p>';
+      h += '<div class="gate-group-label">手（' + hand.length + '／' + hc + '）</div><div class="ho-zone">';
+      hand.forEach(function(i){ h += '<button type="button" class="tile-btn" data-ho="' + i + '">' + tileHtml(tiles[i], 'clickable', { ntid:true }) + '</button>'; });
+      h += '</div><div class="gate-group-label">体内（' + bodyN + '／3）</div><div class="ho-zone">';
+      tiles.forEach(function(x, i){ if(hand.indexOf(i) < 0) h += '<button type="button" class="tile-btn" data-ho="' + i + '">' + tileHtml(x, 'clickable', { ntid:true }) + '</button>'; });
+      h += '</div>';
+      if(!ok) h += '<p class="warn">' + (hand.length > hc ? '手に置ける駒は' + hc + '個までです。' : '体内に置ける駒は3個までです。') + '</p>';
+      h += '<div class="btn-row"><button type="button" class="btn primary" id="hoOk"' + (ok ? '' : ' disabled') + '>この置き方で決める</button></div>';
+      showModal(h);
+      const pk = document.querySelector('#modalRoot [data-peekbtn]'); if(pk) pk.remove();
+      document.querySelectorAll('[data-ho]').forEach(function(b){
+        b.addEventListener('click', function(){ const i = parseInt(b.getAttribute('data-ho'), 10), k = hand.indexOf(i);
+          if(k >= 0) hand.splice(k, 1); else hand.push(i); draw(); });
+      });
+      document.getElementById('hoOk').addEventListener('click', function(){ if(hoArrangeOk(tiles, hand, hc)){ closeModal(); resolve(hand.slice()); } });
+    }
+    draw();
+  });
+}
+/* 姫：AIの体内の駒を1つ選ぶ（裏向きの駒は、置かれている位置で選ぶ） */
+function pickHimeModal(){
+  return new Promise(function(resolve){
+    const q = P(1), n = q.body.length;
+    let h = '<h3 class="serif">奥義「姫」：AIの体内の駒を選ぶ</h3>';
+    h += '<p>選んだ駒をあなたの手（姫があった所）へ移し、姫はAIの体内へ移ります。体内の駒は、下ほど重い駒です。</p><div class="pick-list">';
+    for(let i = n - 1; i >= 0; i--){
+      const x = q.body[i], known = isOpenTile(x) || (G.kn && G.kn[0].has(x.id));
+      h += '<button type="button" class="tile-btn" data-hime="' + i + '">' + (known ? tileHtml(x, 'clickable', { ntid:true }) : backHtml(null, 'clickable')) +
+           '<small>' + (i === 0 ? '一番下' : (i === n - 1 ? '一番上' : '真ん中')) + '</small></button>';
+    }
+    h += '</div><div class="btn-row"><button type="button" class="btn" id="himeNo">やめる</button></div>';
+    showModal(h);
+    document.getElementById('himeNo').addEventListener('click', function(){ closeModal(); resolve(null); });
+    document.querySelectorAll('[data-hime]').forEach(function(b){
+      b.addEventListener('click', function(){ closeModal(); resolve(parseInt(b.getAttribute('data-hime'), 10)); });
+    });
   });
 }

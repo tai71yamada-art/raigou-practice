@@ -8,7 +8,7 @@
    3. AI同士の対局：いろいろなレベルで最後まで進むか。毎手番、駒が消えたり増えたりしていないか
    3b. 途中保存：手番の始めで保存して別の場所で戻し、続きが保存しなかった時と全く同じになるか
    4. いつもの対局：決まった乱数で対局した結果が、前回の記録と同じか（意図しない変更の検出）
-   5. 競技雷轟：開・雷神化・奥義（覇・天・啓・和・禅・楼・幻・鳴・赫・涼・風・凛）の動きと、AI同士の対局での決まりごと */
+   5. 競技雷轟：開・雷神化・奥義（覇・天・啓・和・禅・楼・幻・鳴・赫・涼・風・凛・鳳・焔・姫）の動きと、AI同士の対局での決まりごと */
 'use strict';
 const fs = require('fs'), path = require('path');
 const H = require('./headless');
@@ -375,9 +375,50 @@ function section(t){ console.log('\n■ ' + t); }
       Z.P(0).gates = [mk(Z, '五 三'), [], []]; Z.P(0).hand[0] = Z.mkOugiTile('凛');
       ok(Z.ougiUsable(0, 0) !== '', '凛：役が完成している塔が無い時は発できない');
     }
+    {
+      const X = fresh();
+      X.P(0).body = mk(X, '六 二'); X.P(0).hand = [X.mkOugiTile('鳳'), mk(X, '蛇')[0]];
+      X.P(1).body = mk(X, '七 五 一'); X.P(1).hand = [mk(X, '雷')[0], mk(X, '轟')[0]];
+      await X.primHo(0, 0, function(pi, tiles, hc){ return Promise.resolve(null); });
+      const inner = function(p){ return p.body.concat(p.hand.filter(Boolean)).map(function(t){ return t.name; }).sort().join(''); };
+      ok(inner(X.P(0)) === ['七','五','一','雷','轟'].sort().join('') && inner(X.P(1)) === ['六','二','蛇'].sort().join('') && X.P(0).body.length <= 3, '鳳：内駒を全て入れ替える（体内は3個まで）');
+      const Y = fresh();
+      Y.P(0).hand = [Y.mkOugiTile('鳳'), null]; Y.P(1).body = mk(Y, '四');
+      await Y.primHo(0, 0, function(pi, tiles, hc){ return Promise.resolve(pi === 0 ? [0] : []); });
+      ok(Y.P(0).hand.some(function(t){ return t && t.name === '四'; }) && Y.P(1).body.length === 0, '鳳：自分の内駒が無くても発でき、受け取った駒を手に置ける');
+    }
+    {
+      const X = fresh();
+      X.P(1).gates = [mk(X, '六 五 四'), [], []];
+      X.P(0).hand = [X.mkOugiTile('焔'), mk(X, '一')[0]];
+      await X.primHomura(0, 0, 1, 0);
+      ok(X.G.homura && X.G.ippatsu && !X.canActFromSlot(X.P(0), 1), '焔：桜門を炎上させる（一発奥義）');
+      X.homuraTick();
+      ok(names(X.P(1).gates[0]) === '五 四' && X.G.canyon.some(function(t){ return t.name === '六'; }), '焔：手番が替わると、塔の一番下の駒が峡谷へ');
+      X.P(1).seals[0] = { old:false };
+      X.homuraTick();
+      ok(X.P(1).gates[0].length === 2, '焔：封印中は効果が止まる');
+      X.P(1).seals[0] = null;
+      X.homuraTick(); X.homuraTick();
+      ok(!X.G.homura && X.G.canyon.some(function(t){ return t.name === '焔'; }), '焔：塔が無くなると焔も峡谷へ');
+      const Y = fresh();
+      Y.P(1).gates = [mk(Y, '六 五'), [], []]; Y.P(1).seals[0] = { old:false };
+      Y.P(0).hand[0] = Y.mkOugiTile('焔');
+      ok(Y.ougiUsable(0, 0) !== '', '焔：封印中の塔しか無い時は発できない');
+    }
+    {
+      const X = fresh();
+      X.P(1).body = mk(X, '七 三');
+      X.P(0).hand = [mk(X, '一')[0], X.mkOugiTile('姫')];
+      await X.primHime(0, 1, 0);
+      ok(X.P(0).hand[1].name === '七' && X.P(1).body[0].name === '姫' && X.P(1).body.length === 2, '姫：相手の体内の駒と入れ替わる');
+      const Y = fresh();
+      Y.P(0).hand[0] = Y.mkOugiTile('姫');
+      ok(Y.ougiUsable(0, 0) !== '', '姫：相手の体内に駒が無い時は発できない');
+    }
     /* AI同士の競技雷轟：毎手番、駒の数・塔の高さ・内駒の上限を確かめる */
     const NK = QUICK ? 21 : 84;
-    let kGames = 0, kBad = 0, kFirst = '', kai = 0, hatsu = { '覇':0, '天':0, '啓':0, '和':0, '禅':0, '楼':0, '幻':0, '鳴':0, '赫':0, '涼':0, '風':0, '凛':0 }, kTurns = 0;
+    let kGames = 0, kBad = 0, kFirst = '', kai = 0, hatsu = { '覇':0, '天':0, '啓':0, '和':0, '禅':0, '楼':0, '幻':0, '鳴':0, '赫':0, '涼':0, '風':0, '凛':0, '鳳':0, '焔':0, '姫':0 }, kTurns = 0;
     for(let i = 0; i < NK; i++){
       const eng = H.createEngine(3000 + i);
       const G = eng.E.G, P = eng.E.P;
@@ -386,7 +427,7 @@ function section(t){ console.log('\n■ ' + t); }
         if(!G.players || !G.players.length) return;
         const ids = [];
         const add = function(t){ if(t) ids.push(t.id); };
-        G.deck.forEach(add); G.canyon.forEach(add); (G.excludedOugi || []).forEach(add); add(G.excluded);
+        G.deck.forEach(add); G.canyon.forEach(add); (G.excludedOugi || []).forEach(add); add(G.excluded); if(G.homura) add(G.homura.tile);
         G.released.forEach(function(r){ r.tiles.forEach(add); });
         for(let pi = 0; pi < 2; pi++){
           const p = P(pi);

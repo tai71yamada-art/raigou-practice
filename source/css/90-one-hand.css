@@ -349,3 +349,8 @@
       .tile.open-face{ box-shadow:0 0 0 2px #5ec8e6, 0 0 8px rgba(94,200,230,.55); }
       .pile-btn .deck-open{ display:block; font-size:.66rem; color:#5ec8e6; line-height:1.1; margin-top:1px; white-space:nowrap; }
       .rin-draw{ display:flex; gap:14px; align-items:center; justify-content:center; margin:8px 0; }
+      /* 焔：炎上中の桜門 */
+      .gate.burning{ box-shadow:0 0 0 2px #ff6a2a, 0 0 14px rgba(255,90,30,.7); animation:burnGlow 1.4s ease-in-out infinite; }
+      @keyframes burnGlow{ 50%{ box-shadow:0 0 0 2px #ffb03a, 0 0 22px rgba(255,140,40,.85); } }
+      .gl-fire{ color:#fff; background:#e5501e; border-radius:4px; padding:0 4px; font-weight:bold; margin-right:2px; }
+      .ho-zone{ min-height:58px; border:1px dashed #555; border-radius:8px; padding:6px; display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }

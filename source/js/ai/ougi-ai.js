@@ -1,7 +1,7 @@
 /* ================= AI：競技雷轟（開・奥義） ================= */
 /* 開するかどうか。雷神化は手が1つ増えて内駒の上限も増えるので、開できる時は基本的にすぐ開く。
    Lv.1・Lv.2 はときどき見送る */
-const AI_OUGI_LIKE = { '覇':1.0, '天':0.9, '啓':0.8, '和':0.6, '禅':0.7, '楼':0.9, '幻':0.6, '鳴':0.85, '赫':0.4, '涼':0.35, '風':0.7, '凛':0.7 };
+const AI_OUGI_LIKE = { '覇':1.0, '天':0.9, '啓':0.8, '和':0.6, '禅':0.7, '楼':0.9, '幻':0.6, '鳴':0.85, '赫':0.4, '涼':0.35, '風':0.7, '凛':0.7, '鳳':0.5, '焔':0.6, '姫':0.6 };
 function aiPickKai(){
   const p = P(AI_SEAT);
   if(!canKai(AI_SEAT)) return null;
@@ -120,7 +120,68 @@ function aiOugiActs(p, s, t, dp, avail, acts){
       const g = pOn * (pts + 2) - keep;
       if(g > 0.15) acts.push({ kind:'ougi', name:'凛', hand:s, gi:gi, gain:g });
     });
+  } else if(t.name === '鳳'){
+    const g = aiHoGain(me, s);
+    if(g > 0.8) acts.push({ kind:'ougi', name:'鳳', hand:s, gain:g });
+  } else if(t.name === '焔'){
+    if(G.actedSlots && G.actedSlots.size) return;
+    const q = P(1 - me);
+    let best = null;
+    homuraTargets().forEach(function(x){
+      if(x.pi === me) return;
+      const tw = q.gates[x.gi];
+      const worth = (tw.length >= 3 && !isFuon(tw) ? scoreTower(tw).pts : 0) + 0.35 * tw.length;
+      const g = 0.6 * worth - 0.8;
+      if(!best || g > best.gain) best = { kind:'ougi', name:'焔', hand:s, pi:x.pi, gi:x.gi, gain:g };
+    });
+    if(best && best.gain > 0.3) acts.push(best);
+  } else if(t.name === '姫'){
+    if(!P(1 - me).body.length) return;
+    const b = aiHimePick(me);
+    const g = b.v - 0.4;   // 相手に姫（奥義駒）を渡す分を引く
+    if(g > 0.15) acts.push({ kind:'ougi', name:'姫', hand:s, idx:b.idx, gain:g });
   }
+}
+/* 鳳：受け取る駒と渡す駒の価値の差 */
+function aiHoGain(me, s){
+  const p = P(me), q = P(1 - me);
+  const give = p.body.concat(p.hand.filter(function(x, k){ return x && k !== s; }));
+  const recv = q.body.concat(q.hand.filter(Boolean));
+  let g = 0;
+  recv.forEach(function(x){ g += aiKnows(x, me) ? aiTileDesire(x, p) : 0.45; });
+  give.forEach(function(x){ g -= aiTileDesire(x, p); });
+  return g;
+}
+/* 鳳で受け取った駒の置き方：言霊の価値が高い順に手へ（体内は3個まで） */
+function aiHoArrange(pi, tiles, hc){
+  return withSeat(pi, function(){
+    const p = P(pi);
+    const order = tiles.map(function(_, i){ return i; }).sort(function(a, b){
+      const va = tiles[a].kind === 'gen' ? aiTileDesire(tiles[a], p) : -1, vb = tiles[b].kind === 'gen' ? aiTileDesire(tiles[b], p) : -1;
+      return vb - va;
+    });
+    const need = Math.max(0, tiles.length - BODY_MAX);
+    const gens = order.filter(function(i){ return tiles[i].kind === 'gen'; });
+    let hand = gens.slice(0, hc);
+    order.forEach(function(i){ if(hand.length < need && hand.indexOf(i) < 0) hand.push(i); });
+    return hand.slice(0, Math.max(need, Math.min(hc, hand.length)));
+  });
+}
+/* 鳳の置き直し：AIはAIの考えで、あなたは画面で選ぶ */
+function hoArrangeFor(pi, tiles, hc){
+  if(P(pi).isAI) return Promise.resolve(aiHoArrange(pi, tiles, hc));
+  return VIEW.arrangeHo(pi, tiles, hc);
+}
+/* 姫：取る駒を選ぶ（分かっている駒なら一番欲しい駒、分からなければ一番重い位置の駒） */
+function aiHimePick(me){
+  const p = P(me), q = P(1 - me);
+  let best = { idx:0, v:0.55 };
+  q.body.forEach(function(x, i){ if(aiKnows(x, me)){ const v = aiTileDesire(x, p); if(v > best.v) best = { idx:i, v:v }; } });
+  if(!aiKnows(q.body[best.idx], me) && q.body.some(function(x){ return aiKnows(x, me); })){
+    const unk = q.body.findIndex(function(x){ return !aiKnows(x, me); });
+    if(unk >= 0 && best.v <= 0.55) best = { idx:unk, v:0.55 };
+  }
+  return best;
 }
 /* 凛：雷山の一番上が音無である見込み（表向きなら確実に分かる） */
 function aiRinOnProb(me){
@@ -179,6 +240,9 @@ function aiOugiText(act){
   if(act.name === '啓') return '奥義「啓」：' + who(act.target.pi) + 'の桜門' + (act.target.gi + 1) + 'の塔を2つに分ける';
   if(act.name === '和') return '奥義「和」：自分の桜門' + (act.gi + 1) + 'の塔を公開する';
   if(act.name === '禅') return '奥義「禅」：体内の最も重い駒を移し合う';
+  if(act.name === '鳳') return '奥義「鳳」：内駒を全て入れ替える';
+  if(act.name === '焔') return '奥義「焔」：' + who(act.pi) + 'の桜門' + (act.gi + 1) + 'を炎上させる';
+  if(act.name === '姫') return '奥義「姫」：相手の体内の駒と入れ替わる';
   if(act.name === '涼') return '奥義「涼」：全員の内駒を表向きにする';
   if(act.name === '風') return '奥義「風」：雷山から3個引き、1個を手に置く';
   if(act.name === '凛') return '奥義「凛」：自分の桜門' + (act.gi + 1) + 'の塔を公開して、雷山から1個引く';
@@ -212,4 +276,7 @@ async function aiOugiExecute(act, me){
     }));
   });
   else if(act.name === '凛') await primRin(me, act.hand, act.gi);
+  else if(act.name === '鳳') await primHo(me, act.hand, hoArrangeFor);
+  else if(act.name === '焔') await primHomura(me, act.hand, act.pi, act.gi);
+  else if(act.name === '姫') await primHime(me, act.hand, act.idx);
 }

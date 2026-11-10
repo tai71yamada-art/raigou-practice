@@ -1,6 +1,7 @@
 /* ================= 手番の進行 ================= */
 function startTurn(){
   G.turnNo++;
+  if(G.turnNo > 1 && typeof homuraTick === 'function') homuraTick();   // 奥義「焔」：隠駒が動いたので、炎上中の塔を燃やす
   G.used = new Set();
   G.actedSlots = new Set();
   G.ippatsu = false;

@@ -1453,6 +1453,11 @@
       .tile.open-face{ box-shadow:0 0 0 2px #5ec8e6, 0 0 8px rgba(94,200,230,.55); }
       .pile-btn .deck-open{ display:block; font-size:.66rem; color:#5ec8e6; line-height:1.1; margin-top:1px; white-space:nowrap; }
       .rin-draw{ display:flex; gap:14px; align-items:center; justify-content:center; margin:8px 0; }
+      /* 焔：炎上中の桜門 */
+      .gate.burning{ box-shadow:0 0 0 2px #ff6a2a, 0 0 14px rgba(255,90,30,.7); animation:burnGlow 1.4s ease-in-out infinite; }
+      @keyframes burnGlow{ 50%{ box-shadow:0 0 0 2px #ffb03a, 0 0 22px rgba(255,140,40,.85); } }
+      .gl-fire{ color:#fff; background:#e5501e; border-radius:4px; padding:0 4px; font-weight:bold; margin-right:2px; }
+      .ho-zone{ min-height:58px; border:1px dashed #555; border-radius:8px; padding:6px; display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
 </style>
   </head>
   <body>
@@ -1706,6 +1711,7 @@ const VIEW = {
   /* 演出（終わるまで待つものは Promise を返す） */
   playCutIn: function(name, actorPi){ return Promise.resolve(); },
   playOugiRelease: function(pi){ return Promise.resolve(); },
+  arrangeHo: function(pi, tiles, hc){ return Promise.resolve(null); },
   showRinReveal: function(){ return Promise.resolve(); },
   showWaReveal: function(pi, gi, tiles, sum, delta){ return Promise.resolve(); },
   chooseZenTile: function(choices){ return Promise.resolve(choices[0]); },
@@ -1959,7 +1965,7 @@ function newGame(humanSente, difficulty, opts){
   G.houses = [ opts.house || 'rakura', AI_HOUSE.id ];
   VIEW.applyHouseClasses();
   G.actedSlots = new Set(); G.inGassen = false; G.lastTowerEffect = null;
-  G.excludedOugi = []; G.kakuZero = [false, false]; G.kakuNow = false; G.openIds = new Set(); G.deckOpen = new Set(); G.ippatsu = false;
+  G.excludedOugi = []; G.kakuZero = [false, false]; G.kakuNow = false; G.openIds = new Set(); G.deckOpen = new Set(); G.homura = null; G.ippatsu = false;
   if(G.rules.ougi) setupOugi(opts.ougi);
   // 初期の体内：先手1枚、後手2枚
   const gote = opp(G.sente);
@@ -2134,6 +2140,7 @@ function checkLose(pi){
 /* ================= 手番の進行 ================= */
 function startTurn(){
   G.turnNo++;
+  if(G.turnNo > 1 && typeof homuraTick === 'function') homuraTick();   // 奥義「焔」：隠駒が動いたので、炎上中の塔を燃やす
   G.used = new Set();
   G.actedSlots = new Set();
   G.ippatsu = false;
@@ -2289,6 +2296,7 @@ async function primStack(actor, handSlot, gi){
   if(!t || !canStack(p, gi, t)) return false;
   p.hand[handSlot] = null;
   markActed(p, handSlot);
+  if(typeof homuraCheck === 'function') homuraCheck();
   p.gates[gi].push(t);
   VIEW.sfx('stack');
   const wasOpen = isOpenTile(t);
@@ -2960,7 +2968,7 @@ async function joArrange(actor, handSlot, handTiles, pool, counts){
    ・奥義駒はすべて重さ9の言霊。発したら峡谷へ行く。陣で防げるのは雷・蛇・斬だけなので、奥義は防げない。
    効果を作った奥義駒は ougi-data.js の implemented を true にする（選択画面に出るのは true の駒だけ）。 */
 const OUGI_BRING = 2;   // 持ち込む奥義駒の数
-['覇','天','啓','和','禅','楼','幻','鳴','赫','涼','風','凛'].forEach(function(n){ const o = ougiByName(n); if(o) o.implemented = true; });
+['覇','天','啓','和','禅','楼','幻','鳴','赫','涼','風','凛','鳳','焔','姫'].forEach(function(n){ const o = ougiByName(n); if(o) o.implemented = true; });
 
 function ougiReadyList(){ return OUGI_DATA.filter(function(o){ return o.implemented && !o.kyogiBanned; }); }
 /* 奥義駒は自分と相手で重ならないのが決まり。ただし作り終えた駒が4種類そろうまでは、重なりを認める */
@@ -3063,6 +3071,12 @@ function ougiUsable(pi, slot){
   if(t.name === '幻') return genAvailable().length ? '' : '除外された駒がありません（奥義駒は選べません）';
   if(t.name === '鳴' || t.name === '赫' || t.name === '涼') return '';
   if(t.name === '風') return G.deck.length >= 3 ? '' : '雷山の駒が3個未満です';
+  if(t.name === '鳳') return '';
+  if(t.name === '焔'){
+    if(G.actedSlots && G.actedSlots.size) return '一発奥義：この手番にほかの駒を積・発したあとは発せません';
+    return homuraTargets().length ? '' : '対象にできる塔がありません（封印中の塔は選べません）';
+  }
+  if(t.name === '姫') return P(1 - pi).body.length ? '' : '相手の体内に駒がありません';
   if(t.name === '凛'){
     if(!G.deck.length) return '雷山に駒がありません';
     return rinTowers(pi).length ? '' : '役が完成している自分の塔がありません';
@@ -3125,6 +3139,7 @@ async function primTen(actor, slot, gi, loc){
 /* ---- 啓：2段以上の塔と空いた桜門を持つ人を選び、その塔を好きな所で上下2つに分け、片方を空いた桜門へ置く ----
    k＝下の部分の段数（1〜段数-1）。part＝空いた桜門へ移す側（'top'＝上の部分／'bottom'＝下の部分） */
 async function primKei(actor, slot, tpi, gi, k, part, destGi){
+  homuraCheck();
   const p = P(actor), t = p.hand[slot];
   if(!isOugi(t) || t.name !== '啓') return false;
   const q = P(tpi), tower = q.gates[gi];
@@ -3374,6 +3389,115 @@ async function primRin(actor, slot, gi){
     p.gates[gi] = []; p.seals[gi] = null;
     if(G.cutHints) G.cutHints[actor][gi] = [];
   }
+  await VIEW.render();
+  return true;
+}
+
+/* ================= 鳳・焔・姫 ================= */
+/* ---- 鳳：相手と内駒（体内と手）を全て入れ替え、両方が体内か手の好きな場所に置き直す。
+   arrange(pi, tiles, handCount) は、手に置く駒の番号の配列を返す（体内は3個まで） ---- */
+function hoArrangeOk(tiles, handIdx, handCount){
+  return handIdx.length <= handCount && tiles.length - handIdx.length <= BODY_MAX &&
+         handIdx.every(function(i){ return i >= 0 && i < tiles.length; }) && new Set(handIdx).size === handIdx.length;
+}
+function hoDefaultArrange(tiles, handCount){
+  /* 体内に入りきらない分だけ、軽い順に手へ */
+  const order = tiles.map(function(_, i){ return i; }).sort(function(a, b){ return tiles[a].w - tiles[b].w; });
+  return order.slice(0, Math.max(0, tiles.length - BODY_MAX));
+}
+async function primHo(actor, slot, arrange){
+  const p = P(actor), q = P(1 - actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '鳳') return false;
+  G.used.add('鳳');
+  await VIEW.playCutIn('鳳', actor);
+  consumeHand(p, slot);
+  const mine = p.body.concat(p.hand.filter(Boolean)), theirs = q.body.concat(q.hand.filter(Boolean));
+  p.body = []; q.body = [];
+  p.hand = p.hand.map(function(){ return null; }); q.hand = q.hand.map(function(){ return null; });
+  mine.concat(theirs).forEach(function(x){ if(G.kn){ G.kn[0].add(x.id); G.kn[1].add(x.id); } });
+  log(p.name + 'の奥義「鳳」：' + p.name + 'と' + q.name + 'の内駒を全て入れ替えました（' +
+      p.name + 'へ：' + (theirs.length ? theirs.map(tileLabel).join('・') : 'なし') + '／' + q.name + 'へ：' + (mine.length ? mine.map(tileLabel).join('・') : 'なし') + '）。', 'score');
+  /* 置き直しは、発した人から順に */
+  const plan = [[p, theirs, actor], [q, mine, 1 - actor]];
+  for(let k = 0; k < 2; k++){
+    const pl = plan[k][0], tiles = plan[k][1], pi = plan[k][2], hc = pl.hand.length;
+    let hi = tiles.length ? await arrange(pi, tiles, hc) : [];
+    if(!hi || !hoArrangeOk(tiles, hi, hc)) hi = hoDefaultArrange(tiles, hc);
+    let s = 0;
+    tiles.forEach(function(x, i){
+      if(hi.indexOf(i) >= 0){ while(s < hc && pl.hand[s]) s++; pl.hand[s] = x; }
+      else pl.body.push(x);
+    });
+    sortBody(pl);
+  }
+  if(actor !== 0) VIEW.setMeFace('hit');
+  await VIEW.render();
+  return true;
+}
+/* ---- 焔（一発奥義）：塔がある桜門を1つ選び、炎上させる。隠駒が動くたび（手番が替わるたび）に、
+   その塔の一番下の駒を峡谷へ。塔が無くなると焔も峡谷へ置き、効果が終わる。
+   封印中の塔は選べない。炎上中の塔が封印されている間は、焔の効果も止まる。 G.homura = {pi, gi, tile, by} ---- */
+function homuraTargets(){
+  const out = [];
+  for(let pi = 0; pi < 2; pi++) for(let gi = 0; gi < 3; gi++){
+    if(P(pi).gates[gi].length && !P(pi).seals[gi]) out.push({ pi:pi, gi:gi });
+  }
+  return out;
+}
+function isBurning(pi, gi){ return !!(G.homura && G.homura.pi === pi && G.homura.gi === gi); }
+async function primHomura(actor, slot, pi, gi){
+  const p = P(actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '焔') return false;
+  if(!homuraTargets().some(function(x){ return x.pi === pi && x.gi === gi; })) return false;
+  G.used.add('焔');
+  await VIEW.playCutIn('焔', actor);
+  p.hand[slot] = null;
+  markActed(p, slot);
+  if(G.players && p === P(0) && G.hatsuGame) G.hatsuGame['焔'] = (G.hatsuGame['焔'] || 0) + 1;
+  G.homura = { pi:pi, gi:gi, tile:t, by:actor };
+  G.ippatsu = true;
+  log(p.name + 'の奥義「焔」：' + P(pi).name + 'の桜門' + (gi+1) + 'を炎上させました。手番が替わるたびに、この塔の一番下の駒が峡谷へ置かれます。', 'bad');
+  if(actor !== 0 && pi === 0) VIEW.setMeFace('hit');
+  await VIEW.render();
+  return true;
+}
+/* 手番が替わった時（隠駒が動いた時）の炎上の処理。塔が無くなっていたら焔を峡谷へ */
+function homuraTick(){
+  const h = G.homura;
+  if(!h) return;
+  const p = P(h.pi), tw = p.gates[h.gi];
+  if(!tw.length){ homuraEnd(); return; }
+  if(p.seals[h.gi]){ log('炎上中の' + p.name + 'の桜門' + (h.gi+1) + 'の塔は封印中なので、焔の効果は止まっています。', 'sys'); return; }
+  const x = tw.shift();
+  G.canyon.push(x);
+  if(G.cutHints && G.cutHints[h.pi] && G.cutHints[h.pi][h.gi]) G.cutHints[h.pi][h.gi] = [];
+  log('焔：' + p.name + 'の桜門' + (h.gi+1) + 'の塔の一番下の「' + tileLabel(x) + '」が燃えて、峡谷へ置かれました（残り' + tw.length + '段）。', 'bad');
+  if(!tw.length) homuraEnd();
+}
+/* 炎上中の桜門の塔が（解放などで）無くなっていたら、すぐに焔を峡谷へ。新しく積んだ塔は燃やさない */
+function homuraCheck(){ if(G.homura && !P(G.homura.pi).gates[G.homura.gi].length) homuraEnd(); }
+function homuraEnd(){
+  const h = G.homura; if(!h) return;
+  G.canyon.push(h.tile);
+  G.homura = null;
+  log('焔：桜門の塔が無くなったので、焔を峡谷へ置き、炎上が終わりました。', 'sys');
+}
+/* ---- 姫：相手の体内の駒を1つ選び、姫があった手へ移す。姫は、選んだ駒があった相手の体内へ移る ---- */
+async function primHime(actor, slot, bodyIdx){
+  const p = P(actor), q = P(1 - actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '姫' || !q.body[bodyIdx]) return false;
+  G.used.add('姫');
+  await VIEW.playCutIn('姫', actor);
+  markActed(p, slot);
+  if(G.players && p === P(0) && G.hatsuGame) G.hatsuGame['姫'] = (G.hatsuGame['姫'] || 0) + 1;
+  const x = q.body[bodyIdx];
+  q.body[bodyIdx] = t;
+  p.hand[slot] = x;
+  sortBody(q);
+  if(G.kn){ G.kn[actor].add(x.id); G.kn[0].add(t.id); G.kn[1].add(t.id); }
+  if(p.isAI) log(p.name + 'の奥義「姫」：' + q.name + 'の体内の駒を1つ取り、' + handLabel(slot) + 'に置きました。姫は' + q.name + 'の体内へ移りました。', 'bad');
+  else log(p.name + 'の奥義「姫」：' + q.name + 'の体内から「' + tileLabel(x) + '」を取り、' + handLabel(slot) + 'に置きました。姫は' + q.name + 'の体内へ移りました。', 'score');
+  if(actor !== 0) VIEW.setMeFace('hit');
   await VIEW.render();
   return true;
 }
@@ -4438,7 +4562,7 @@ async function aiExecute(act, me){
 /* ================= AI：競技雷轟（開・奥義） ================= */
 /* 開するかどうか。雷神化は手が1つ増えて内駒の上限も増えるので、開できる時は基本的にすぐ開く。
    Lv.1・Lv.2 はときどき見送る */
-const AI_OUGI_LIKE = { '覇':1.0, '天':0.9, '啓':0.8, '和':0.6, '禅':0.7, '楼':0.9, '幻':0.6, '鳴':0.85, '赫':0.4, '涼':0.35, '風':0.7, '凛':0.7 };
+const AI_OUGI_LIKE = { '覇':1.0, '天':0.9, '啓':0.8, '和':0.6, '禅':0.7, '楼':0.9, '幻':0.6, '鳴':0.85, '赫':0.4, '涼':0.35, '風':0.7, '凛':0.7, '鳳':0.5, '焔':0.6, '姫':0.6 };
 function aiPickKai(){
   const p = P(AI_SEAT);
   if(!canKai(AI_SEAT)) return null;
@@ -4557,7 +4681,68 @@ function aiOugiActs(p, s, t, dp, avail, acts){
       const g = pOn * (pts + 2) - keep;
       if(g > 0.15) acts.push({ kind:'ougi', name:'凛', hand:s, gi:gi, gain:g });
     });
+  } else if(t.name === '鳳'){
+    const g = aiHoGain(me, s);
+    if(g > 0.8) acts.push({ kind:'ougi', name:'鳳', hand:s, gain:g });
+  } else if(t.name === '焔'){
+    if(G.actedSlots && G.actedSlots.size) return;
+    const q = P(1 - me);
+    let best = null;
+    homuraTargets().forEach(function(x){
+      if(x.pi === me) return;
+      const tw = q.gates[x.gi];
+      const worth = (tw.length >= 3 && !isFuon(tw) ? scoreTower(tw).pts : 0) + 0.35 * tw.length;
+      const g = 0.6 * worth - 0.8;
+      if(!best || g > best.gain) best = { kind:'ougi', name:'焔', hand:s, pi:x.pi, gi:x.gi, gain:g };
+    });
+    if(best && best.gain > 0.3) acts.push(best);
+  } else if(t.name === '姫'){
+    if(!P(1 - me).body.length) return;
+    const b = aiHimePick(me);
+    const g = b.v - 0.4;   // 相手に姫（奥義駒）を渡す分を引く
+    if(g > 0.15) acts.push({ kind:'ougi', name:'姫', hand:s, idx:b.idx, gain:g });
   }
+}
+/* 鳳：受け取る駒と渡す駒の価値の差 */
+function aiHoGain(me, s){
+  const p = P(me), q = P(1 - me);
+  const give = p.body.concat(p.hand.filter(function(x, k){ return x && k !== s; }));
+  const recv = q.body.concat(q.hand.filter(Boolean));
+  let g = 0;
+  recv.forEach(function(x){ g += aiKnows(x, me) ? aiTileDesire(x, p) : 0.45; });
+  give.forEach(function(x){ g -= aiTileDesire(x, p); });
+  return g;
+}
+/* 鳳で受け取った駒の置き方：言霊の価値が高い順に手へ（体内は3個まで） */
+function aiHoArrange(pi, tiles, hc){
+  return withSeat(pi, function(){
+    const p = P(pi);
+    const order = tiles.map(function(_, i){ return i; }).sort(function(a, b){
+      const va = tiles[a].kind === 'gen' ? aiTileDesire(tiles[a], p) : -1, vb = tiles[b].kind === 'gen' ? aiTileDesire(tiles[b], p) : -1;
+      return vb - va;
+    });
+    const need = Math.max(0, tiles.length - BODY_MAX);
+    const gens = order.filter(function(i){ return tiles[i].kind === 'gen'; });
+    let hand = gens.slice(0, hc);
+    order.forEach(function(i){ if(hand.length < need && hand.indexOf(i) < 0) hand.push(i); });
+    return hand.slice(0, Math.max(need, Math.min(hc, hand.length)));
+  });
+}
+/* 鳳の置き直し：AIはAIの考えで、あなたは画面で選ぶ */
+function hoArrangeFor(pi, tiles, hc){
+  if(P(pi).isAI) return Promise.resolve(aiHoArrange(pi, tiles, hc));
+  return VIEW.arrangeHo(pi, tiles, hc);
+}
+/* 姫：取る駒を選ぶ（分かっている駒なら一番欲しい駒、分からなければ一番重い位置の駒） */
+function aiHimePick(me){
+  const p = P(me), q = P(1 - me);
+  let best = { idx:0, v:0.55 };
+  q.body.forEach(function(x, i){ if(aiKnows(x, me)){ const v = aiTileDesire(x, p); if(v > best.v) best = { idx:i, v:v }; } });
+  if(!aiKnows(q.body[best.idx], me) && q.body.some(function(x){ return aiKnows(x, me); })){
+    const unk = q.body.findIndex(function(x){ return !aiKnows(x, me); });
+    if(unk >= 0 && best.v <= 0.55) best = { idx:unk, v:0.55 };
+  }
+  return best;
 }
 /* 凛：雷山の一番上が音無である見込み（表向きなら確実に分かる） */
 function aiRinOnProb(me){
@@ -4616,6 +4801,9 @@ function aiOugiText(act){
   if(act.name === '啓') return '奥義「啓」：' + who(act.target.pi) + 'の桜門' + (act.target.gi + 1) + 'の塔を2つに分ける';
   if(act.name === '和') return '奥義「和」：自分の桜門' + (act.gi + 1) + 'の塔を公開する';
   if(act.name === '禅') return '奥義「禅」：体内の最も重い駒を移し合う';
+  if(act.name === '鳳') return '奥義「鳳」：内駒を全て入れ替える';
+  if(act.name === '焔') return '奥義「焔」：' + who(act.pi) + 'の桜門' + (act.gi + 1) + 'を炎上させる';
+  if(act.name === '姫') return '奥義「姫」：相手の体内の駒と入れ替わる';
   if(act.name === '涼') return '奥義「涼」：全員の内駒を表向きにする';
   if(act.name === '風') return '奥義「風」：雷山から3個引き、1個を手に置く';
   if(act.name === '凛') return '奥義「凛」：自分の桜門' + (act.gi + 1) + 'の塔を公開して、雷山から1個引く';
@@ -4649,6 +4837,9 @@ async function aiOugiExecute(act, me){
     }));
   });
   else if(act.name === '凛') await primRin(me, act.hand, act.gi);
+  else if(act.name === '鳳') await primHo(me, act.hand, hoArrangeFor);
+  else if(act.name === '焔') await primHomura(me, act.hand, act.pi, act.gi);
+  else if(act.name === '姫') await primHime(me, act.hand, act.idx);
 }
 /* ================= 設定（端末に保存） ================= */
 /* ホーム画面に追加したときのオフライン用（https で公開した時だけ動く） */
@@ -4676,7 +4867,7 @@ function aiSpeedFactor(){ const o = AI_SPEEDS.find(function(x){ return x.v === S
 function aiWait(ms){ return wait(ms * aiSpeedFactor()); }
 
 /* ================= アプリのバージョン（build.py が source/VERSION の値を入れる） ================= */
-const APP_VERSION = 'v51';   // build.py が VERSION ファイルの値を入れる（sw.js も同じ値になる）
+const APP_VERSION = 'v52';   // build.py が VERSION ファイルの値を入れる（sw.js も同じ値になる）
 /* ================= 効果音（音声ファイルは使わず、その場で合成） ================= */
 const SFX = (function(){
   let ctx = null;
@@ -5116,7 +5307,8 @@ function gateInfoHtml(pi, gi){
 /* 桜門の上に出す短い見出し。詳しい内訳は桜門をタップして見る */
 function gateShortLabel(pi, gi){
   const p = P(pi), tower = p.gates[gi];
-  if(p.seals[gi]) return '<span class="gl-seal">封印中</span>';
+  if(p.seals[gi]) return (isBurning(pi, gi) ? '<span class="gl-fire">炎上</span>' : '') + '<span class="gl-seal">封印中</span>';
+  if(isBurning(pi, gi)) return '<span class="gl-fire">炎上 ' + tower.length + '段</span>';
   if(!tower.length) return '<span class="gl-name">桜門' + (gi+1) + '</span>';
   if(pi === 1) return '<span class="gl-n">' + tower.length + '段</span>';
   if(isFuon(tower)) return '<span class="gl-bad">不穏 ' + tower.length + '段</span>';
@@ -5129,6 +5321,7 @@ function gateShortLabel(pi, gi){
 function gateClasses(pi, gi){
   const cls = ['gate'];
   if(P(pi).seals[gi]) cls.push('sealed');
+  if(isBurning(pi, gi)) cls.push('burning');
   if(pi === 0 && isFuon(P(pi).gates[gi])) cls.push('fuon');
   if(pi === 0 && !isFuon(P(pi).gates[gi]) && P(pi).gates[gi].length >= 3 && scoreTower(P(pi).gates[gi]).pts > 0) cls.push('has-role');
   if(isGateTargetable(pi, gi)) cls.push('targetable');
@@ -6553,7 +6746,10 @@ async function playCutIn(name, actorPi){
     '赫':['OUGI','次の手番は全員の「現」が0個'],
     '涼':['OUGI','全員の内駒を表向きにする'],
     '風':['OUGI','雷山から3個引き、1個を手に置く'],
-    '凛':['OUGI','塔を公開し、雷山の駒で役の点数が決まる']
+    '凛':['OUGI','塔を公開し、雷山の駒で役の点数が決まる'],
+    '鳳':['OUGI','相手と内駒を全て入れ替える'],
+    '焔':['OUGI','桜門を炎上させる（一発奥義）'],
+    '姫':['OUGI','相手の体内の駒と入れ替わる']
   };
   const info = INFO[name] || ['KOTODAMA',''];
   const whoText = actor ? esc(actor.name) + (name === '雷神化' ? '' : (ougiByName(name) ? ' の奥義' : ' の言霊')) : '';
@@ -7826,6 +8022,28 @@ async function runOugiFlow(slot){
     await primKaku(0, slot);
     return;
   }
+  if(t.name === '鳳'){
+    const ok = await confirmYesNo('奥義「鳳」の確認', 'あなたとAIの<b>内駒（体内と手）を全て入れ替えます</b>。入れ替えた駒は両方に分かります。そのあと、受け取った駒を体内か手の好きな場所に置き直します（AIも同じように置き直します）。');
+    if(!ok) return;
+    await primHo(0, slot, hoArrangeFor);
+    return;
+  }
+  if(t.name === '焔'){
+    while(true){
+      const tgt = await pickTowerModal('奥義「焔」：炎上させる桜門を選ぶ', '塔がある桜門を1つ選びます（自分の桜門も選べます。封印中の塔は選べません）。<b>手番が替わるたびに</b>、その塔の一番下の駒が峡谷へ置かれます。塔が無くなると焔も峡谷へ置き、炎上が終わります。<b>一発奥義</b>なので、この手番はほかの駒を積・発できなくなります。', homuraTargets());
+      if(!tgt) return;
+      const ok = await confirmYesNo('奥義「焔」の確認', (tgt.pi === 0 ? 'あなた' : 'AI') + 'の桜門' + (tgt.gi+1) + '（' + P(tgt.pi).gates[tgt.gi].length + '段）を炎上させます。');
+      if(!ok) continue;
+      await primHomura(0, slot, tgt.pi, tgt.gi);
+      return;
+    }
+  }
+  if(t.name === '姫'){
+    const idx = await pickHimeModal();
+    if(idx === null) return;
+    await primHime(0, slot, idx);
+    return;
+  }
   if(t.name === '涼'){
     const ok = await confirmYesNo('奥義「涼」の確認', 'あなたとAIの<b>内駒（体内と手）を全て表向き</b>にします。表になった駒は、積むまで表のままです。');
     if(!ok) return;
@@ -8107,6 +8325,52 @@ function showRinReveal(actor, gi, tiles, s, x, win){
     document.getElementById('rinOk').addEventListener('click', function(){ closeModal(); resolve(); });
   });
 }
+
+/* 鳳：受け取った駒を、手と体内に分ける（体内は3個まで・手は空いている数まで） */
+function arrangeHo(pi, tiles, hc){
+  return new Promise(function(resolve){
+    let hand = hoDefaultArrange(tiles, hc);
+    function draw(){
+      const bodyN = tiles.length - hand.length, ok = hoArrangeOk(tiles, hand, hc);
+      let h = '<h3 class="serif">奥義「鳳」：受け取った駒を置き直す</h3>';
+      h += '<p>駒を押すと、手と体内を切り替えます。手は' + hc + 'か所、体内は3個までです（体内は重い順に並びます）。</p>';
+      h += '<div class="gate-group-label">手（' + hand.length + '／' + hc + '）</div><div class="ho-zone">';
+      hand.forEach(function(i){ h += '<button type="button" class="tile-btn" data-ho="' + i + '">' + tileHtml(tiles[i], 'clickable', { ntid:true }) + '</button>'; });
+      h += '</div><div class="gate-group-label">体内（' + bodyN + '／3）</div><div class="ho-zone">';
+      tiles.forEach(function(x, i){ if(hand.indexOf(i) < 0) h += '<button type="button" class="tile-btn" data-ho="' + i + '">' + tileHtml(x, 'clickable', { ntid:true }) + '</button>'; });
+      h += '</div>';
+      if(!ok) h += '<p class="warn">' + (hand.length > hc ? '手に置ける駒は' + hc + '個までです。' : '体内に置ける駒は3個までです。') + '</p>';
+      h += '<div class="btn-row"><button type="button" class="btn primary" id="hoOk"' + (ok ? '' : ' disabled') + '>この置き方で決める</button></div>';
+      showModal(h);
+      const pk = document.querySelector('#modalRoot [data-peekbtn]'); if(pk) pk.remove();
+      document.querySelectorAll('[data-ho]').forEach(function(b){
+        b.addEventListener('click', function(){ const i = parseInt(b.getAttribute('data-ho'), 10), k = hand.indexOf(i);
+          if(k >= 0) hand.splice(k, 1); else hand.push(i); draw(); });
+      });
+      document.getElementById('hoOk').addEventListener('click', function(){ if(hoArrangeOk(tiles, hand, hc)){ closeModal(); resolve(hand.slice()); } });
+    }
+    draw();
+  });
+}
+/* 姫：AIの体内の駒を1つ選ぶ（裏向きの駒は、置かれている位置で選ぶ） */
+function pickHimeModal(){
+  return new Promise(function(resolve){
+    const q = P(1), n = q.body.length;
+    let h = '<h3 class="serif">奥義「姫」：AIの体内の駒を選ぶ</h3>';
+    h += '<p>選んだ駒をあなたの手（姫があった所）へ移し、姫はAIの体内へ移ります。体内の駒は、下ほど重い駒です。</p><div class="pick-list">';
+    for(let i = n - 1; i >= 0; i--){
+      const x = q.body[i], known = isOpenTile(x) || (G.kn && G.kn[0].has(x.id));
+      h += '<button type="button" class="tile-btn" data-hime="' + i + '">' + (known ? tileHtml(x, 'clickable', { ntid:true }) : backHtml(null, 'clickable')) +
+           '<small>' + (i === 0 ? '一番下' : (i === n - 1 ? '一番上' : '真ん中')) + '</small></button>';
+    }
+    h += '</div><div class="btn-row"><button type="button" class="btn" id="himeNo">やめる</button></div>';
+    showModal(h);
+    document.getElementById('himeNo').addEventListener('click', function(){ closeModal(); resolve(null); });
+    document.querySelectorAll('[data-hime]').forEach(function(b){
+      b.addEventListener('click', function(){ closeModal(); resolve(parseInt(b.getAttribute('data-hime'), 10)); });
+    });
+  });
+}
 /* ================= 駒一覧・役一覧（ガイド） =================
    サマリー（言霊の効果・役の種類・駒の個数・駒の重さ）をもとにした資料画面。
    対戦状態には一切触れないので、試合中・スタート画面のどちらからでも開閉できる。 */
@@ -8366,6 +8630,7 @@ Object.assign(VIEW, {
   setMeFace: function(){ return setMeFace.apply(null, arguments); },
   playCutIn: function(){ return playCutIn.apply(null, arguments); },
   playOugiRelease: function(){ return playOugiRelease.apply(null, arguments); },
+  arrangeHo: function(){ return arrangeHo.apply(null, arguments); },
   showRinReveal: function(){ return showRinReveal.apply(null, arguments); },
   showWaReveal: function(){ return showWaReveal.apply(null, arguments); },
   chooseZenTile: function(){ return chooseZenTile.apply(null, arguments); },

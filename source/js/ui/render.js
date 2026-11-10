@@ -144,7 +144,8 @@ function gateInfoHtml(pi, gi){
 /* 桜門の上に出す短い見出し。詳しい内訳は桜門をタップして見る */
 function gateShortLabel(pi, gi){
   const p = P(pi), tower = p.gates[gi];
-  if(p.seals[gi]) return '<span class="gl-seal">封印中</span>';
+  if(p.seals[gi]) return (isBurning(pi, gi) ? '<span class="gl-fire">炎上</span>' : '') + '<span class="gl-seal">封印中</span>';
+  if(isBurning(pi, gi)) return '<span class="gl-fire">炎上 ' + tower.length + '段</span>';
   if(!tower.length) return '<span class="gl-name">桜門' + (gi+1) + '</span>';
   if(pi === 1) return '<span class="gl-n">' + tower.length + '段</span>';
   if(isFuon(tower)) return '<span class="gl-bad">不穏 ' + tower.length + '段</span>';
@@ -157,6 +158,7 @@ function gateShortLabel(pi, gi){
 function gateClasses(pi, gi){
   const cls = ['gate'];
   if(P(pi).seals[gi]) cls.push('sealed');
+  if(isBurning(pi, gi)) cls.push('burning');
   if(pi === 0 && isFuon(P(pi).gates[gi])) cls.push('fuon');
   if(pi === 0 && !isFuon(P(pi).gates[gi]) && P(pi).gates[gi].length >= 3 && scoreTower(P(pi).gates[gi]).pts > 0) cls.push('has-role');
   if(isGateTargetable(pi, gi)) cls.push('targetable');
