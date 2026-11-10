@@ -38,11 +38,25 @@ async function playCutIn(name, actorPi){
       '<div class="fsc-text"><span class="fsc-en">' + info[0] + '</span><span class="fsc-name">' + esc(name) + '</span>' +
       (info[1] ? '<span class="fsc-sub">' + info[1] + '</span>' : '') + (whoText ? '<span class="fsc-who">' + whoText + '</span>' : '') + '</div>' +
     '</div></div>';
+  placeCutInBand(root.querySelector('.fsc-band'));
   const ms = 1450;
   G.fxBusy = true;
   await fxWait(ms);
   root.innerHTML = '';
   G.fxBusy = false;
+}
+/* 帯が自キャラのアイコンに重ならないよう、アイコンの下から帯を出す
+   （発動・受けた の表情が見えるように）。画面が低くて入らない時は画面の下端に合わせる */
+function placeCutInBand(band){
+  const av = document.querySelector('#humanZone .pz-avatar');
+  if(!band || !av) return;
+  const r = av.getBoundingClientRect();
+  if(!r.height) return;
+  const h = band.offsetHeight, vh = window.innerHeight;
+  let top = r.bottom + 6;
+  if(top + h > vh - 4) top = Math.max(r.bottom - h * 0.25, vh - h - 4);
+  band.style.top = Math.round(top) + 'px';
+  band.style.marginTop = '0';
 }
 /* 「隠」のカットイン（言霊のカットインと同じ系統の演出で、1秒弱の短め表示） */
 async function playHideCutIn(actorPi){

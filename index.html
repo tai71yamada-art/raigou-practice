@@ -1247,8 +1247,8 @@
       /* キャラごとの見た目の調整（build.py が assets/chara/<id>/chara.json の css から作る） */
       /* 敗北の絵（しゃがんだ絵）は顔が大きく出て「敗北」の文字に重なるので、小さめにして右へ */
       html[data-chara="shigure"] #resultScreen[data-res="lose"] .result-hero img{ right:-16%; top:34px; height:108%; }
-      /* 勝利の絵は刀を肩にかついで横に広く「勝利」の文字に重なるので小さめに。引き分け（立ち絵）は刀の手が点数の行にかかるので少し右へ */
-      html[data-chara="yakumo"] #resultScreen[data-res="win"] .result-hero img{ right:-8%; top:64px; height:90%; } html[data-chara="yakumo"] #resultScreen[data-res="draw"] .result-hero img{ right:-12%; }
+      /* 勝利の絵は刀を肩にかついで横に広いので、文字に少しかかる程度の大きさで右へ（たいせいさん：多少被ってもいいので大きめに）。引き分け（立ち絵）は刀の手が点数の行にかかるので少し右へ */
+      html[data-chara="yakumo"] #resultScreen[data-res="win"] .result-hero img{ right:-12%; top:28px; height:104%; } html[data-chara="yakumo"] #resultScreen[data-res="draw"] .result-hero img{ right:-12%; }
       .hero-img, #startScreen .hero-img{ width:auto; max-width:100%; height:clamp(220px, 38vh, 320px); object-fit:contain; }
       #startScreen .hero-img.hero-wide{ width:100%; max-width:440px; height:auto; }
       /* 背景つきの一枚絵：縦が長すぎる画面では空の上側を切って収める */
@@ -3895,7 +3895,7 @@ function aiSpeedFactor(){ const o = AI_SPEEDS.find(function(x){ return x.v === S
 function aiWait(ms){ return wait(ms * aiSpeedFactor()); }
 
 /* ================= アプリのバージョン（build.py が source/VERSION の値を入れる） ================= */
-const APP_VERSION = 'v40';   // build.py が VERSION ファイルの値を入れる（sw.js も同じ値になる）
+const APP_VERSION = 'v41';   // build.py が VERSION ファイルの値を入れる（sw.js も同じ値になる）
 /* ================= 効果音（音声ファイルは使わず、その場で合成） ================= */
 const SFX = (function(){
   let ctx = null;
@@ -5732,11 +5732,25 @@ async function playCutIn(name, actorPi){
       '<div class="fsc-text"><span class="fsc-en">' + info[0] + '</span><span class="fsc-name">' + esc(name) + '</span>' +
       (info[1] ? '<span class="fsc-sub">' + info[1] + '</span>' : '') + (whoText ? '<span class="fsc-who">' + whoText + '</span>' : '') + '</div>' +
     '</div></div>';
+  placeCutInBand(root.querySelector('.fsc-band'));
   const ms = 1450;
   G.fxBusy = true;
   await fxWait(ms);
   root.innerHTML = '';
   G.fxBusy = false;
+}
+/* 帯が自キャラのアイコンに重ならないよう、アイコンの下から帯を出す
+   （発動・受けた の表情が見えるように）。画面が低くて入らない時は画面の下端に合わせる */
+function placeCutInBand(band){
+  const av = document.querySelector('#humanZone .pz-avatar');
+  if(!band || !av) return;
+  const r = av.getBoundingClientRect();
+  if(!r.height) return;
+  const h = band.offsetHeight, vh = window.innerHeight;
+  let top = r.bottom + 6;
+  if(top + h > vh - 4) top = Math.max(r.bottom - h * 0.25, vh - h - 4);
+  band.style.top = Math.round(top) + 'px';
+  band.style.marginTop = '0';
 }
 /* 「隠」のカットイン（言霊のカットインと同じ系統の演出で、1秒弱の短め表示） */
 async function playHideCutIn(actorPi){
