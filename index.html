@@ -1370,7 +1370,45 @@
       .sen-btn.one{ background:#f2f0ea; }
       .sen-btn:active{ filter:brightness(.92); }
       #modalRoot [data-peekbtn]{ display:block; margin:12px auto 0 !important; }
-    </style>
+          /* ===== 競技雷轟（奥義駒・月・開） ===== */
+      .menu-row .phasebar.has-kai, .phasebar.has-kai{ grid-template-columns:repeat(4, minmax(0,1fr)); }
+      .phase-step[hidden]{ display:none; }
+      .start-act-btn[hidden]{ display:none; }
+      .start-act-btn.ougi-btn .sa-value{ white-space:nowrap; }
+      .pz-main.me .inner-row.has-moon{ gap:10px; }
+      .pz-main.opp .inner-row.has-moon{ gap:9px; }
+      .moon-slot{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:0; background:none; color:inherit; font:inherit; }
+      button.moon-slot{ cursor:pointer; }
+      .pz-main.me .hand-slot.moon-slot .tile.moon-mini{ width:44px; height:24px; font-size:.95rem; pointer-events:none; }
+      .pz-main.me .hand-slot.moon-slot .tile.moon-mini .w{ display:none; }
+      .pz-main.opp .hand-slot.moon-slot .tile.moon-mini{ width:22px; height:11px; }
+      .pz-main.opp .hand-slot.moon-slot .tile.moon-mini::before{ display:none; }
+      .moon-wrap .ib-label{ color:var(--main-hi,var(--main)); }
+      .ougi-card{ display:flex; gap:10px; align-items:flex-start; background:var(--panel2); border:1px solid var(--line); padding:9px 10px; margin:8px 0; text-align:left; }
+      .ougi-card > .tile{ flex:none; width:46px; height:46px; font-size:1.35rem; }
+      .ougi-card .oc-body{ flex:1; min-width:0; }
+      .ougi-card .oc-name{ display:block; font-size:.95rem; margin-bottom:3px; }
+      .ougi-card .oc-act{ margin-top:8px; }
+      .ougi-text .guide-badges{ margin:0 0 4px; justify-content:flex-start; }
+      .ougi-text .ougi-desc{ margin:0; font-size:.86rem; line-height:1.6; white-space:pre-line; }
+      .ougi-text .ougi-notes{ margin-top:3px; font-size:.78rem; }
+      .modal-box > .ougi-text{ background:var(--panel2); border:1px solid var(--line); padding:8px 10px; margin:8px 0; text-align:left; }
+      .ougi-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(58px, 1fr)); gap:8px; margin:10px 0 4px; }
+      .ougi-opt{ position:relative; display:flex; align-items:center; justify-content:center; padding:7px 0; background:var(--panel2); border:1px solid var(--line); cursor:pointer; }
+      .ougi-opt .tile{ width:44px; height:44px; font-size:1.3rem; pointer-events:none; }
+      .ougi-opt.focus{ border-color:#f2f0ea; }
+      .ougi-opt.on{ background:var(--main); border-color:var(--main-hi,var(--main)); }
+      .ougi-opt:disabled{ opacity:.4; cursor:not-allowed; }
+      .ougi-opt .oo-check{ position:absolute; top:-6px; right:-6px; min-width:18px; height:18px; line-height:18px; font-size:.7rem; font-weight:900; background:#f2f0ea; color:#101114; border-radius:9px; text-align:center; }
+      .ougi-opt .oo-taken{ position:absolute; bottom:1px; left:0; right:0; font-size:.58rem; font-weight:800; text-align:center; color:#f2f0ea; }
+      .ougi-pick-note{ font-size:.76rem; line-height:1.55; }
+      .kei-gate .big-stack{ gap:0; align-items:center; }
+      .kei-cut{ display:block; width:150px; margin:0; padding:3px 0; background:none; border:none; cursor:pointer; color:var(--ink-soft); font:inherit; font-size:.68rem; font-weight:800; }
+      .kei-cut span{ display:block; text-align:center; border-top:2px dashed #6a6d78; padding-top:1px; }
+      .kei-cut:hover span, .kei-cut.on span{ border-top-color:var(--main-hi,var(--main)); color:var(--main-hi,var(--main)); }
+      .kei-cut.on span{ border-top-style:solid; border-top-width:3px; }
+      .big-stack .tile.kei-move{ outline:3px solid var(--main-hi,var(--main)); outline-offset:-1px; }
+</style>
   </head>
   <body>
     <div id="loadScreen" class="load-screen" role="status" aria-live="polite">
@@ -1393,6 +1431,8 @@
             <div class="start-actions">
               <button type="button" class="start-act-btn rule-btn" id="ruleBtn" aria-haspopup="dialog" disabled><span class="sa-label">ルール</span><span class="sa-value" id="ruleBtnVal">基本ルール</span></button>
               <button type="button" class="start-act-btn rule-btn house-btn" id="houseBtn" aria-haspopup="dialog" disabled><span class="sa-label">キャラ</span><span class="sa-value" id="houseBtnVal">雷藏 くらら</span></button>
+              <button type="button" class="start-act-btn rule-btn ougi-btn" id="ougiBtn" aria-haspopup="dialog" disabled hidden><span class="sa-label">奥義駒</span><span class="sa-value" id="ougiBtnVal">未選択</span></button>
+              <button type="button" class="start-act-btn rule-btn ougi-btn" id="aiOugiBtn" aria-haspopup="dialog" disabled hidden><span class="sa-label">AIの奥義</span><span class="sa-value" id="aiOugiBtnVal">おまかせ</span></button>
               <button type="button" class="start-act-btn" id="diffBtn" aria-haspopup="dialog" disabled><span class="sa-label">AIの強さ</span><span class="sa-value" id="diffBtnVal">Lv.3</span></button>
               <button type="button" class="start-act-btn" id="orderBtn" aria-haspopup="dialog" disabled><span class="sa-label">先手 / 後手</span><span class="sa-value" id="orderBtnVal">先手</span></button>
               <button type="button" class="start-act-btn start-go" id="startGoBtn" disabled><span class="sa-value">対戦開始</span></button>
@@ -1431,6 +1471,7 @@
           <div class="menu-row">
             <span class="logo-mark" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="#ffd23f"><path d="M13 2 4 14h6l-1 8 9-12h-6z"></path></svg>雷轟</span>
 <div class="phasebar" id="phasebar">
+              <span class="phase-step" data-ph="kai" hidden>開</span>
               <span class="phase-step" data-ph="gen">現</span>
               <span class="phase-step" data-ph="sen">選</span>
               <span class="phase-step" data-ph="act">積・発</span>
@@ -1782,7 +1823,7 @@ function isPersistentOugi(name){ const o = ougiByName(name); return !!(o && o.ty
    内駒は最大6個、積・発できる手は1手番で最大2か所まで。 */
 const RULESETS = {
   basic: { id:'basic', label:'基本ルール', ougi:false },
-  kyogi: { id:'kyogi', label:'競技雷轟', ougi:true, ready:false }
+  kyogi: { id:'kyogi', label:'競技雷轟', ougi:true, ready:true }
 };
 const BODY_MAX = 3;      // 体内は3個まで
 const ACT_HAND_MAX = 2;  // 1手番で積・発に使える手は最大2か所（競技雷轟）
@@ -1867,6 +1908,8 @@ function newGame(humanSente, difficulty, opts){
   G.houses = [ opts.house || 'rakura', AI_HOUSE.id ];
   VIEW.applyHouseClasses();
   G.actedSlots = new Set(); G.inGassen = false; G.lastTowerEffect = null;
+  G.excludedOugi = [];
+  if(G.rules.ougi) setupOugi(opts.ougi);
   // 初期の体内：先手1枚、後手2枚
   const gote = opp(G.sente);
   P(G.sente).body.push(G.deck.pop());
@@ -1875,6 +1918,7 @@ function newGame(humanSente, difficulty, opts){
   VIEW.logClear();
   log('対戦開始。先手は' + P(G.sente).name + '、後手は' + P(gote).name + 'です。', 'sys');
   log('あなたは' + houseById(G.houses[0]).name + '家です。', 'sys');
+  if(G.rules.ougi) log('ルールは競技雷轟です。奥義駒を2個ずつ月に置きました。自分の桜門がすべて塔で埋まると、手番の最初に「開」ができます（1対戦に1回）。', 'sys');
   log('陽玉は各自2点から。雷山は' + G.deck.length + '枚です。', 'sys');
   startTurn();
 }
@@ -2845,6 +2889,185 @@ async function joArrange(actor, handSlot, handTiles, pool, counts){
   await VIEW.render();
   return true;
 }
+/* ================= 競技雷轟：奥義駒・開・雷神化 =================
+   ・対戦前に、各自が奥義駒を2個選んで「月」に裏向きで置く（相手には見えない）。
+   ・手番は「開 → 現 → 選 → 積・発」。開は1対戦に1回だけ：自分の桜門がすべて塔で埋まっている時に、
+     月の奥義駒を1つ選んで体内か手の空いている場所へ移せる（任意）。
+   ・開したら、月に残った奥義駒は除外し、雷神化する（月が3か所目の手になる。積・発できる手は1手番2か所まで、内駒は6個まで）。
+   ・奥義駒はすべて重さ9の言霊。発したら峡谷へ行く。陣で防げるのは雷・蛇・斬だけなので、奥義は防げない。
+   効果を作った奥義駒は ougi-data.js の implemented を true にする（選択画面に出るのは true の駒だけ）。 */
+const OUGI_BRING = 2;   // 持ち込む奥義駒の数
+['覇','天','啓'].forEach(function(n){ const o = ougiByName(n); if(o) o.implemented = true; });
+
+function ougiReadyList(){ return OUGI_DATA.filter(function(o){ return o.implemented && !o.kyogiBanned; }); }
+/* 奥義駒は自分と相手で重ならないのが決まり。ただし作り終えた駒が4種類そろうまでは、重なりを認める */
+function ougiAllowDup(){ return ougiReadyList().length < OUGI_BRING * 2; }
+function mkOugiTile(name){ const t = mkTile('gen', name, OUGI_W); t.ougi = true; return t; }
+function isOugi(t){ return !!(t && t.ougi); }
+function pickRandomOugi(n, exclude){
+  let pool = ougiReadyList().map(function(o){ return o.name; });
+  if(!ougiAllowDup() && exclude && exclude.length) pool = pool.filter(function(x){ return exclude.indexOf(x) < 0; });
+  return shuffle(pool).slice(0, n);
+}
+/* sets：[あなたの奥義駒の名前2つ, AIの奥義駒の名前2つ]。無い側はランダムに決める */
+function setupOugi(sets){
+  sets = sets || [];
+  const ok = function(a){ return Array.isArray(a) && a.length === OUGI_BRING && a.every(function(n){ const o = ougiByName(n); return o && o.implemented && !o.kyogiBanned; }); };
+  const mine = ok(sets[0]) ? sets[0].slice() : (ok(sets[1]) ? pickRandomOugi(OUGI_BRING, sets[1]) : pickRandomOugi(OUGI_BRING, []));
+  const theirs = ok(sets[1]) ? sets[1].slice() : pickRandomOugi(OUGI_BRING, mine);
+  G.excludedOugi = [];
+  P(0).moon = mine.map(mkOugiTile);
+  P(1).moon = theirs.map(mkOugiTile);
+}
+function gatesAllFilled(p){ return p.gates.every(function(g){ return g.length > 0; }); }
+function emptyGates(pi){ const out = []; P(pi).gates.forEach(function(g, gi){ if(!g.length) out.push(gi); }); return out; }
+/* 開した奥義駒の置き場所（体内か、手の空いている場所） */
+function kaiDests(p){
+  const out = [];
+  p.hand.forEach(function(t, i){ if(!t) out.push({ where:'hand', idx:i }); });
+  if(p.body.length < BODY_MAX) out.push({ where:'body' });
+  return out;
+}
+function canKai(pi){
+  const p = P(pi);
+  return !!(rulesNow().ougi && !p.raijinka && p.moon && p.moon.length && gatesAllFilled(p) && kaiDests(p).length);
+}
+async function doKai(pi, moonIdx, dest){
+  const p = P(pi);
+  if(!canKai(pi)) return false;
+  const t = p.moon[moonIdx];
+  if(!t) return false;
+  const rest = p.moon.filter(function(x){ return x !== t; });
+  if(dest && dest.where === 'hand' && !p.hand[dest.idx]) p.hand[dest.idx] = t;
+  else if(p.body.length < BODY_MAX){ p.body.push(t); sortBody(p); dest = { where:'body' }; }
+  else { const s = p.hand.indexOf(null); if(s < 0) return false; p.hand[s] = t; dest = { where:'hand', idx:s }; }
+  rest.forEach(function(x){ G.excludedOugi.push(x); });
+  setRaijinka(pi);
+  const whereText = dest.where === 'body' ? '体内' : handLabel(dest.idx);
+  if(p.isAI) log(p.name + 'は「開」：月の奥義駒を1つ内駒に移し、雷神化しました（月が3か所目の手になり、内駒は6個まで）。', 'sys');
+  else log(p.name + 'は「開」：奥義駒「' + tileLabel(t) + '」を' + whereText + 'に移し、雷神化しました（月が3か所目の手になり、内駒は6個まで）。', 'sys');
+  await VIEW.playCutIn('雷神化', pi);
+  await VIEW.render();
+  return true;
+}
+
+/* ---- 発できるかどうか（できる時は ''、できない時は理由） ---- */
+function haTargets(){
+  const out = [];
+  for(let pi = 0; pi < 2; pi++) for(let gi = 0; gi < 3; gi++){ if(P(pi).gates[gi].length > 0 && !P(pi).seals[gi]) out.push({ pi:pi, gi:gi }); }
+  return out;
+}
+function tenTowers(pi){
+  const out = [];
+  for(let gi = 0; gi < 3; gi++){ if(P(pi).gates[gi].length > 0 && !P(pi).seals[gi]) out.push(gi); }
+  return out;
+}
+/* 天で選べる駒の場所：峡谷と、全員の内駒（発している天そのものは除く） */
+function tenSources(pi, slot){
+  const out = [];
+  for(let q = 0; q < 2; q++){
+    P(q).body.forEach(function(t, i){ out.push({ zone:'body', pi:q, idx:i }); });
+    P(q).hand.forEach(function(t, i){ if(t && !(q === pi && i === slot)) out.push({ zone:'hand', pi:q, idx:i }); });
+  }
+  G.canyon.forEach(function(t, i){ out.push({ zone:'canyon', idx:i }); });
+  return out;
+}
+function keiTargets(){
+  const out = [];
+  for(let pi = 0; pi < 2; pi++){
+    if(!emptyGates(pi).length) continue;
+    for(let gi = 0; gi < 3; gi++){ if(P(pi).gates[gi].length >= 2 && !P(pi).seals[gi]) out.push({ pi:pi, gi:gi }); }
+  }
+  return out;
+}
+function ougiUsable(pi, slot){
+  const t = P(pi).hand[slot];
+  if(!isOugi(t)) return '奥義駒ではありません';
+  if(G.used.has(t.name)) return 'この効果はこの手番使用済み';
+  if(t.name === '覇') return haTargets().length ? '' : '対象になる塔がありません';
+  if(t.name === '天'){
+    if(!tenTowers(pi).length) return '自分の塔がありません';
+    return tenSources(pi, slot).length ? '' : '入れ替える駒がありません';
+  }
+  if(t.name === '啓') return keiTargets().length ? '' : '2段以上の塔と空いた桜門を両方持つ人がいません';
+  return 'この奥義駒は準備中です';
+}
+
+/* ---- 覇：全ての塔の一番上、もしくは一番下の駒を捨て駒にする（雷停中の塔は含まない） ---- */
+async function primHa(actor, slot, end){
+  const p = P(actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '覇') return false;
+  const tgs = haTargets();
+  if(!tgs.length) return false;
+  G.used.add('覇');
+  await VIEW.playCutIn('覇', actor);
+  if(actor !== 0 && tgs.some(function(x){ return x.pi === 0; })) VIEW.setMeFace('hit');
+  const fx = [], parts = [];
+  tgs.forEach(function(tg){
+    const tower = P(tg.pi).gates[tg.gi];
+    const rect = VIEW.fxGateRect(tg.pi, tg.gi);
+    const removed = (end === 'top') ? tower.pop() : tower.shift();
+    G.canyon.push(removed);
+    if(G.cutHints){ if(tower.length) G.cutHints[tg.pi][tg.gi].push({ w:removed.w, end:end }); else G.cutHints[tg.pi][tg.gi] = []; }
+    fx.push({ removed:removed, rect:rect });
+    parts.push(P(tg.pi).name + 'の桜門' + (tg.gi+1) + '「' + tileLabel(removed) + '」');
+  });
+  consumeHand(p, slot);
+  log(p.name + 'の奥義「覇」：全ての塔の' + (end === 'top' ? '一番上' : '一番下') + 'の駒を捨て駒にしました（' + parts.join('・') + '）。');
+  VIEW.render();
+  await Promise.all(fx.map(function(f){ return VIEW.fxZanFx(f.removed, f.rect, end); }));
+  return true;
+}
+/* ---- 天：自分の塔を1つ選び、その一番上の駒と、捨て駒（峡谷）か全員の内駒から選んだ1駒の場所を入れ替える ----
+   loc は瞬と同じ形 { zone:'body'|'hand'|'canyon', pi, idx } */
+async function primTen(actor, slot, gi, loc){
+  const p = P(actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '天') return false;
+  const tower = p.gates[gi];
+  if(!tower || !tower.length || p.seals[gi]) return false;
+  const top = tower[tower.length - 1], other = locTile(loc);
+  if(!other || other === t || other === top) return false;
+  G.used.add('天');
+  await VIEW.playCutIn('天', actor);
+  const fromLabel = locLabel(loc, other);
+  const pub = loc.zone === 'canyon' || loc.pi !== actor;   // 相手にも分かる入れ替えか（自分の内駒との入れ替えだけは相手に見えない）
+  tower[tower.length - 1] = other;
+  locSet(loc, top);
+  if(pub){
+    if(G.revealedTopIds) G.revealedTopIds.add(other.id);
+    if(G.kn){ G.kn[0].add(other.id); G.kn[1].add(other.id); if(loc.zone !== 'canyon'){ G.kn[0].add(top.id); G.kn[1].add(top.id); } }
+  }
+  if(actor !== 0 && loc.pi === 0 && loc.zone !== 'canyon') VIEW.setMeFace('hit');
+  sortBody(P(0)); sortBody(P(1));
+  consumeHand(p, slot);
+  if(p.isAI && !pub) log(p.name + 'の奥義「天」：桜門' + (gi+1) + 'の塔の一番上の駒と、自分の内駒を入れ替えました。');
+  else log(p.name + 'の奥義「天」：桜門' + (gi+1) + 'の塔の一番上の「' + tileLabel(top) + '」と、' + fromLabel + 'を入れ替えました。');
+  await VIEW.render();
+  return true;
+}
+/* ---- 啓：2段以上の塔と空いた桜門を持つ人を選び、その塔を好きな所で上下2つに分け、片方を空いた桜門へ置く ----
+   k＝下の部分の段数（1〜段数-1）。part＝空いた桜門へ移す側（'top'＝上の部分／'bottom'＝下の部分） */
+async function primKei(actor, slot, tpi, gi, k, part, destGi){
+  const p = P(actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '啓') return false;
+  const q = P(tpi), tower = q.gates[gi];
+  if(!tower || tower.length < 2 || q.seals[gi]) return false;
+  if(!(k >= 1 && k <= tower.length - 1)) return false;
+  if(destGi === gi || !q.gates[destGi] || q.gates[destGi].length) return false;
+  G.used.add('啓');
+  await VIEW.playCutIn('啓', actor);
+  if(actor !== 0 && tpi === 0) VIEW.setMeFace('hit');
+  const n = tower.length, lower = tower.slice(0, k), upper = tower.slice(k);
+  if(part === 'bottom'){ q.gates[gi] = upper; q.gates[destGi] = lower; }
+  else { q.gates[gi] = lower; q.gates[destGi] = upper; }
+  q.seals[destGi] = null;
+  if(G.cutHints){ G.cutHints[tpi][gi] = []; G.cutHints[tpi][destGi] = []; }
+  consumeHand(p, slot);
+  log(p.name + 'の奥義「啓」：' + q.name + 'の桜門' + (gi+1) + 'の塔（' + n + '段）を下' + k + '段と上' + (n - k) + '段に分け、' +
+      (part === 'bottom' ? '下' : '上') + 'の部分を桜門' + (destGi+1) + 'へ移しました。');
+  await VIEW.render();
+  return true;
+}
 /* ================= 対局の途中保存 =================
    G（盤面・山・峡谷・手番・AIの見込みなど）をまるごと文字にして保存し、あとで同じ状態に戻す。
    駒は同じ駒が何か所からも指されている（例：合戦で開示された駒の記録）ので、
@@ -2999,9 +3222,23 @@ function unknownAvail(aiIdx){
   P(aiIdx).hand.filter(Boolean).forEach(sub);
   return full;
 }
+/* completionBest は同じ塔・同じ残り駒で何度も呼ばれるので、答えを覚えておく（結果は変わらない。速くするだけ） */
+const CB_MEMO = new Map();
 function completionBest(tiles, avail){
   const n = tiles.length;
   if(n >= 6) return scoreTower(tiles).pts;
+  let key = '';
+  for(let i = 0; i < n; i++) key += tiles[i].kind + tiles[i].name + ',';
+  if(avail){ key += '|'; for(let w = 1; w <= 9; w++) key += (avail[w] || 0) + ','; }
+  const hit = CB_MEMO.get(key);
+  if(hit !== undefined) return hit;
+  const v = completionBestRaw(tiles, avail);
+  if(CB_MEMO.size > 20000) CB_MEMO.clear();
+  CB_MEMO.set(key, v);
+  return v;
+}
+function completionBestRaw(tiles, avail){
+  const n = tiles.length;
   let best = scoreTower(tiles).pts;
   const need = 6 - n;
   const topW = tiles[n-1].w;
@@ -3138,6 +3375,7 @@ function aiTileDesire(t, p){
   if(t.kind === 'gen'){
     const bonus = { '雷':0.85, '蛇':0.55, '斬':0.6, '陣':0.35, '轟':0.4, '霧':0.55, '瞬':0.5, '浄':0.45 };
     let b = bonus[t.name] || 0;
+    if(t.ougi) b = 0.9;   // 奥義駒は手に持って発したい
     if(t.name==='雷' && !raiTargets().length) b = 0.1;
     if(t.name==='轟') b = Math.max(b, diffParams().goDesire);
     if(t.name==='陣') b = Math.max(b, diffParams().jinDesire);
@@ -3210,6 +3448,10 @@ async function aiTurn(){
   const p = P(me);
   await VIEW.aiWait(650);
   if(G.over) return;
+  if(rulesNow().ougi){
+    const kai = withSeat(me, aiPickKai);
+    if(kai){ VIEW.aiBand('開：月の奥義駒を開いて雷神化'); await VIEW.aiWait(350); await doKai(me, kai.idx, kai.dest); await VIEW.aiWait(350); if(G.over) return; }
+  }
   { const b0 = p.body.length; withSeat(me, aiGen); const mv = b0 - p.body.length;
     VIEW.aiBand(mv > 0 ? '現：体内の駒を' + mv + '個、手に移した' : '現：0現（手に移さない）'); }
   // 現で残った体内（裏向き）が詰まる動きを、プレイヤーが追える速さで見せる
@@ -3340,6 +3582,7 @@ function aiChooseAction(){
       if(nt.length === 6) gain = scoreTower(nt).pts - before + dp.sixBonus;
       else gain = towerValue(nt, avail) - before + dp.stackBase; // 積むこと自体が前進（内駒も減る）
       if(totalInner(p) >= 4) gain += dp.fullBonus; // 満杯が近い時は消費を優先
+      if(rulesNow().ougi) gain += aiOugiStackAdjust(p, t, gi);
       if(dp.no5Pen > 0 && nt.length === 5){
         /* 5段で手番を終えると雷放の的になりやすい。同じ手番に6段目を積める駒が手にあるなら後押し、無ければ控える */
         let combo = false;
@@ -3382,6 +3625,7 @@ function aiChooseAction(){
       else lowStacks.push({ kind:'stack', hand:s, gi:gi, gain:gain });
     }
     if(t.kind !== 'gen') return;
+    if(t.ougi){ if(!G._collectMode) aiOugiActs(p, s, t, dp, avail, acts); return; }
     // 効果の候補（霧は雷・蛇・斬をまねる）
     let effs = [];
     if(t.name==='雷' || t.name==='蛇' || t.name==='斬') effs = [t.name];
@@ -3853,6 +4097,7 @@ function aiActText(act){
     case 'hebi':   return '蛇' + kiri() + '：' + who(act.targetLoc.pi) + 'の' + (act.targetLoc.where === 'body' ? '体内' : '手') + 'の駒を狙う';
     case 'shun':   return '瞬：駒を2個入れ替える';
     case 'jo':     return '浄：内駒を捨てて引き直す';
+    case 'ougi':   return aiOugiText(act);
   }
   return '行動中';
 }
@@ -3865,6 +4110,7 @@ async function aiExecute(act, me){
     case 'zan': G.used.add('斬'); await primZan(me, act.hand, act.target); break;
     case 'hebi': G.used.add('蛇'); await primHebi(me, act.hand, act.targetLoc); break;
     case 'shun': G.used.add('瞬'); await primShun(me, act.hand, act.locA, act.locB); break;
+    case 'ougi': await aiOugiExecute(act, me); break;
     case 'jo': {
       const res = await joDraw(me, act.hand, act.discards);
       const handTiles = withSeat(me, function(){ return res.pool.slice().sort(function(a,b){ return aiTileDesire(b, P(me)) - aiTileDesire(a, P(me)); }).slice(0, P(me).hand.length); });
@@ -3874,6 +4120,92 @@ async function aiExecute(act, me){
   }
 }
 
+/* ================= AI：競技雷轟（開・奥義） ================= */
+/* 開するかどうか。雷神化は手が1つ増えて内駒の上限も増えるので、開できる時は基本的にすぐ開く。
+   Lv.1・Lv.2 はときどき見送る */
+const AI_OUGI_LIKE = { '覇':1.0, '天':0.9, '啓':0.8 };
+function aiPickKai(){
+  const p = P(AI_SEAT);
+  if(!canKai(AI_SEAT)) return null;
+  const lv = rawDiffLevel();
+  if(lv === 1 && Math.random() < 0.5) return null;
+  if(lv === 2 && Math.random() < 0.25) return null;
+  let best = 0, bestV = -1;
+  p.moon.forEach(function(t, i){ const v = (AI_OUGI_LIKE[t.name] || 0.5) + Math.random() * 0.4; if(v > bestV){ bestV = v; best = i; } });
+  return { idx: best, dest: kaiDests(p)[0] };
+}
+/* 積む手の評価の調整：奥義駒はただの重さ9として積まない／開のために空いた桜門を埋める後押し */
+function aiOugiStackAdjust(p, t, gi){
+  let d = 0;
+  if(t.ougi) d -= 0.9;
+  if(!p.raijinka && p.moon && p.moon.length && !p.gates[gi].length && p.gates.filter(function(g){ return !g.length; }).length === 1) d += 0.5;
+  return d;
+}
+function aiOwnVal(tiles, avail){ return !tiles.length ? 0 : (isFuon(tiles) ? -1 : towerValue(tiles, avail)); }
+/* 手の奥義駒 t（手の場所 s）で打てる手を acts に足す */
+function aiOugiActs(p, s, t, dp, avail, acts){
+  if(G.used.has(t.name)) return;
+  const me = AI_SEAT, opn = 1 - AI_SEAT;
+  if(t.name === '覇'){
+    ['top','bottom'].forEach(function(end){
+      let g = 0;
+      haTargets().forEach(function(tg){
+        const tw = P(tg.pi).gates[tg.gi];
+        const after = end === 'top' ? tw.slice(0, -1) : tw.slice(1);
+        if(tg.pi === me) g += aiOwnVal(after, avail) - aiOwnVal(tw, avail);
+        else g += aiTowerView(tg.pi, tg.gi, avail).val - (after.length ? aiTowerView(tg.pi, tg.gi, avail, after).val : 0);
+      });
+      if(g > 0.8) acts.push({ kind:'ougi', name:'覇', hand:s, end:end, gain: g * dp.zanFactor });
+    });
+  } else if(t.name === '天'){
+    let best = null;
+    const seen = {};
+    tenTowers(me).forEach(function(gi){
+      const tw = p.gates[gi], top = tw[tw.length - 1], base = aiOwnVal(tw, avail);
+      tenSources(me, s).forEach(function(loc){
+        const x = locTile(loc);
+        if(!x || x === top) return;
+        if(loc.zone !== 'canyon' && loc.pi !== me && !aiKnows(x, me)) return;   // 相手の内駒は、中身を知っている駒だけ
+        const key = gi + ':' + loc.zone + ':' + (loc.zone === 'canyon' ? x.kind + x.name : loc.pi + ':' + x.id);
+        if(seen[key]) return; seen[key] = 1;
+        const nt = tw.slice(0, -1).concat([x]);
+        if(isFuon(nt)) return;
+        /* 先に軽い計算でふるいにかける：今の点が上がるか、不穏の塔が直る入れ替えだけを詳しく見る */
+        if(!(isFuon(tw) || scoreTower(nt).pts > scoreTower(tw).pts)) return;
+        let g = towerValue(nt, avail) - base;
+        if(loc.zone !== 'canyon' && loc.pi === me) g += (aiTileDesire(top, p) - aiTileDesire(x, p)) * 0.3;
+        if(loc.zone !== 'canyon' && loc.pi === opn) g += 0.2;
+        if(!best || g > best.gain) best = { kind:'ougi', name:'天', hand:s, gi:gi, loc:loc, gain:g };
+      });
+    });
+    if(best && best.gain > 0.7) acts.push(best);
+  } else if(t.name === '啓'){
+    let best = null;
+    keiTargets().forEach(function(tg){
+      const tw = P(tg.pi).gates[tg.gi], dest = emptyGates(tg.pi)[0];
+      for(let k = 1; k <= tw.length - 1; k++){
+        const lower = tw.slice(0, k), upper = tw.slice(k);
+        let g;
+        if(tg.pi === me) g = aiOwnVal(lower, avail) + aiOwnVal(upper, avail) - aiOwnVal(tw, avail);
+        else g = aiTowerView(tg.pi, tg.gi, avail).val - aiTowerView(tg.pi, tg.gi, avail, lower).val - aiTowerView(tg.pi, tg.gi, avail, upper).val;
+        if(!best || g > best.gain) best = { kind:'ougi', name:'啓', hand:s, target:tg, k:k, part:'top', dest:dest, gain:g };
+      }
+    });
+    if(best && best.gain > 0.7) acts.push(best);
+  }
+}
+function aiOugiText(act){
+  const who = function(pi){ return pi === AI_SEAT ? '自分' : 'あなた'; };
+  if(act.name === '覇') return '奥義「覇」：全ての塔の' + (act.end === 'top' ? '一番上' : '一番下') + 'を捨てる';
+  if(act.name === '天') return '奥義「天」：自分の桜門' + (act.gi + 1) + 'の塔の一番上を入れ替える';
+  if(act.name === '啓') return '奥義「啓」：' + who(act.target.pi) + 'の桜門' + (act.target.gi + 1) + 'の塔を2つに分ける';
+  return '奥義';
+}
+async function aiOugiExecute(act, me){
+  if(act.name === '覇') await primHa(me, act.hand, act.end);
+  else if(act.name === '天') await primTen(me, act.hand, act.gi, act.loc);
+  else if(act.name === '啓') await primKei(me, act.hand, act.target.pi, act.target.gi, act.k, act.part, act.dest);
+}
 /* ================= 設定（端末に保存） ================= */
 /* ホーム画面に追加したときのオフライン用（https で公開した時だけ動く） */
 if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
@@ -3900,7 +4232,7 @@ function aiSpeedFactor(){ const o = AI_SPEEDS.find(function(x){ return x.v === S
 function aiWait(ms){ return wait(ms * aiSpeedFactor()); }
 
 /* ================= アプリのバージョン（build.py が source/VERSION の値を入れる） ================= */
-const APP_VERSION = 'v43';   // build.py が VERSION ファイルの値を入れる（sw.js も同じ値になる）
+const APP_VERSION = 'v44';   // build.py が VERSION ファイルの値を入れる（sw.js も同じ値になる）
 /* ================= 効果音（音声ファイルは使わず、その場で合成） ================= */
 const SFX = (function(){
   let ctx = null;
@@ -4204,7 +4536,7 @@ const UI = {
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 function tileHtml(t, extra, opts){
   const tid = (opts && opts.ntid) ? '' : ' data-tid="' + t.id + '"';
-  return '<div class="tile ' + t.kind + (extra ? ' ' + extra : '') + '"' + tid + '><span class="w">' + t.w + '</span>' + esc(tileLabel(t)) + '</div>';
+  return '<div class="tile ' + t.kind + (t.ougi ? ' ougi' : '') + (extra ? ' ' + extra : '') + '"' + tid + '><span class="w">' + t.w + '</span>' + esc(tileLabel(t)) + '</div>';
 }
 function backHtml(t, extra){
   if(typeof t === 'string'){ extra = t; t = null; }
@@ -4283,6 +4615,8 @@ function render(){
   renderHumanZone();
   renderCanyon();
   renderReleased();
+  { const pb = document.getElementById('phasebar'), ks = pb && pb.querySelector('[data-ph="kai"]');
+    if(ks){ ks.hidden = !rulesNow().ougi; pb.classList.toggle('has-kai', !!rulesNow().ougi); } }
   document.querySelectorAll('#phasebar .phase-step').forEach(function(el){
     el.classList.toggle('on', el.getAttribute('data-ph') === G.phase && !G.over);
   });
@@ -4410,7 +4744,18 @@ function zoneMainHtml(pi){
   }
   if(!p.body.length) body += '<span class="body-count">（なし）</span>';
   body += '</div></div>';
-  const inner = '<div class="inner-row">' + handHtml(0) + body + handHtml(1) + (p.hand.length > 2 ? handHtml(2) : '') + '</div>';
+  /* 月：競技雷轟だけ。開の前は奥義駒の置き場（自分の駒は押すと効果を見られる）、雷神化の後は3か所目の手 */
+  let moon = '';
+  if(p.hand.length > 2) moon = handHtml(2);
+  else if(rulesNow().ougi){
+    let mi = '';
+    (p.moon || []).forEach(function(t){ mi += isHuman ? tileHtml(t, 'moon-mini') : backHtml(t, 'moon-mini'); });
+    if(!mi) mi = '<span class="body-count">空</span>';
+    moon = '<div class="hand-wrap moon-wrap"><span class="ib-label">月</span>' +
+           (isHuman ? '<button type="button" class="hand-slot moon-slot" data-cmd="moonInfo" aria-label="月の奥義駒を見る">' + mi + '</button>'
+                    : '<div class="hand-slot moon-slot">' + mi + '</div>') + '</div>';
+  }
+  const inner = '<div class="inner-row' + (moon ? ' has-moon' : '') + '">' + handHtml(0) + body + handHtml(1) + moon + '</div>';
   return '<div class="pz-main ' + (isHuman ? 'me' : 'opp') + '">' + (isHuman ? gates + inner : inner + gates) + '</div>';
 }
 /* AI側ゾーンの描画（アバターは静止画なので、従来通りゾーンごと描き直してよい） */
@@ -4754,6 +5099,11 @@ function buildHandActs(t, s){
   const anyStack = [0,1,2].some(function(gi){ return canStack(p, gi, t); });
   acts.push({ kind:'stack', label:'積（塔を選ぶ）', disabled: !anyStack });
   if(t.kind !== 'gen') return acts;
+  if(t.ougi){
+    const why = ougiUsable(0, s);
+    acts.push({ kind:'ougi', short:'発：' + t.name, label:'発する：奥義「' + t.name + '」' + (why ? '（' + why + '）' : ''), disabled: !!why });
+    return acts;
+  }
   if(t.name === '雷'){
     const ok = raiTargets().length > 0;
     acts.push({ kind:'raiHou', label:'発する：雷放' + effNote(usedHou), disabled: usedHou || !ok });
@@ -4820,6 +5170,7 @@ function showHandPopup(slot){
   if(t.kind === 'gen' && (t.name === '陣' || t.name === '轟')){
     h += '<p>「' + t.name + '」は手に置いておく受け札です。発するものではありません。積むことはできます。</p>';
   }
+  if(t.ougi){ const od = ougiByName(t.name); if(od) h += ougiTextHtml(od); }
   h += '<div class="act-list">';
   acts.forEach(function(a, i){
     h += '<button type="button" class="btn' + (i === 0 ? ' primary' : '') + '" data-act="' + i + '"' + (a.disabled ? ' disabled' : '') + '>' + esc(a.label) + '</button>';
@@ -4840,6 +5191,12 @@ function showHandPopup(slot){
 /* ================= あなたの手番の操作（現・禁忌・選のポップアップ） ================= */
 /* 人間の手番：現ポップアップ →（禁忌）→ 選ポップアップ → 積・発 */
 async function humanFlow(){
+  if(canKai(0)){
+    G.phase = 'kai'; render();
+    await humanKaiPopup();
+    if(G.over){ G.acting = false; render(); return; }
+    G.phase = 'gen'; render();
+  }
   await humanGenPopup();
   if(G.over){ G.acting = false; render(); return; }
   if(!(G.finalRound || G.deck.length === 0)){
@@ -5625,6 +5982,9 @@ async function runEffectFlow(kind, slot){
         break;
       }
     }
+    else if(kind === 'ougi'){
+      await runOugiFlow(slot);
+    }
     else if(kind === 'jo'){
       const res = await humanJoFlow(slot);
       if(res) await joArrange(0, slot, res.handTiles, res.pool, res.counts);
@@ -5724,10 +6084,14 @@ async function playCutIn(name, actorPi){
     '浄':['KOTODAMA','捨てて引き直す'],
     '雷轟':['RAIGOU','雷と轟で解放 — 役が成立すれば +2'],
     '雷轟・雷停':['RAIGOU','雷と轟で塔を封印'],
-    '雷轟合戦':['RAIGOU BATTLE','重い方の塔に雷が落ちる']
+    '雷轟合戦':['RAIGOU BATTLE','重い方の塔に雷が落ちる'],
+    '雷神化':['RAIJINKA','奥義駒を開いた ― 月が3か所目の手に'],
+    '覇':['OUGI','全ての塔の端の駒を捨て駒にする'],
+    '天':['OUGI','塔の一番上の駒を入れ替える'],
+    '啓':['OUGI','塔を上下2つに分ける']
   };
   const info = INFO[name] || ['KOTODAMA',''];
-  const whoText = actor ? esc(actor.name) + ' の言霊' : '';
+  const whoText = actor ? esc(actor.name) + (name === '雷神化' ? '' : (ougiByName(name) ? ' の奥義' : ' の言霊')) : '';
   let img = '';
   if(actor && isAI) img = '<img class="fsc-img" src="' + AI_IMG + '" alt="">';
   else if(actor) img = '<img class="fsc-img" src="' + CUT_IMG_ME + '" alt="">';
@@ -6146,6 +6510,7 @@ function aiBand(text){
 /* ================= プレイヤーの操作（盤面タップ） ================= */
 async function onCmd(cmd, arg){
   if(G.over) return;
+  if(cmd === 'moonInfo'){ openMoonInfo(); return; }
   if(cmd === 'endTurn'){
     if(G.turn === 0 && !G.busy && !G.acting && G.phase === 'act'){
       UI.pending = null; UI.selHand = null; UI.shunFirst = null;
@@ -6199,7 +6564,7 @@ function showHandChips(slot){
   let h = '<div class="hand-chips" role="menu" aria-label="' + esc(tileLabel(t)) + 'の操作">';
   h += '<div class="hc-row">';
   acts.forEach(function(a, i){
-    const label = CHIP_SHORT[a.kind] || a.label;
+    const label = a.short || CHIP_SHORT[a.kind] || a.label;
     const primary = a.kind !== 'stack' && !a.disabled;
     h += '<button type="button" role="menuitem" class="hc-chip' + (primary ? ' primary' : '') + '" data-chip="' + i + '"' + (a.disabled ? ' disabled' : '') + ' title="' + esc(a.label) + '">' + esc(label) + '</button>';
   });
@@ -6493,8 +6858,11 @@ let startHouse = (SETTINGS.house && HOUSE_CHARA[SETTINGS.house]) ? SETTINGS.hous
 applyChara(startHouse);
 const START_RULE_OPTIONS = [
   { v:'basic', label:'基本ルール（奥義なし）', short:'基本ルール', d:'公式の2人戦をもとにした練習用のルールです。奥義駒と「滅」は入っていません。' },
-  { v:'kyogi', label:'競技雷轟（奥義あり）', short:'競技雷轟', d:'シーズン6以降の大会ルール。奥義駒を「開」すると雷神化し、月が3か所目の手になります（積・発できる手は2か所まで）。', disabled:true, soon:'準備中' }
+  { v:'kyogi', label:'競技雷轟（奥義あり）', short:'競技雷轟', d:'シーズン6以降の大会ルール。奥義駒を2個持ち込みます。自分の桜門が3つとも埋まると「開」で1つを使えるようになり、雷神化して月が3か所目の手になります（積・発できる手は2か所まで）。' }
 ];
+/* 競技雷轟で持ち込む奥義駒（2個）。AIの分は null＝おまかせ（ランダム） */
+let startOugi = (Array.isArray(SETTINGS.ougi) ? SETTINGS.ougi : []).filter(function(n){ const o = ougiByName(n); return o && o.implemented && !o.kyogiBanned; }).slice(0, OUGI_BRING);
+let startAiOugi = null;
 const START_DIFF_OPTIONS = [
   { v:'lv1', label:'Lv.1', d:'決まりに沿って素直に動きます。たまに一番良い手ではない手を選び、妨害はあまりしません。まず慣れたい時に。' },
   { v:'lv2', label:'Lv.2', d:'Lv.1とLv.3の間です。素直に動きますが、Lv.3ほど正確ではなく、良い手を逃したり受けを外したりすることが時々あります。' },
@@ -6516,6 +6884,10 @@ function syncStartButtons(){
   const rOpt = START_RULE_OPTIONS.find(function(o){ return o.v === startRule; });
   document.getElementById('ruleBtnVal').textContent = rOpt ? rOpt.short : startRule;
   document.getElementById('houseBtnVal').innerHTML = houseIconHtml(startHouse) + esc(HOUSE_CHARA[startHouse] || (houseById(startHouse).name + '家'));
+  const kyogi = startRule === 'kyogi';
+  const ob = document.getElementById('ougiBtn'), ab = document.getElementById('aiOugiBtn');
+  if(ob){ ob.hidden = !kyogi; document.getElementById('ougiBtnVal').textContent = startOugi.length === OUGI_BRING ? startOugi.join('・') : '未選択'; }
+  if(ab){ ab.hidden = !kyogi; document.getElementById('aiOugiBtnVal').textContent = startAiOugi ? startAiOugi.join('・') : 'おまかせ'; }
   if(typeof syncResumeUi === 'function') syncResumeUi();
 }
 function closeStartSetting(){ document.getElementById('startSettingRoot').innerHTML = ''; }
@@ -6568,12 +6940,15 @@ function openStartSetting(kind){
 document.getElementById('ruleBtn').addEventListener('click', function(){ openStartSetting('rule'); });
 document.getElementById('houseBtn').addEventListener('click', function(){ openStartSetting('house'); });
 document.getElementById('diffBtn').addEventListener('click', function(){ openStartSetting('diff'); });
+document.getElementById('ougiBtn').addEventListener('click', function(){ openOugiPicker('me'); });
+document.getElementById('aiOugiBtn').addEventListener('click', function(){ openOugiPicker('ai'); });
 document.getElementById('orderBtn').addEventListener('click', function(){ openStartSetting('order'); });
 let vsPlaying = false;
 document.getElementById('startGoBtn').addEventListener('click', function(){ if(hasSave()) resumeBattle(); else startBattle(); });
 /* 対戦開始（スタート画面の「対戦開始」とリザルトの「再戦」から）。条件はスタート画面の設定のまま */
 function startBattle(){
   if(vsPlaying) return;
+  if(startRule === 'kyogi' && startOugi.length !== OUGI_BRING){ openOugiPicker('me', true); return; }
   JINGLE.stop();
   vsPlaying = true;
   closeStartSetting();
@@ -6726,6 +7101,264 @@ document.getElementById('saveQuitBtn').addEventListener('click', saveAndQuit);
 document.getElementById('resumeDiscardBtn').addEventListener('click', discardSaveConfirm);
 document.getElementById('menuDetails').addEventListener('toggle', syncSaveButton);
 syncResumeUi();
+/* ================= 競技雷轟の画面（奥義駒の選択・月・開・奥義の操作） ================= */
+/* 奥義駒の効果文（種別のバッジ＋本文＋注記） */
+function ougiTextHtml(o){
+  let h = '<div class="ougi-text">';
+  if(o.types && o.types.length) h += '<div class="guide-badges">' + o.types.map(function(t){ return '<span class="guide-badge ougi-type">' + esc(ougiTypeLabel(t)) + '</span>'; }).join('') + '</div>';
+  h += '<p class="ougi-desc">' + esc(o.text) + '</p>';
+  if(o.notes && o.notes.length) h += '<div class="ougi-notes sub">' + o.notes.map(function(n){ return '<div>※' + esc(n) + '</div>'; }).join('') + '</div>';
+  return h + '</div>';
+}
+function ougiCardHtml(o, extra){
+  return '<div class="ougi-card">' + ougiTileHtml(o) + '<div class="oc-body"><b class="oc-name">奥義「' + esc(o.name) + '」</b>' + ougiTextHtml(o) + (extra || '') + '</div></div>';
+}
+/* 盤面の「月」を押した時：自分が持ち込んだ奥義駒と、開の決まりを見る（見るだけ） */
+function openMoonInfo(){
+  if(!G.started || !rulesNow().ougi) return;
+  const p = P(0);
+  let h = '<div class="guide-back"><div class="guide-box small" role="dialog" aria-label="月の奥義駒">';
+  h += '<h3 class="serif">月の奥義駒</h3>';
+  if(p.moon && p.moon.length){
+    p.moon.forEach(function(t){ const o = ougiByName(t.name); if(o) h += ougiCardHtml(o); });
+    h += '<div class="guide-note"><b>開：</b>自分の桜門が3つとも塔で埋まっていると、手番の最初に、どちらか1つを体内か手の空いている場所へ移せます（1対戦に1回）。開くと雷神化して、月が3か所目の手になります。選ばなかった駒は除外されます。</div>';
+  } else {
+    h += '<p>月に奥義駒はありません。</p>';
+  }
+  h += '<div class="btn-row"><button type="button" class="btn primary" data-guide-close>閉じる</button></div></div></div>';
+  const root = document.getElementById('guideRoot');
+  root.innerHTML = h;
+  root.querySelector('[data-guide-close]').addEventListener('click', closeGuide);
+  root.querySelector('.guide-back').addEventListener('click', function(e){ if(e.target === e.currentTarget) closeGuide(); });
+}
+
+/* ---- スタート画面：持ち込む奥義駒を2個選ぶ（who＝'me'：あなた／'ai'：AI）。thenStart＝決めたらそのまま対戦開始 ---- */
+function openOugiPicker(who, thenStart){
+  const list = ougiReadyList();
+  const dup = ougiAllowDup();
+  let sel = (who === 'me' ? startOugi : (startAiOugi || [])).slice();
+  const other = who === 'me' ? (startAiOugi || []) : startOugi;
+  let focus = sel[sel.length - 1] || (list[0] && list[0].name);
+  const root = document.getElementById('startSettingRoot');
+  function taken(name){ return !dup && other.indexOf(name) >= 0; }
+  function draw(){
+    let h = '<div class="guide-back"><div class="guide-box small ougi-pick" role="dialog" aria-label="奥義駒を選ぶ">';
+    h += '<h3 class="serif">' + (who === 'me' ? '奥義駒を選ぶ' : 'AIの奥義駒') + '</h3>';
+    h += '<p class="sub">' + (who === 'me' ? '対戦に持ち込む奥義駒を<b>' + OUGI_BRING + '個</b>選んでください。対戦中に「開」で使えるのは、そのうち1つだけです。'
+                                          : 'AIが持ち込む奥義駒です。選ばなければ、おまかせ（毎回ランダム）になります。') + '</p>';
+    h += '<div class="ougi-grid">';
+    list.forEach(function(o){
+      const on = sel.indexOf(o.name) >= 0, tk = taken(o.name);
+      h += '<button type="button" class="ougi-opt' + (on ? ' on' : '') + (focus === o.name ? ' focus' : '') + '" data-ougi-opt="' + esc(o.name) + '"' + (tk ? ' disabled' : '') + ' aria-pressed="' + on + '">' +
+           ougiTileHtml(o) + (on ? '<span class="oo-check">' + (sel.indexOf(o.name) + 1) + '</span>' : '') + (tk ? '<span class="oo-taken">' + (who === 'me' ? 'AI' : 'あなた') + '</span>' : '') + '</button>';
+    });
+    h += '</div>';
+    const fo = ougiByName(focus);
+    if(fo) h += ougiCardHtml(fo);
+    h += '<p class="sub ougi-pick-note">今選べるのは' + list.length + '種類です。ほかの奥義駒は順に追加していきます。' +
+         (dup ? '<br>奥義駒は本来、相手と重ならない決まりですが、選べる駒が' + (OUGI_BRING * 2) + '種類そろうまでは同じ駒になることがあります。' : '<br>相手が選んでいる奥義駒は選べません。') + '</p>';
+    h += '<div class="btn-row"><button type="button" class="btn" id="opRandom">ランダム</button>' +
+         (who === 'ai' ? '<button type="button" class="btn" id="opAuto">おまかせに戻す</button>' : '') +
+         '<button type="button" class="btn primary" id="opOk"' + (sel.length === OUGI_BRING ? '' : ' disabled') + '>' + (thenStart ? 'これで対戦開始' : 'これで決める') + '</button>' +
+         '<button type="button" class="btn" id="opClose">閉じる</button></div>';
+    h += '</div></div>';
+    root.innerHTML = h;
+    root.querySelectorAll('[data-ougi-opt]').forEach(function(b){
+      b.addEventListener('click', function(){
+        const n = b.getAttribute('data-ougi-opt');
+        focus = n;
+        const i = sel.indexOf(n);
+        if(i >= 0) sel.splice(i, 1);
+        else { if(sel.length >= OUGI_BRING) sel.shift(); sel.push(n); }
+        draw();
+      });
+    });
+    document.getElementById('opRandom').addEventListener('click', function(){
+      sel = pickRandomOugi(OUGI_BRING, other); focus = sel[0] || focus; draw();
+    });
+    const auto = document.getElementById('opAuto');
+    if(auto) auto.addEventListener('click', function(){ startAiOugi = null; syncStartButtons(); closeStartSetting(); });
+    document.getElementById('opOk').addEventListener('click', function(){
+      if(sel.length !== OUGI_BRING) return;
+      if(who === 'me'){ startOugi = sel.slice(); SETTINGS.ougi = startOugi.slice(); saveSettings(); }
+      else startAiOugi = sel.slice();
+      syncStartButtons(); closeStartSetting();
+      if(thenStart) startBattle();
+    });
+    document.getElementById('opClose').addEventListener('click', closeStartSetting);
+    root.querySelector('.guide-back').addEventListener('click', function(e){ if(e.target === e.currentTarget) closeStartSetting(); });
+  }
+  draw();
+}
+
+/* ---- 開：手番の最初に、月の奥義駒を開くかどうかを選ぶ ---- */
+function humanKaiPopup(){
+  return new Promise(function(resolve){
+    const p = P(0);
+    function askWhich(){
+      let h = '<h3 class="serif">開：奥義駒を開きますか？</h3>';
+      h += '<p>自分の桜門が3つとも塔で埋まっているので、月の奥義駒を<b>1つだけ</b>開けます（1対戦に1回）。開くと<b>雷神化</b>して、月が3か所目の手になり、内駒は6個まで持てます。選ばなかった奥義駒は除外されます。</p>';
+      p.moon.forEach(function(t, i){
+        const o = ougiByName(t.name);
+        h += ougiCardHtml(o, '<div class="oc-act"><button type="button" class="btn primary" data-kai="' + i + '">「' + esc(t.name) + '」を開く</button></div>');
+      });
+      h += '<div class="btn-row"><button type="button" class="btn" id="kaiSkip">今は開かない</button></div>';
+      showModal(h);
+      document.querySelectorAll('[data-kai]').forEach(function(b){
+        b.addEventListener('click', function(){ askWhere(parseInt(b.getAttribute('data-kai'), 10)); });
+      });
+      document.getElementById('kaiSkip').addEventListener('click', function(){
+        closeModal();
+        log('あなたは開を見送りました。', 'sys');
+        resolve(false);
+      });
+    }
+    function askWhere(idx){
+      const t = p.moon[idx];
+      const dests = kaiDests(p);
+      let h = '<h3 class="serif">開：「' + esc(t.name) + '」をどこに置きますか？</h3>';
+      h += '<div class="modal-center">' + tileHtml(t, 'big', { ntid:true }) + '</div>';
+      h += '<p>手に置くと、この手番から発したり積んだりできます。体内に置いた駒は、あとで「現」で手に移します。</p>';
+      h += '<div class="act-list">';
+      dests.forEach(function(d, i){
+        h += '<button type="button" class="btn' + (i === 0 ? ' primary' : '') + '" data-kai-dest="' + i + '">' + (d.where === 'body' ? '体内に置く' : handLabel(d.idx) + 'に置く') + '</button>';
+      });
+      h += '</div><div class="btn-row"><button type="button" class="btn" id="kaiBack">選び直す</button></div>';
+      showModal(h);
+      document.querySelectorAll('[data-kai-dest]').forEach(function(b){
+        b.addEventListener('click', async function(){
+          const d = dests[parseInt(b.getAttribute('data-kai-dest'), 10)];
+          const ok = await confirmYesNo('開の確認', '奥義駒「' + esc(t.name) + '」を' + (d.where === 'body' ? '体内' : handLabel(d.idx)) + 'に置いて、雷神化します。もう一方の奥義駒は除外されます。');
+          if(!ok){ askWhich(); return; }
+          await doKai(0, idx, d);
+          resolve(true);
+        });
+      });
+      document.getElementById('kaiBack').addEventListener('click', askWhich);
+    }
+    askWhich();
+  });
+}
+
+/* ---- 奥義を発する（対象を選ぶ → 確認 → 解決） ---- */
+async function runOugiFlow(slot){
+  const t = P(0).hand[slot];
+  if(!isOugi(t) || ougiUsable(0, slot)) return;
+  if(t.name === '覇'){
+    while(true){
+      const end = await pickHaEnd();
+      if(!end) return;
+      const ok = await confirmYesNo('奥義「覇」の確認', '全ての塔（あなたの塔も含む。封印中の塔は除く）の' + (end === 'top' ? '<b>一番上</b>' : '<b>一番下</b>') + 'の駒を捨て駒にします。');
+      if(!ok) continue;
+      await primHa(0, slot, end);
+      return;
+    }
+  }
+  if(t.name === '天'){
+    while(true){
+      const tgt = await pickTowerModal('奥義「天」：自分の塔を選ぶ', '選んだ塔の<b>一番上の駒</b>を、峡谷か誰かの内駒の1つと入れ替えます。', tenTowers(0).map(function(gi){ return { pi:0, gi:gi }; }));
+      if(!tgt) return;
+      const loc = await pickTenSourceModal(slot, tgt.gi);
+      if(!loc) continue;
+      const tw = P(0).gates[tgt.gi], top = tw[tw.length - 1];
+      const ok = await confirmYesNo('奥義「天」の確認', '桜門' + (tgt.gi+1) + 'の塔の一番上の「' + esc(tileLabel(top)) + '」と、' + esc(locDescForShun(loc)) + 'を入れ替えます。');
+      if(!ok) continue;
+      await primTen(0, slot, tgt.gi, loc);
+      return;
+    }
+  }
+  if(t.name === '啓'){
+    while(true){
+      const tgt = await pickTowerModal('奥義「啓」：分ける塔を選ぶ', '2段以上の塔と、空いている桜門を両方持っている人の塔を選べます。分けた片方は、その人の空いている桜門へ移ります。', keiTargets());
+      if(!tgt) return;
+      const sp = await pickKeiSplitModal(tgt.pi, tgt.gi);
+      if(!sp) continue;
+      const owner = P(tgt.pi), n = owner.gates[tgt.gi].length;
+      const ok = await confirmYesNo('奥義「啓」の確認', esc(owner.name) + 'の桜門' + (tgt.gi+1) + 'の塔（' + n + '段）を、下' + sp.k + '段と上' + (n - sp.k) + '段に分けて、<b>' + (sp.part === 'top' ? '上' : '下') + 'の部分</b>を桜門' + (sp.dest+1) + 'へ移します。');
+      if(!ok) continue;
+      await primKei(0, slot, tgt.pi, tgt.gi, sp.k, sp.part, sp.dest);
+      return;
+    }
+  }
+}
+function pickHaEnd(){
+  return new Promise(function(resolve){
+    const tgs = haTargets();
+    const mine = tgs.filter(function(x){ return x.pi === 0; }).length, theirs = tgs.length - mine;
+    let h = '<h3 class="serif">奥義「覇」：どちらの端を捨てますか</h3>';
+    h += '<p>全ての塔の一番上か、一番下の駒を捨て駒にします。どちらか一方を選ぶと、<b>全部の塔</b>に同じように効きます（あなたの塔 ' + mine + '本・AIの塔 ' + theirs + '本。封印中の塔は除く）。</p>';
+    h += '<div class="btn-row"><button type="button" class="btn primary" id="haTop">一番上を捨てる</button><button type="button" class="btn primary" id="haBot">一番下を捨てる</button>' +
+         '<button type="button" class="btn" id="haCancel">やめる</button></div>';
+    showModal(h);
+    document.getElementById('haTop').addEventListener('click', function(){ closeModal(); resolve('top'); });
+    document.getElementById('haBot').addEventListener('click', function(){ closeModal(); resolve('bottom'); });
+    document.getElementById('haCancel').addEventListener('click', function(){ closeModal(); resolve(null); });
+  });
+}
+/* 天：入れ替える相手の駒を1つ選ぶ（峡谷・全員の内駒）。瞬と同じ並べ方 */
+function pickTenSourceModal(handSlot, gi){
+  return new Promise(function(resolve){
+    const tw = P(0).gates[gi], top = tw[tw.length - 1];
+    const items = {};
+    let h = '<h3 class="serif">奥義「天」：入れ替える駒を選ぶ</h3>';
+    h += '<p>桜門' + (gi+1) + 'の塔の一番上の「' + esc(tileLabel(top)) + '」と入れ替える駒を、1つ選んでください。峡谷の駒はどれでも選べます。</p>';
+    function wrap(key, inner){ return '<button type="button" class="tile-btn" data-ten-item="' + key + '">' + inner + '</button>'; }
+    function section(title, build){ h += '<div class="gate-group-label">' + title + '</div><div class="pick-list">' + (build || '<span class="sub">（なし）</span>') + '</div>'; }
+    function sectionBody(title, build){
+      if(!build){ h += '<div class="gate-group-label">' + title + '（縦：下が重い）</div><span class="sub">（なし）</span>'; return; }
+      h += '<div class="gate-group-label">' + title + '（縦：下が重い）</div><div class="pick-col-wrap"><span class="pick-col-note">▲ 上（軽い）</span><div class="pick-col">' + build + '</div><span class="pick-col-note">▼ 下（重い）</span></div>';
+    }
+    section('峡谷', G.canyon.map(function(t, idx){ const key = 'c:' + idx; items[key] = { zone:'canyon', idx:idx }; return wrap(key, tileHtml(t, 'clickable', { ntid:true })); }).join(''));
+    sectionBody('あなたの体内', P(0).body.map(function(t, idx){ const key = 'b0:' + idx; items[key] = { zone:'body', pi:0, idx:idx }; return wrap(key, tileHtml(t, 'clickable', { ntid:true })); }).join(''));
+    section('あなたの手', P(0).hand.map(function(t, s){ if(!t || s === handSlot) return ''; const key = 'h0:' + s; items[key] = { zone:'hand', pi:0, idx:s }; return wrap(key, tileHtml(t, 'clickable', { ntid:true })); }).join(''));
+    sectionBody('相手の体内', P(1).body.map(function(t, idx){ const key = 'b1:' + idx; items[key] = { zone:'body', pi:1, idx:idx }; return wrap(key, backHtml(null, 'clickable')); }).join(''));
+    section('相手の手', P(1).hand.map(function(t, s){ if(!t) return ''; const key = 'h1:' + s; items[key] = { zone:'hand', pi:1, idx:s }; return wrap(key, backHtml(null, 'clickable')); }).join(''));
+    h += '<div class="btn-row"><button type="button" class="btn" id="tenCancel">塔を選び直す</button></div>';
+    showModal(h);
+    document.getElementById('tenCancel').addEventListener('click', function(){ closeModal(); resolve(null); });
+    document.querySelectorAll('[data-ten-item]').forEach(function(el){
+      el.addEventListener('click', function(){ closeModal(); resolve(items[el.getAttribute('data-ten-item')]); });
+    });
+  });
+}
+/* 啓：どこで分けるか・どちらを移すか・（空きが2つあれば）どの桜門へ移すかを選ぶ */
+function pickKeiSplitModal(pi, gi){
+  return new Promise(function(resolve){
+    const owner = P(pi), tower = owner.gates[gi], n = tower.length;
+    const dests = emptyGates(pi);
+    let k = null, part = null, dest = dests.length === 1 ? dests[0] : null;
+    function draw(){
+      let h = '<h3 class="serif">奥義「啓」：塔を分ける</h3>';
+      h += '<p>' + esc(owner.name) + 'の桜門' + (gi+1) + 'の塔（' + n + '段）です。' + (k === null ? '<b>分けたい所</b>の線を押してください。' : '下' + k + '段と上' + (n - k) + '段に分けます。空いた桜門へ<b>移す側</b>を選んでください。') + '</p>';
+      h += '<div class="modal-center"><div class="big-gate kei-gate"><div class="bg-label">桜門' + (gi+1) + '</div><div class="big-stack">';
+      for(let i = n - 1; i >= 0; i--){
+        const cls = k === null ? '' : (i >= k ? 'kei-up' : 'kei-low') + ((part === 'top' && i >= k) || (part === 'bottom' && i < k) ? ' kei-move' : '');
+        h += (pi === 0 || isRevealedTile(tower[i])) ? tileHtml(tower[i], cls, { ntid:true }) : '<div class="tile back ' + cls + '"></div>';
+        if(i >= 1) h += '<button type="button" class="kei-cut' + (k === i ? ' on' : '') + '" data-kei-k="' + i + '" aria-label="下' + i + '段と上' + (n - i) + '段に分ける"><span>ここで分ける</span></button>';
+      }
+      h += '</div></div></div>';
+      if(k !== null){
+        h += '<div class="btn-row"><button type="button" class="btn' + (part === 'top' ? ' primary' : '') + '" data-kei-part="top">上の' + (n - k) + '段を移す</button>' +
+             '<button type="button" class="btn' + (part === 'bottom' ? ' primary' : '') + '" data-kei-part="bottom">下の' + k + '段を移す</button></div>';
+        if(dests.length > 1){
+          h += '<p class="sub">移す先の桜門</p><div class="btn-row">' + dests.map(function(d){ return '<button type="button" class="btn' + (dest === d ? ' primary' : '') + '" data-kei-dest="' + d + '">桜門' + (d+1) + '</button>'; }).join('') + '</div>';
+        }
+      }
+      h += '<div class="btn-row"><button type="button" class="btn primary" id="keiOk"' + (k !== null && part && dest !== null ? '' : ' disabled') + '>これで決める</button>' +
+           '<button type="button" class="btn" id="keiCancel">塔を選び直す</button></div>';
+      showModal(h);
+      document.querySelectorAll('[data-kei-k]').forEach(function(b){ b.addEventListener('click', function(){ k = parseInt(b.getAttribute('data-kei-k'), 10); draw(); }); });
+      document.querySelectorAll('[data-kei-part]').forEach(function(b){ b.addEventListener('click', function(){ part = b.getAttribute('data-kei-part'); draw(); }); });
+      document.querySelectorAll('[data-kei-dest]').forEach(function(b){ b.addEventListener('click', function(){ dest = parseInt(b.getAttribute('data-kei-dest'), 10); draw(); }); });
+      document.getElementById('keiCancel').addEventListener('click', function(){ closeModal(); resolve(null); });
+      document.getElementById('keiOk').addEventListener('click', function(){
+        if(k === null || !part || dest === null) return;
+        closeModal(); resolve({ k:k, part:part, dest:dest });
+      });
+    }
+    draw();
+  });
+}
 /* ================= 駒一覧・役一覧（ガイド） =================
    サマリー（言霊の効果・役の種類・駒の個数・駒の重さ）をもとにした資料画面。
    対戦状態には一切触れないので、試合中・スタート画面のどちらからでも開閉できる。 */
@@ -6855,7 +7488,7 @@ function openOugiDetail(name){
   let h = '<div class="guide-back detail"><div class="guide-box small" role="dialog" aria-label="奥義駒' + esc(o.name) + 'の解説">';
   h += '<h3 class="serif">奥義駒「' + esc(o.name) + '」</h3>';
   h += '<div class="guide-detail-tile">' + ougiTileHtml(o) + '</div>';
-  h += '<p class="ougi-owner">' + esc(o.raijinName) + '【' + esc(o.ougiName) + '】</p>';
+  h += '<p class="ougi-owner">【' + esc(o.ougiName) + '】の1駒' + (o.implemented && !o.kyogiBanned ? '' : '（競技雷轟では準備中）') + '</p>';
   h += '<div class="guide-badges"><span class="guide-badge">奥義駒</span><span class="guide-badge">重さ ' + o.w + '</span>';
   o.types.forEach(function(t){ h += '<span class="guide-badge ougi-type">' + esc(ougiTypeLabel(t)) + '</span>'; });
   if(o.kyogiChanged) h += '<span class="guide-badge warn">競技雷轟で変更</span>';
@@ -6891,14 +7524,14 @@ function komaTabHtml(){
   return h;
 }
 function ougiTabHtml(){
-  let h = '<div class="guide-note">奥義駒は競技雷轟（準備中）で使う駒です。今の対戦ではまだ使えません。全て重さ9の言霊です。</div>';
+  let h = '<div class="guide-note">奥義駒は競技雷轟で使う駒です。全て重さ9の言霊で、3駒で1組になっています。今の対戦で選べるのは「使える」の印がある駒です（ほかは順に追加）。</div>';
   RAIJIN_DATA.forEach(function(r){
-    h += '<h4>' + esc(r.gen) + ' ' + esc(r.name) + '【' + esc(r.ougi) + '】' + (r.kyogiBanned ? '<span class="ougi-h4-note">公式大会では使用禁止</span>' : '') + '</h4>';
+    h += '<h4>【' + esc(r.ougi) + '】' + (r.kyogiBanned ? '<span class="ougi-h4-note">公式大会では使用禁止</span>' : '') + '</h4>';
     h += '<div class="guide-grid">';
     r.pieces.forEach(function(name){
       const o = ougiByName(name);
       if(!o) return;
-      const sub = (o.types.length ? o.types.map(ougiTypeLabel).join('・') : '奥義駒') + (o.kyogiChanged ? '＊' : '');
+      const sub = (o.implemented && !o.kyogiBanned ? '使える・' : '') + (o.types.length ? o.types.map(ougiTypeLabel).join('・') : '奥義駒') + (o.kyogiChanged ? '＊' : '');
       h += '<button type="button" class="koma-card" data-ougi="' + esc(o.name) + '" aria-label="奥義駒' + esc(o.name) + 'の解説を開く">' + ougiTileHtml(o) +
            '<span class="koma-meta"><span class="koma-name">' + esc(o.name) + '</span><br><span class="koma-sub">' + esc(sub) + '</span></span><span class="koma-go">解説 ›</span></button>';
     });
@@ -6919,7 +7552,7 @@ function openKomaList(tab){
     h += '<p class="guide-total">言霊 37個 ・ 音無 32個 ・ 計69個　―　駒を押すと解説が開きます。</p>';
     h += komaTabHtml();
   } else {
-    h += '<p class="guide-total">奥義駒 ' + OUGI_DATA.length + '個（雷神12人×3駒＋天魔3駒）　―　駒を押すと効果の全文が開きます。＊は競技雷轟でテキストが変わった駒です。</p>';
+    h += '<p class="guide-total">奥義駒 ' + OUGI_DATA.length + '個（3駒×13組）　―　駒を押すと効果の全文が開きます。＊は競技雷轟でテキストが変わった駒です。</p>';
     h += ougiTabHtml();
   }
   h += '<div class="btn-row"><button type="button" class="btn primary" data-guide-close>閉じる</button></div>';
@@ -7016,7 +7649,7 @@ Object.assign(VIEW, {
   logTurn: function(text){ return uiLogTurn(text); },
   logClear: function(){ return uiLogClear(); },
   sfx: function(name){ return SFX.play(name); },
-  gameSetup: function(){ return { rule:startRule, house:startHouse }; },
+  gameSetup: function(){ return { rule:startRule, house:startHouse, ougi: startRule === 'kyogi' ? [startOugi.slice(), startAiOugi ? startAiOugi.slice() : null] : null }; },
   resetGameUi: function(){ UI.aiBodyIds = null; UI.aiBodyKey = null; UI.aiNewIds = null; UI.disp = null; },
   resetTurnUi: function(){ UI.selHand = null; UI.pending = null; UI.drawn = []; }
 });
@@ -7189,7 +7822,7 @@ function openStats(){
       im.src = src;
     });
   }
-  const lockBtns = ['startGoBtn','ruleBtn','houseBtn','diffBtn','orderBtn'].map(function(id){ return document.getElementById(id); }).filter(Boolean);
+  const lockBtns = ['startGoBtn','ruleBtn','houseBtn','diffBtn','orderBtn','ougiBtn','aiOugiBtn'].map(function(id){ return document.getElementById(id); }).filter(Boolean);
   lockBtns.forEach(function(b){ b.disabled = true; });
   let finished = false;
   function done(){

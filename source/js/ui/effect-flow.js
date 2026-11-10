@@ -119,6 +119,9 @@ async function runEffectFlow(kind, slot){
         break;
       }
     }
+    else if(kind === 'ougi'){
+      await runOugiFlow(slot);
+    }
     else if(kind === 'jo'){
       const res = await humanJoFlow(slot);
       if(res) await joArrange(0, slot, res.handTiles, res.pool, res.counts);

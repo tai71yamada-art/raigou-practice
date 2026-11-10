@@ -25,10 +25,14 @@ async function playCutIn(name, actorPi){
     '浄':['KOTODAMA','捨てて引き直す'],
     '雷轟':['RAIGOU','雷と轟で解放 — 役が成立すれば +2'],
     '雷轟・雷停':['RAIGOU','雷と轟で塔を封印'],
-    '雷轟合戦':['RAIGOU BATTLE','重い方の塔に雷が落ちる']
+    '雷轟合戦':['RAIGOU BATTLE','重い方の塔に雷が落ちる'],
+    '雷神化':['RAIJINKA','奥義駒を開いた ― 月が3か所目の手に'],
+    '覇':['OUGI','全ての塔の端の駒を捨て駒にする'],
+    '天':['OUGI','塔の一番上の駒を入れ替える'],
+    '啓':['OUGI','塔を上下2つに分ける']
   };
   const info = INFO[name] || ['KOTODAMA',''];
-  const whoText = actor ? esc(actor.name) + ' の言霊' : '';
+  const whoText = actor ? esc(actor.name) + (name === '雷神化' ? '' : (ougiByName(name) ? ' の奥義' : ' の言霊')) : '';
   let img = '';
   if(actor && isAI) img = '<img class="fsc-img" src="' + AI_IMG + '" alt="">';
   else if(actor) img = '<img class="fsc-img" src="' + CUT_IMG_ME + '" alt="">';

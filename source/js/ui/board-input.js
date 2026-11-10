@@ -1,6 +1,7 @@
 /* ================= プレイヤーの操作（盤面タップ） ================= */
 async function onCmd(cmd, arg){
   if(G.over) return;
+  if(cmd === 'moonInfo'){ openMoonInfo(); return; }
   if(cmd === 'endTurn'){
     if(G.turn === 0 && !G.busy && !G.acting && G.phase === 'act'){
       UI.pending = null; UI.selHand = null; UI.shunFirst = null;

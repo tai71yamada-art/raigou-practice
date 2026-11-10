@@ -15,6 +15,11 @@ function buildHandActs(t, s){
   const anyStack = [0,1,2].some(function(gi){ return canStack(p, gi, t); });
   acts.push({ kind:'stack', label:'積（塔を選ぶ）', disabled: !anyStack });
   if(t.kind !== 'gen') return acts;
+  if(t.ougi){
+    const why = ougiUsable(0, s);
+    acts.push({ kind:'ougi', short:'発：' + t.name, label:'発する：奥義「' + t.name + '」' + (why ? '（' + why + '）' : ''), disabled: !!why });
+    return acts;
+  }
   if(t.name === '雷'){
     const ok = raiTargets().length > 0;
     acts.push({ kind:'raiHou', label:'発する：雷放' + effNote(usedHou), disabled: usedHou || !ok });
@@ -81,6 +86,7 @@ function showHandPopup(slot){
   if(t.kind === 'gen' && (t.name === '陣' || t.name === '轟')){
     h += '<p>「' + t.name + '」は手に置いておく受け札です。発するものではありません。積むことはできます。</p>';
   }
+  if(t.ougi){ const od = ougiByName(t.name); if(od) h += ougiTextHtml(od); }
   h += '<div class="act-list">';
   acts.forEach(function(a, i){
     h += '<button type="button" class="btn' + (i === 0 ? ' primary' : '') + '" data-act="' + i + '"' + (a.disabled ? ' disabled' : '') + '>' + esc(a.label) + '</button>';

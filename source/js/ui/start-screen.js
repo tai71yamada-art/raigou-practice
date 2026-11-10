@@ -8,8 +8,11 @@ let startHouse = (SETTINGS.house && HOUSE_CHARA[SETTINGS.house]) ? SETTINGS.hous
 applyChara(startHouse);
 const START_RULE_OPTIONS = [
   { v:'basic', label:'基本ルール（奥義なし）', short:'基本ルール', d:'公式の2人戦をもとにした練習用のルールです。奥義駒と「滅」は入っていません。' },
-  { v:'kyogi', label:'競技雷轟（奥義あり）', short:'競技雷轟', d:'シーズン6以降の大会ルール。奥義駒を「開」すると雷神化し、月が3か所目の手になります（積・発できる手は2か所まで）。', disabled:true, soon:'準備中' }
+  { v:'kyogi', label:'競技雷轟（奥義あり）', short:'競技雷轟', d:'シーズン6以降の大会ルール。奥義駒を2個持ち込みます。自分の桜門が3つとも埋まると「開」で1つを使えるようになり、雷神化して月が3か所目の手になります（積・発できる手は2か所まで）。' }
 ];
+/* 競技雷轟で持ち込む奥義駒（2個）。AIの分は null＝おまかせ（ランダム） */
+let startOugi = (Array.isArray(SETTINGS.ougi) ? SETTINGS.ougi : []).filter(function(n){ const o = ougiByName(n); return o && o.implemented && !o.kyogiBanned; }).slice(0, OUGI_BRING);
+let startAiOugi = null;
 const START_DIFF_OPTIONS = [
   { v:'lv1', label:'Lv.1', d:'決まりに沿って素直に動きます。たまに一番良い手ではない手を選び、妨害はあまりしません。まず慣れたい時に。' },
   { v:'lv2', label:'Lv.2', d:'Lv.1とLv.3の間です。素直に動きますが、Lv.3ほど正確ではなく、良い手を逃したり受けを外したりすることが時々あります。' },
@@ -31,6 +34,10 @@ function syncStartButtons(){
   const rOpt = START_RULE_OPTIONS.find(function(o){ return o.v === startRule; });
   document.getElementById('ruleBtnVal').textContent = rOpt ? rOpt.short : startRule;
   document.getElementById('houseBtnVal').innerHTML = houseIconHtml(startHouse) + esc(HOUSE_CHARA[startHouse] || (houseById(startHouse).name + '家'));
+  const kyogi = startRule === 'kyogi';
+  const ob = document.getElementById('ougiBtn'), ab = document.getElementById('aiOugiBtn');
+  if(ob){ ob.hidden = !kyogi; document.getElementById('ougiBtnVal').textContent = startOugi.length === OUGI_BRING ? startOugi.join('・') : '未選択'; }
+  if(ab){ ab.hidden = !kyogi; document.getElementById('aiOugiBtnVal').textContent = startAiOugi ? startAiOugi.join('・') : 'おまかせ'; }
   if(typeof syncResumeUi === 'function') syncResumeUi();
 }
 function closeStartSetting(){ document.getElementById('startSettingRoot').innerHTML = ''; }
@@ -83,12 +90,15 @@ function openStartSetting(kind){
 document.getElementById('ruleBtn').addEventListener('click', function(){ openStartSetting('rule'); });
 document.getElementById('houseBtn').addEventListener('click', function(){ openStartSetting('house'); });
 document.getElementById('diffBtn').addEventListener('click', function(){ openStartSetting('diff'); });
+document.getElementById('ougiBtn').addEventListener('click', function(){ openOugiPicker('me'); });
+document.getElementById('aiOugiBtn').addEventListener('click', function(){ openOugiPicker('ai'); });
 document.getElementById('orderBtn').addEventListener('click', function(){ openStartSetting('order'); });
 let vsPlaying = false;
 document.getElementById('startGoBtn').addEventListener('click', function(){ if(hasSave()) resumeBattle(); else startBattle(); });
 /* 対戦開始（スタート画面の「対戦開始」とリザルトの「再戦」から）。条件はスタート画面の設定のまま */
 function startBattle(){
   if(vsPlaying) return;
+  if(startRule === 'kyogi' && startOugi.length !== OUGI_BRING){ openOugiPicker('me', true); return; }
   JINGLE.stop();
   vsPlaying = true;
   closeStartSetting();

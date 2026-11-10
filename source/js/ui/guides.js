@@ -127,7 +127,7 @@ function openOugiDetail(name){
   let h = '<div class="guide-back detail"><div class="guide-box small" role="dialog" aria-label="奥義駒' + esc(o.name) + 'の解説">';
   h += '<h3 class="serif">奥義駒「' + esc(o.name) + '」</h3>';
   h += '<div class="guide-detail-tile">' + ougiTileHtml(o) + '</div>';
-  h += '<p class="ougi-owner">' + esc(o.raijinName) + '【' + esc(o.ougiName) + '】</p>';
+  h += '<p class="ougi-owner">【' + esc(o.ougiName) + '】の1駒' + (o.implemented && !o.kyogiBanned ? '' : '（競技雷轟では準備中）') + '</p>';
   h += '<div class="guide-badges"><span class="guide-badge">奥義駒</span><span class="guide-badge">重さ ' + o.w + '</span>';
   o.types.forEach(function(t){ h += '<span class="guide-badge ougi-type">' + esc(ougiTypeLabel(t)) + '</span>'; });
   if(o.kyogiChanged) h += '<span class="guide-badge warn">競技雷轟で変更</span>';
@@ -163,14 +163,14 @@ function komaTabHtml(){
   return h;
 }
 function ougiTabHtml(){
-  let h = '<div class="guide-note">奥義駒は競技雷轟（準備中）で使う駒です。今の対戦ではまだ使えません。全て重さ9の言霊です。</div>';
+  let h = '<div class="guide-note">奥義駒は競技雷轟で使う駒です。全て重さ9の言霊で、3駒で1組になっています。今の対戦で選べるのは「使える」の印がある駒です（ほかは順に追加）。</div>';
   RAIJIN_DATA.forEach(function(r){
-    h += '<h4>' + esc(r.gen) + ' ' + esc(r.name) + '【' + esc(r.ougi) + '】' + (r.kyogiBanned ? '<span class="ougi-h4-note">公式大会では使用禁止</span>' : '') + '</h4>';
+    h += '<h4>【' + esc(r.ougi) + '】' + (r.kyogiBanned ? '<span class="ougi-h4-note">公式大会では使用禁止</span>' : '') + '</h4>';
     h += '<div class="guide-grid">';
     r.pieces.forEach(function(name){
       const o = ougiByName(name);
       if(!o) return;
-      const sub = (o.types.length ? o.types.map(ougiTypeLabel).join('・') : '奥義駒') + (o.kyogiChanged ? '＊' : '');
+      const sub = (o.implemented && !o.kyogiBanned ? '使える・' : '') + (o.types.length ? o.types.map(ougiTypeLabel).join('・') : '奥義駒') + (o.kyogiChanged ? '＊' : '');
       h += '<button type="button" class="koma-card" data-ougi="' + esc(o.name) + '" aria-label="奥義駒' + esc(o.name) + 'の解説を開く">' + ougiTileHtml(o) +
            '<span class="koma-meta"><span class="koma-name">' + esc(o.name) + '</span><br><span class="koma-sub">' + esc(sub) + '</span></span><span class="koma-go">解説 ›</span></button>';
     });
@@ -191,7 +191,7 @@ function openKomaList(tab){
     h += '<p class="guide-total">言霊 37個 ・ 音無 32個 ・ 計69個　―　駒を押すと解説が開きます。</p>';
     h += komaTabHtml();
   } else {
-    h += '<p class="guide-total">奥義駒 ' + OUGI_DATA.length + '個（雷神12人×3駒＋天魔3駒）　―　駒を押すと効果の全文が開きます。＊は競技雷轟でテキストが変わった駒です。</p>';
+    h += '<p class="guide-total">奥義駒 ' + OUGI_DATA.length + '個（3駒×13組）　―　駒を押すと効果の全文が開きます。＊は競技雷轟でテキストが変わった駒です。</p>';
     h += ougiTabHtml();
   }
   h += '<div class="btn-row"><button type="button" class="btn primary" data-guide-close>閉じる</button></div>';

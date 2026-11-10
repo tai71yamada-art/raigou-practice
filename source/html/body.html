@@ -21,6 +21,8 @@
             <div class="start-actions">
               <button type="button" class="start-act-btn rule-btn" id="ruleBtn" aria-haspopup="dialog" disabled><span class="sa-label">ルール</span><span class="sa-value" id="ruleBtnVal">基本ルール</span></button>
               <button type="button" class="start-act-btn rule-btn house-btn" id="houseBtn" aria-haspopup="dialog" disabled><span class="sa-label">キャラ</span><span class="sa-value" id="houseBtnVal">雷藏 くらら</span></button>
+              <button type="button" class="start-act-btn rule-btn ougi-btn" id="ougiBtn" aria-haspopup="dialog" disabled hidden><span class="sa-label">奥義駒</span><span class="sa-value" id="ougiBtnVal">未選択</span></button>
+              <button type="button" class="start-act-btn rule-btn ougi-btn" id="aiOugiBtn" aria-haspopup="dialog" disabled hidden><span class="sa-label">AIの奥義</span><span class="sa-value" id="aiOugiBtnVal">おまかせ</span></button>
               <button type="button" class="start-act-btn" id="diffBtn" aria-haspopup="dialog" disabled><span class="sa-label">AIの強さ</span><span class="sa-value" id="diffBtnVal">Lv.3</span></button>
               <button type="button" class="start-act-btn" id="orderBtn" aria-haspopup="dialog" disabled><span class="sa-label">先手 / 後手</span><span class="sa-value" id="orderBtnVal">先手</span></button>
               <button type="button" class="start-act-btn start-go" id="startGoBtn" disabled><span class="sa-value">対戦開始</span></button>
@@ -59,6 +61,7 @@
           <div class="menu-row">
             <span class="logo-mark" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="#ffd23f"><path d="M13 2 4 14h6l-1 8 9-12h-6z"></path></svg>雷轟</span>
 <div class="phasebar" id="phasebar">
+              <span class="phase-step" data-ph="kai" hidden>開</span>
               <span class="phase-step" data-ph="gen">現</span>
               <span class="phase-step" data-ph="sen">選</span>
               <span class="phase-step" data-ph="act">積・発</span>

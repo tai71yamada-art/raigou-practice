@@ -1,6 +1,12 @@
 /* ================= あなたの手番の操作（現・禁忌・選のポップアップ） ================= */
 /* 人間の手番：現ポップアップ →（禁忌）→ 選ポップアップ → 積・発 */
 async function humanFlow(){
+  if(canKai(0)){
+    G.phase = 'kai'; render();
+    await humanKaiPopup();
+    if(G.over){ G.acting = false; render(); return; }
+    G.phase = 'gen'; render();
+  }
   await humanGenPopup();
   if(G.over){ G.acting = false; render(); return; }
   if(!(G.finalRound || G.deck.length === 0)){

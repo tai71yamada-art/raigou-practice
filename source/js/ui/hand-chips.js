@@ -23,7 +23,7 @@ function showHandChips(slot){
   let h = '<div class="hand-chips" role="menu" aria-label="' + esc(tileLabel(t)) + 'の操作">';
   h += '<div class="hc-row">';
   acts.forEach(function(a, i){
-    const label = CHIP_SHORT[a.kind] || a.label;
+    const label = a.short || CHIP_SHORT[a.kind] || a.label;
     const primary = a.kind !== 'stack' && !a.disabled;
     h += '<button type="button" role="menuitem" class="hc-chip' + (primary ? ' primary' : '') + '" data-chip="' + i + '"' + (a.disabled ? ' disabled' : '') + ' title="' + esc(a.label) + '">' + esc(label) + '</button>';
   });

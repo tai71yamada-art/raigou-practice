@@ -37,7 +37,7 @@ Object.assign(VIEW, {
   logTurn: function(text){ return uiLogTurn(text); },
   logClear: function(){ return uiLogClear(); },
   sfx: function(name){ return SFX.play(name); },
-  gameSetup: function(){ return { rule:startRule, house:startHouse }; },
+  gameSetup: function(){ return { rule:startRule, house:startHouse, ougi: startRule === 'kyogi' ? [startOugi.slice(), startAiOugi ? startAiOugi.slice() : null] : null }; },
   resetGameUi: function(){ UI.aiBodyIds = null; UI.aiBodyKey = null; UI.aiNewIds = null; UI.disp = null; },
   resetTurnUi: function(){ UI.selHand = null; UI.pending = null; UI.drawn = []; }
 });

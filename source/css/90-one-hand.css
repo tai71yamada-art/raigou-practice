@@ -297,4 +297,41 @@
       .sen-btn.one{ background:#f2f0ea; }
       .sen-btn:active{ filter:brightness(.92); }
       #modalRoot [data-peekbtn]{ display:block; margin:12px auto 0 !important; }
-    
+          /* ===== 競技雷轟（奥義駒・月・開） ===== */
+      .menu-row .phasebar.has-kai, .phasebar.has-kai{ grid-template-columns:repeat(4, minmax(0,1fr)); }
+      .phase-step[hidden]{ display:none; }
+      .start-act-btn[hidden]{ display:none; }
+      .start-act-btn.ougi-btn .sa-value{ white-space:nowrap; }
+      .pz-main.me .inner-row.has-moon{ gap:10px; }
+      .pz-main.opp .inner-row.has-moon{ gap:9px; }
+      .moon-slot{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:0; background:none; color:inherit; font:inherit; }
+      button.moon-slot{ cursor:pointer; }
+      .pz-main.me .hand-slot.moon-slot .tile.moon-mini{ width:44px; height:24px; font-size:.95rem; pointer-events:none; }
+      .pz-main.me .hand-slot.moon-slot .tile.moon-mini .w{ display:none; }
+      .pz-main.opp .hand-slot.moon-slot .tile.moon-mini{ width:22px; height:11px; }
+      .pz-main.opp .hand-slot.moon-slot .tile.moon-mini::before{ display:none; }
+      .moon-wrap .ib-label{ color:var(--main-hi,var(--main)); }
+      .ougi-card{ display:flex; gap:10px; align-items:flex-start; background:var(--panel2); border:1px solid var(--line); padding:9px 10px; margin:8px 0; text-align:left; }
+      .ougi-card > .tile{ flex:none; width:46px; height:46px; font-size:1.35rem; }
+      .ougi-card .oc-body{ flex:1; min-width:0; }
+      .ougi-card .oc-name{ display:block; font-size:.95rem; margin-bottom:3px; }
+      .ougi-card .oc-act{ margin-top:8px; }
+      .ougi-text .guide-badges{ margin:0 0 4px; justify-content:flex-start; }
+      .ougi-text .ougi-desc{ margin:0; font-size:.86rem; line-height:1.6; white-space:pre-line; }
+      .ougi-text .ougi-notes{ margin-top:3px; font-size:.78rem; }
+      .modal-box > .ougi-text{ background:var(--panel2); border:1px solid var(--line); padding:8px 10px; margin:8px 0; text-align:left; }
+      .ougi-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(58px, 1fr)); gap:8px; margin:10px 0 4px; }
+      .ougi-opt{ position:relative; display:flex; align-items:center; justify-content:center; padding:7px 0; background:var(--panel2); border:1px solid var(--line); cursor:pointer; }
+      .ougi-opt .tile{ width:44px; height:44px; font-size:1.3rem; pointer-events:none; }
+      .ougi-opt.focus{ border-color:#f2f0ea; }
+      .ougi-opt.on{ background:var(--main); border-color:var(--main-hi,var(--main)); }
+      .ougi-opt:disabled{ opacity:.4; cursor:not-allowed; }
+      .ougi-opt .oo-check{ position:absolute; top:-6px; right:-6px; min-width:18px; height:18px; line-height:18px; font-size:.7rem; font-weight:900; background:#f2f0ea; color:#101114; border-radius:9px; text-align:center; }
+      .ougi-opt .oo-taken{ position:absolute; bottom:1px; left:0; right:0; font-size:.58rem; font-weight:800; text-align:center; color:#f2f0ea; }
+      .ougi-pick-note{ font-size:.76rem; line-height:1.55; }
+      .kei-gate .big-stack{ gap:0; align-items:center; }
+      .kei-cut{ display:block; width:150px; margin:0; padding:3px 0; background:none; border:none; cursor:pointer; color:var(--ink-soft); font:inherit; font-size:.68rem; font-weight:800; }
+      .kei-cut span{ display:block; text-align:center; border-top:2px dashed #6a6d78; padding-top:1px; }
+      .kei-cut:hover span, .kei-cut.on span{ border-top-color:var(--main-hi,var(--main)); color:var(--main-hi,var(--main)); }
+      .kei-cut.on span{ border-top-style:solid; border-top-width:3px; }
+      .big-stack .tile.kei-move{ outline:3px solid var(--main-hi,var(--main)); outline-offset:-1px; }

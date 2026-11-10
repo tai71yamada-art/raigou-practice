@@ -272,6 +272,7 @@ function aiActText(act){
     case 'hebi':   return '蛇' + kiri() + '：' + who(act.targetLoc.pi) + 'の' + (act.targetLoc.where === 'body' ? '体内' : '手') + 'の駒を狙う';
     case 'shun':   return '瞬：駒を2個入れ替える';
     case 'jo':     return '浄：内駒を捨てて引き直す';
+    case 'ougi':   return aiOugiText(act);
   }
   return '行動中';
 }
@@ -284,6 +285,7 @@ async function aiExecute(act, me){
     case 'zan': G.used.add('斬'); await primZan(me, act.hand, act.target); break;
     case 'hebi': G.used.add('蛇'); await primHebi(me, act.hand, act.targetLoc); break;
     case 'shun': G.used.add('瞬'); await primShun(me, act.hand, act.locA, act.locB); break;
+    case 'ougi': await aiOugiExecute(act, me); break;
     case 'jo': {
       const res = await joDraw(me, act.hand, act.discards);
       const handTiles = withSeat(me, function(){ return res.pool.slice().sort(function(a,b){ return aiTileDesire(b, P(me)) - aiTileDesire(a, P(me)); }).slice(0, P(me).hand.length); });

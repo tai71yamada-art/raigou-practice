@@ -25,7 +25,9 @@ const ENGINE_CODE = engineFiles().map(function(f){ return fs.readFileSync(path.j
   ' scoreTower:scoreTower, isFuon:isFuon, roleOf:roleOf, raijinRoleOf:raijinRoleOf, mkTile:mkTile, GEN_DEF:GEN_DEF, ON_DEF:ON_DEF,' +
   ' sortBody:sortBody, totalInner:totalInner, innerCap:innerCap, buildDeck:buildDeck,' +
   ' serializeGame:serializeGame, restoreGame:restoreGame, startTurn:function(){ return startTurn(); },' +
-  ' getStartTurn:function(){ return startTurn; }, setStartTurn:function(f){ startTurn = f; } };';
+  ' getStartTurn:function(){ return startTurn; }, setStartTurn:function(f){ startTurn = f; },' +
+  ' canKai:canKai, doKai:doKai, primHa:primHa, primTen:primTen, primKei:primKei, mkOugiTile:mkOugiTile, ougiUsable:ougiUsable, ougiReadyList:ougiReadyList,' +
+  ' RULESETS:RULESETS, setRaijinka:setRaijinka, canActFromSlot:canActFromSlot, primStack:primStack };';
 
 function createEngine(seed){
   let s = seed >>> 0;
@@ -58,7 +60,8 @@ function createEngine(seed){
         try{ E.restoreGame(JSON.parse(JSON.stringify(data))); E.startTurn(); }catch(e){ clearTimeout(timer); reject(e); }
       });
     },
-    play: function(levels, sente, timeoutMs){
+    /* opts（省略可）：{ rule:'kyogi', ougi:[[…],[…]] } など。省略すると基本ルール */
+    play: function(levels, sente, timeoutMs, opts){
       lines = [];
       return new Promise(function(resolve, reject){
         const timer = setTimeout(function(){ done = null; reject(new Error('対局が終わりません（' + E.G.turnNo + '手番目）')); }, timeoutMs || 30000);
@@ -66,7 +69,7 @@ function createEngine(seed){
         done = function(r){ clearTimeout(timer); done = null; r.lines = lines; setTimeout(function(){ resolve(r); }, 30); };
         try{
           E.G.seatDiff = levels;
-          E.newGame(sente !== false, levels[0], { rule:'basic', house:'rakura' });
+          E.newGame(sente !== false, levels[0], Object.assign({ rule:'basic', house:'rakura' }, opts || {}));
           E.G.seatDiff = levels;
         }catch(e){ clearTimeout(timer); reject(e); }
       });

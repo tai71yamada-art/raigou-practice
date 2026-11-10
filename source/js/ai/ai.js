@@ -21,9 +21,23 @@ function unknownAvail(aiIdx){
   P(aiIdx).hand.filter(Boolean).forEach(sub);
   return full;
 }
+/* completionBest は同じ塔・同じ残り駒で何度も呼ばれるので、答えを覚えておく（結果は変わらない。速くするだけ） */
+const CB_MEMO = new Map();
 function completionBest(tiles, avail){
   const n = tiles.length;
   if(n >= 6) return scoreTower(tiles).pts;
+  let key = '';
+  for(let i = 0; i < n; i++) key += tiles[i].kind + tiles[i].name + ',';
+  if(avail){ key += '|'; for(let w = 1; w <= 9; w++) key += (avail[w] || 0) + ','; }
+  const hit = CB_MEMO.get(key);
+  if(hit !== undefined) return hit;
+  const v = completionBestRaw(tiles, avail);
+  if(CB_MEMO.size > 20000) CB_MEMO.clear();
+  CB_MEMO.set(key, v);
+  return v;
+}
+function completionBestRaw(tiles, avail){
+  const n = tiles.length;
   let best = scoreTower(tiles).pts;
   const need = 6 - n;
   const topW = tiles[n-1].w;

@@ -73,6 +73,7 @@ function aiTileDesire(t, p){
   if(t.kind === 'gen'){
     const bonus = { '雷':0.85, '蛇':0.55, '斬':0.6, '陣':0.35, '轟':0.4, '霧':0.55, '瞬':0.5, '浄':0.45 };
     let b = bonus[t.name] || 0;
+    if(t.ougi) b = 0.9;   // 奥義駒は手に持って発したい
     if(t.name==='雷' && !raiTargets().length) b = 0.1;
     if(t.name==='轟') b = Math.max(b, diffParams().goDesire);
     if(t.name==='陣') b = Math.max(b, diffParams().jinDesire);
@@ -145,6 +146,10 @@ async function aiTurn(){
   const p = P(me);
   await VIEW.aiWait(650);
   if(G.over) return;
+  if(rulesNow().ougi){
+    const kai = withSeat(me, aiPickKai);
+    if(kai){ VIEW.aiBand('開：月の奥義駒を開いて雷神化'); await VIEW.aiWait(350); await doKai(me, kai.idx, kai.dest); await VIEW.aiWait(350); if(G.over) return; }
+  }
   { const b0 = p.body.length; withSeat(me, aiGen); const mv = b0 - p.body.length;
     VIEW.aiBand(mv > 0 ? '現：体内の駒を' + mv + '個、手に移した' : '現：0現（手に移さない）'); }
   // 現で残った体内（裏向き）が詰まる動きを、プレイヤーが追える速さで見せる
@@ -275,6 +280,7 @@ function aiChooseAction(){
       if(nt.length === 6) gain = scoreTower(nt).pts - before + dp.sixBonus;
       else gain = towerValue(nt, avail) - before + dp.stackBase; // 積むこと自体が前進（内駒も減る）
       if(totalInner(p) >= 4) gain += dp.fullBonus; // 満杯が近い時は消費を優先
+      if(rulesNow().ougi) gain += aiOugiStackAdjust(p, t, gi);
       if(dp.no5Pen > 0 && nt.length === 5){
         /* 5段で手番を終えると雷放の的になりやすい。同じ手番に6段目を積める駒が手にあるなら後押し、無ければ控える */
         let combo = false;
@@ -317,6 +323,7 @@ function aiChooseAction(){
       else lowStacks.push({ kind:'stack', hand:s, gi:gi, gain:gain });
     }
     if(t.kind !== 'gen') return;
+    if(t.ougi){ if(!G._collectMode) aiOugiActs(p, s, t, dp, avail, acts); return; }
     // 効果の候補（霧は雷・蛇・斬をまねる）
     let effs = [];
     if(t.name==='雷' || t.name==='蛇' || t.name==='斬') effs = [t.name];

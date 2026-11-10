@@ -23,7 +23,7 @@
       im.src = src;
     });
   }
-  const lockBtns = ['startGoBtn','ruleBtn','houseBtn','diffBtn','orderBtn'].map(function(id){ return document.getElementById(id); }).filter(Boolean);
+  const lockBtns = ['startGoBtn','ruleBtn','houseBtn','diffBtn','orderBtn','ougiBtn','aiOugiBtn'].map(function(id){ return document.getElementById(id); }).filter(Boolean);
   lockBtns.forEach(function(b){ b.disabled = true; });
   let finished = false;
   function done(){

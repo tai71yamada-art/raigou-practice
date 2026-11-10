@@ -10,7 +10,7 @@ const UI = {
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 function tileHtml(t, extra, opts){
   const tid = (opts && opts.ntid) ? '' : ' data-tid="' + t.id + '"';
-  return '<div class="tile ' + t.kind + (extra ? ' ' + extra : '') + '"' + tid + '><span class="w">' + t.w + '</span>' + esc(tileLabel(t)) + '</div>';
+  return '<div class="tile ' + t.kind + (t.ougi ? ' ougi' : '') + (extra ? ' ' + extra : '') + '"' + tid + '><span class="w">' + t.w + '</span>' + esc(tileLabel(t)) + '</div>';
 }
 function backHtml(t, extra){
   if(typeof t === 'string'){ extra = t; t = null; }
@@ -89,6 +89,8 @@ function render(){
   renderHumanZone();
   renderCanyon();
   renderReleased();
+  { const pb = document.getElementById('phasebar'), ks = pb && pb.querySelector('[data-ph="kai"]');
+    if(ks){ ks.hidden = !rulesNow().ougi; pb.classList.toggle('has-kai', !!rulesNow().ougi); } }
   document.querySelectorAll('#phasebar .phase-step').forEach(function(el){
     el.classList.toggle('on', el.getAttribute('data-ph') === G.phase && !G.over);
   });
@@ -216,7 +218,18 @@ function zoneMainHtml(pi){
   }
   if(!p.body.length) body += '<span class="body-count">（なし）</span>';
   body += '</div></div>';
-  const inner = '<div class="inner-row">' + handHtml(0) + body + handHtml(1) + (p.hand.length > 2 ? handHtml(2) : '') + '</div>';
+  /* 月：競技雷轟だけ。開の前は奥義駒の置き場（自分の駒は押すと効果を見られる）、雷神化の後は3か所目の手 */
+  let moon = '';
+  if(p.hand.length > 2) moon = handHtml(2);
+  else if(rulesNow().ougi){
+    let mi = '';
+    (p.moon || []).forEach(function(t){ mi += isHuman ? tileHtml(t, 'moon-mini') : backHtml(t, 'moon-mini'); });
+    if(!mi) mi = '<span class="body-count">空</span>';
+    moon = '<div class="hand-wrap moon-wrap"><span class="ib-label">月</span>' +
+           (isHuman ? '<button type="button" class="hand-slot moon-slot" data-cmd="moonInfo" aria-label="月の奥義駒を見る">' + mi + '</button>'
+                    : '<div class="hand-slot moon-slot">' + mi + '</div>') + '</div>';
+  }
+  const inner = '<div class="inner-row' + (moon ? ' has-moon' : '') + '">' + handHtml(0) + body + handHtml(1) + moon + '</div>';
   return '<div class="pz-main ' + (isHuman ? 'me' : 'opp') + '">' + (isHuman ? gates + inner : inner + gates) + '</div>';
 }
 /* AI側ゾーンの描画（アバターは静止画なので、従来通りゾーンごと描き直してよい） */

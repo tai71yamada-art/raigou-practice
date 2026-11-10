@@ -3,7 +3,7 @@
    内駒は最大6個、積・発できる手は1手番で最大2か所まで。 */
 const RULESETS = {
   basic: { id:'basic', label:'基本ルール', ougi:false },
-  kyogi: { id:'kyogi', label:'競技雷轟', ougi:true, ready:false }
+  kyogi: { id:'kyogi', label:'競技雷轟', ougi:true, ready:true }
 };
 const BODY_MAX = 3;      // 体内は3個まで
 const ACT_HAND_MAX = 2;  // 1手番で積・発に使える手は最大2か所（競技雷轟）
@@ -88,6 +88,8 @@ function newGame(humanSente, difficulty, opts){
   G.houses = [ opts.house || 'rakura', AI_HOUSE.id ];
   VIEW.applyHouseClasses();
   G.actedSlots = new Set(); G.inGassen = false; G.lastTowerEffect = null;
+  G.excludedOugi = [];
+  if(G.rules.ougi) setupOugi(opts.ougi);
   // 初期の体内：先手1枚、後手2枚
   const gote = opp(G.sente);
   P(G.sente).body.push(G.deck.pop());
@@ -96,6 +98,7 @@ function newGame(humanSente, difficulty, opts){
   VIEW.logClear();
   log('対戦開始。先手は' + P(G.sente).name + '、後手は' + P(gote).name + 'です。', 'sys');
   log('あなたは' + houseById(G.houses[0]).name + '家です。', 'sys');
+  if(G.rules.ougi) log('ルールは競技雷轟です。奥義駒を2個ずつ月に置きました。自分の桜門がすべて塔で埋まると、手番の最初に「開」ができます（1対戦に1回）。', 'sys');
   log('陽玉は各自2点から。雷山は' + G.deck.length + '枚です。', 'sys');
   startTurn();
 }
