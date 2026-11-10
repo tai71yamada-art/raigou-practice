@@ -8,7 +8,7 @@ const BGM = (function(){
   /* el：HTMLに埋め込んだ曲データ／file：ホーム画面版で横に置く mp3 */
   const TRACKS = {
     battle: { el:'bgmData',      file:'bgm.mp3',       ls:2.291587,           le:144.900272 },
-    title:  { el:'bgmTitleData', file:'bgm_title.mp3', ls:15.576031746031745, le:122.2425850340136 }
+    title:  { el:'bgmTitleData', file:'bgm_title.mp3', ls:25.946666666666665, le:173.94666666666666 }
   };
   const bufs = {}, loads = {};
   let src = null, gain = null, want = null, cur = null;
