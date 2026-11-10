@@ -263,7 +263,7 @@ function aiApplyLookahead(acts, p, o, avail, lambda, rel){
 }
 function aiActText(act){
   const who = function(pi){ return pi === AI_SEAT ? '自分' : 'あなた'; };
-  const kiri = function(){ return act.via === '霧' ? '（霧でまねる）' : ''; };
+  const kiri = function(){ return act.via === '霧' ? '（霧でまねる）' : (act.via === '鳴' ? '（奥義「鳴」で）' : ''); };
   switch(act.kind){
     case 'stack':  return '積：桜門' + (act.gi + 1) + 'に積む（' + (P(AI_SEAT).gates[act.gi].length + 1) + '段目）';
     case 'rai':    return (act.mode === 'hou' ? '雷放' : '雷停') + kiri() + '：' + who(act.target.pi) + 'の桜門' + (act.target.gi + 1) + 'の塔へ';
@@ -278,6 +278,7 @@ function aiActText(act){
 }
 async function aiExecute(act, me){
   if(me === undefined) me = 1;
+  if(act.via === '鳴'){ G.used.add('鳴'); await VIEW.playCutIn('鳴', me); log(P(me).name + 'の奥義「鳴」：' + (act.kind === 'rai' ? (act.mode === 'hou' ? '雷放' : '雷停') : act.kind === 'raigou' ? '雷' : act.kind === 'zan' ? '斬' : '蛇') + 'と同じ効果を適用します。'); }
   switch(act.kind){
     case 'stack': await primStack(me, act.hand, act.gi); break;
     case 'raigou': G.used.add('雷放'); await primRaigou(me, act.hand, act.gi, act.partner); break;

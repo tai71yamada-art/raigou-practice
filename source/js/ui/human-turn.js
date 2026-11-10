@@ -27,7 +27,7 @@ function humanGenPopup(){
   return new Promise(function(resolve){
     const p = P(0);
     const freeSlots = p.hand.filter(function(x){ return !x; }).length;
-    const maxMove = Math.min(GEN_MAX, freeSlots, p.body.length);
+    const maxMove = G.kakuNow ? 0 : Math.min(GEN_MAX, freeSlots, p.body.length);
     let sel = [];
     let zeroMode = false;
     function drawConfirm(){
@@ -67,7 +67,7 @@ function humanGenPopup(){
     function drawSelect(){
       let h = '<h3 class="serif">現：体内の駒を手に移す</h3>';
       if(maxMove <= 0){
-        h += '<p>手に空きがないか、体内に駒がないため、移せる駒がありません。0現にします。</p>';
+        h += G.kakuNow ? '<p>奥義「赫」の効果で、この手番の「現」は0個です。体内の駒は手に移せません。</p>' : '<p>手に空きがないか、体内に駒がないため、移せる駒がありません。0現にします。</p>';
         h += '<div class="btn-row"><button type="button" class="btn primary" id="genZeroOnly">0現にする</button></div>';
         showModal(h);
         document.getElementById('genZeroOnly').addEventListener('click', function(){ zeroMode = true; sel = []; drawConfirm(); });

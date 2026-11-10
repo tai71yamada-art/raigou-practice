@@ -1884,6 +1884,7 @@ function otherHandSlot(p, slot, pred){
 function raiPartnerSlot(p, slot){
   let k = otherHandSlot(p, slot, function(x){ return x.kind==='gen' && x.name==='雷'; });
   if(k < 0) k = otherHandSlot(p, slot, function(x){ return x.kind==='gen' && x.name==='霧'; });
+  if(k < 0) k = otherHandSlot(p, slot, function(x){ return x.kind==='gen' && x.name==='鳴'; });
   return k;
 }
 /* 積・発に使った手の管理（手番プレイヤーのみ）。手が2か所の基本ルールでは制限にかからない */
@@ -1953,7 +1954,7 @@ function newGame(humanSente, difficulty, opts){
   G.houses = [ opts.house || 'rakura', AI_HOUSE.id ];
   VIEW.applyHouseClasses();
   G.actedSlots = new Set(); G.inGassen = false; G.lastTowerEffect = null;
-  G.excludedOugi = [];
+  G.excludedOugi = []; G.kakuZero = [false, false]; G.kakuNow = false; G.ippatsu = false;
   if(G.rules.ougi) setupOugi(opts.ougi);
   // 初期の体内：先手1枚、後手2枚
   const gote = opp(G.sente);
@@ -2131,6 +2132,8 @@ function startTurn(){
   G.used = new Set();
   G.actedSlots = new Set();
   G.ippatsu = false;
+  G.kakuNow = !!(G.kakuZero && G.kakuZero[G.turn]);   // 奥義「赫」：この手番は0現
+  if(G.kakuNow) G.kakuZero[G.turn] = false;
   G.genMoves = 0;
   G.phase = 'gen';
   G.isFinalTurn = !!(G.endIn !== null && G.finalTurnActive);
@@ -2308,8 +2311,12 @@ function consumeHand(p, slot){
   if(t) G.canyon.push(t);
   return t;
 }
-function isRaiLike(t){ return t && t.kind==='gen' && (t.name==='雷' || t.name==='霧'); }
-function isGoLike(t){ return t && t.kind==='gen' && (t.name==='轟' || t.name==='霧'); }
+function isRaiLike(t){ return t && t.kind==='gen' && (t.name==='雷' || t.name==='霧' || t.name==='鳴'); }
+function isGoLike(t){ return t && t.kind==='gen' && (t.name==='轟' || t.name==='霧' || t.name==='鳴'); }
+/* 陣・轟をまねられる駒の手：霧を優先し、無ければ奥義「鳴」 */
+function mimicSlot(p){ const k = handHas(p, '霧'); return k >= 0 ? k : handHas(p, '鳴'); }
+/* 陣・轟として使った駒の記録用の言い方 */
+function asJinText(name){ return name === '陣' ? '「陣」で防ぎました。' : '「' + name + '」を陣として使って防ぎました。'; }
 /* 指定スロット以外の手にある、轟として使える駒のスロット（本物の轟を優先、次に霧） */
 function goPartnerSlot(p, slot){
   let kiri = -1;
@@ -2318,7 +2325,8 @@ function goPartnerSlot(p, slot){
     if(p.hand[i].name==='轟') return i;
     if(p.hand[i].name==='霧') kiri = i;
   }
-  return kiri;
+  if(kiri < 0) kiri = handHas(p, '鳴');
+  return kiri === slot ? -1 : kiri;
 }
 /* 轟で移し先／合戦で選べる自分の塔：公式では段数の制限はなく、当初の対象の塔も選べる。
    封印中の塔と、駒が1つもない塔は対象外（現行通り）。 */
@@ -2347,7 +2355,7 @@ async function resolveRaiDefense(attacker, defender, mode, targetGi, opt){
   const goOnly = !!(opt && opt.goOnly);
   if(!goOnly && G.tally) G.tally.attacked[defender]++;
   const goSlot = handHas(d, '轟');
-  const kiriSlot = handHas(d, '霧');
+  const kiriSlot = mimicSlot(d);
   const jinSlot = goOnly ? -1 : handHas(d, '陣');
   if(goSlot < 0 && kiriSlot < 0 && jinSlot < 0) return { type:'none' };
   // 移し先の候補（轟／霧を轟として使う時に選べる自分の塔。段数制限なし・対象の塔も含む）
@@ -2371,8 +2379,7 @@ async function resolveRaiDefense(attacker, defender, mode, targetGi, opt){
     if(pick.action === 'jin'){
       const usedName = d.hand[pick.slot] ? d.hand[pick.slot].name : '陣';
       consumeHand(d, pick.slot);
-      if(usedName === '霧') log(d.name + 'は「霧」を陣として使って防ぎました。', 'sys');
-      else log(d.name + 'は「陣」で防ぎました。', 'sys');
+      log(d.name + 'は' + asJinText(usedName), 'sys');
       VIEW.render();
       if(G.tally) G.tally.blocked[defender]++;
       return { type:'blocked' };
@@ -2421,8 +2428,9 @@ async function resolveRaiDefense(attacker, defender, mode, targetGi, opt){
     return { type:'blocked' };
   }
   if(kiriSlot >= 0){
+    const kn = d.hand[kiriSlot].name;
     consumeHand(d, kiriSlot);
-    log(d.name + 'は「霧」を陣として使って防ぎました。', 'sys');
+    log(d.name + 'は' + asJinText(kn), 'sys');
     VIEW.render();
     if(G.tally) G.tally.blocked[defender]++;
     return { type:'blocked' };
@@ -2438,7 +2446,7 @@ async function resolveJinDefense(defender, attackName, targetDesc){
   const d = P(defender);
   if(G.tally) G.tally.attacked[defender]++;
   const jinSlot = handHas(d, '陣');
-  const kiriSlot = handHas(d, '霧');
+  const kiriSlot = mimicSlot(d);
   if(jinSlot < 0 && kiriSlot < 0) return false;
   if(!d.isAI){
     const pick = await VIEW.humanJinDefenseChoice(attackName || '言霊', targetDesc || '', jinSlot, kiriSlot);
@@ -2448,8 +2456,7 @@ async function resolveJinDefense(defender, attackName, targetDesc){
     }
     const usedName = d.hand[pick.slot] ? d.hand[pick.slot].name : '陣';
     consumeHand(d, pick.slot);
-    if(usedName === '霧') log(d.name + 'は「霧」を陣として使って防ぎました。', 'sys');
-    else log(d.name + 'は「陣」で防ぎました。', 'sys');
+    log(d.name + 'は' + asJinText(usedName), 'sys');
     VIEW.render();
     await VIEW.playJinFx(defender);
     if(G.tally) G.tally.blocked[defender]++;
@@ -2464,8 +2471,9 @@ async function resolveJinDefense(defender, attackName, targetDesc){
     if(G.tally) G.tally.blocked[defender]++;
     return true;
   }
+  const kn2 = d.hand[kiriSlot].name;
   consumeHand(d, kiriSlot);
-  log(d.name + 'は「霧」を陣として使って防ぎました。', 'sys');
+  log(d.name + 'は' + asJinText(kn2), 'sys');
   VIEW.render();
   await VIEW.playJinFx(defender);
   if(G.tally) G.tally.blocked[defender]++;
@@ -2560,7 +2568,7 @@ async function primRai(actor, handSlot, mode, target){
         await VIEW.playCutIn('轟', defender);
         const usedName = d.hand[def.slot] ? d.hand[def.slot].name : '轟';
         consumeHand(d, def.slot);
-        if(usedName === '霧') log(d.name + 'は「霧」を轟として使って受けて、落とす先を自分の桜門' + (gi+1) + 'の塔に変えました。', 'score');
+        if(usedName !== '轟') log(d.name + 'は「' + usedName + '」を轟として使って受けて、落とす先を自分の桜門' + (gi+1) + 'の塔に変えました。', 'score');
         else log(d.name + 'は「轟」で受けて、落とす先を自分の桜門' + (gi+1) + 'の塔に変えました。', 'score');
         targetGi = gi;
         targetPi = defender;
@@ -2615,7 +2623,7 @@ async function resolveRaigouResponse(attacker, defender, gi, modeOpt){
   const mode = modeOpt === 'tei' ? 'tei' : 'hou';
   const d = P(defender);
   const goSlot = handHas(d, '轟');
-  const kiriSlot = handHas(d, '霧');
+  const kiriSlot = mimicSlot(d);
   const jinSlot = handHas(d, '陣');
   const goCandSlot = goSlot >= 0 ? goSlot : kiriSlot;
   const cands = goTowerCands(defender);
@@ -2739,8 +2747,8 @@ async function primRaigou(actor, handSlot, gi, partnerSlotOpt, modeOpt){
   await VIEW.playCutIn(mode === 'hou' ? '雷轟' : '雷轟・雷停', actor);
   const partnerTile = p.hand[goSlot];
   let pairLabel = '「' + tileLabel(t) + '」と「' + tileLabel(partnerTile) + '」';
-  if(partnerTile.name === '霧') pairLabel += '（霧を轟として使用）';
-  if(t.name === '霧') pairLabel += '（霧で雷をまねる）';
+  if(partnerTile.name === '霧' || partnerTile.name === '鳴') pairLabel += '（' + partnerTile.name + 'を轟として使用）';
+  if(t.name === '霧' || t.name === '鳴') pairLabel += '（' + t.name + 'で雷をまねる）';
   /* 受け手の応答：轟（霧）で受ければ雷轟合戦。陣は掟3で適用されないため応答の対象にしない */
   const defender = opp(actor);
   const resp = await resolveRaigouResponse(actor, defender, gi, mode);
@@ -2943,7 +2951,7 @@ async function joArrange(actor, handSlot, handTiles, pool, counts){
    ・奥義駒はすべて重さ9の言霊。発したら峡谷へ行く。陣で防げるのは雷・蛇・斬だけなので、奥義は防げない。
    効果を作った奥義駒は ougi-data.js の implemented を true にする（選択画面に出るのは true の駒だけ）。 */
 const OUGI_BRING = 2;   // 持ち込む奥義駒の数
-['覇','天','啓','和','禅','楼'].forEach(function(n){ const o = ougiByName(n); if(o) o.implemented = true; });
+['覇','天','啓','和','禅','楼','幻','鳴','赫'].forEach(function(n){ const o = ougiByName(n); if(o) o.implemented = true; });
 
 function ougiReadyList(){ return OUGI_DATA.filter(function(o){ return o.implemented && !o.kyogiBanned; }); }
 /* 奥義駒は自分と相手で重ならないのが決まり。ただし作り終えた駒が4種類そろうまでは、重なりを認める */
@@ -3043,6 +3051,8 @@ function ougiUsable(pi, slot){
     if(G.actedSlots && G.actedSlots.size) return '一発奥義：この手番にほかの駒を積・発したあとは発せません';
     return rouTowers(pi).length ? '' : '2段以上の自分の塔がありません';
   }
+  if(t.name === '幻') return genAvailable().length ? '' : '除外された駒がありません（奥義駒は選べません）';
+  if(t.name === '鳴' || t.name === '赫') return '';
   return 'この奥義駒は準備中です';
 }
 
@@ -3219,6 +3229,57 @@ async function primRou(actor, slot, gi, order){
   await VIEW.render();
   return true;
 }
+
+/* ================= 幻・鳴・赫 ================= */
+/* ---- 幻：除外された駒（奥義駒を除く）を確認し、1つを自分の体内か手の空いている場所に置く。
+   2人戦で除外されている駒はセットアップの1個だけ（雷神化で除外した奥義駒は選べない） ---- */
+function genAvailable(){ return G.excluded && !isOugi(G.excluded) ? [G.excluded] : []; }
+/* 置ける場所。発した幻の手は空くので、そこにも置ける */
+function genDests(pi, slot){
+  const p = P(pi), out = [];
+  p.hand.forEach(function(x, s){ if(!x || s === slot) out.push({ where:'hand', idx:s }); });
+  if(p.body.length < BODY_MAX) out.push({ where:'body' });
+  return out;
+}
+async function primGen(actor, slot, chooseDest){
+  const p = P(actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '幻') return false;
+  const cands = genAvailable();
+  if(!cands.length) return false;
+  G.used.add('幻');
+  await VIEW.playCutIn('幻', actor);
+  const dests = genDests(actor, slot);
+  consumeHand(p, slot);
+  const x = cands[0];
+  if(G.kn) G.kn[actor].add(x.id);
+  let d = await chooseDest(x, dests);
+  if(!d || !dests.some(function(y){ return y.where === d.where && y.idx === d.idx; })) d = dests[0];
+  G.excluded = null;
+  if(d.where === 'body'){ p.body.push(x); sortBody(p); }
+  else p.hand[d.idx] = x;
+  const place = d.where === 'body' ? '体内' : handLabel(d.idx);
+  if(p.isAI) log(p.name + 'の奥義「幻」：除外された駒を確認し、その駒を自分の' + place + 'に置きました。');
+  else log(p.name + 'の奥義「幻」：除外された駒「' + tileLabel(x) + '」を、自分の' + place + 'に置きました。');
+  await VIEW.render();
+  return true;
+}
+/* ---- 赫：全プレイヤーは、次の手番だけ「現」が0個になる。G.kakuZero[pi] は手番の始めに G.kakuNow へ移す ---- */
+async function primKaku(actor, slot){
+  const p = P(actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '赫') return false;
+  G.used.add('赫');
+  await VIEW.playCutIn('赫', actor);
+  consumeHand(p, slot);
+  G.kakuZero = [true, true];
+  log(p.name + 'の奥義「赫」：あなたもAIも、次の手番だけ「現」が0個になります（体内の駒を手に移せません）。', 'score');
+  if(actor !== 0) VIEW.setMeFace('hit');
+  VIEW.render();
+  return true;
+}
+/* ---- 鳴：雷・蛇・斬・陣・轟・霧・瞬・浄のどれか1つと同じ効果。
+   自分の手番では、選んだ言霊の効果をそのまま（鳴の手で）実行する。陣・轟（と霧でまねる陣・轟）は、
+   相手の雷・蛇・斬を受けた時に、霧と同じように使える（responses.js の mimicSlot） ---- */
+function isMei(t){ return !!(t && t.kind === 'gen' && t.name === '鳴'); }
 /* ================= 対局の途中保存 =================
    G（盤面・山・峡谷・手番・AIの見込みなど）をまるごと文字にして保存し、あとで同じ状態に戻す。
    駒は同じ駒が何か所からも指されている（例：合戦で開示された駒の記録）ので、
@@ -3603,7 +3664,8 @@ async function aiTurn(){
     const kai = withSeat(me, aiPickKai);
     if(kai){ VIEW.aiBand('開：月の奥義駒を開いて雷神化'); await VIEW.aiWait(350); await doKai(me, kai.idx, kai.dest); await VIEW.aiWait(350); if(G.over) return; }
   }
-  { const b0 = p.body.length; withSeat(me, aiGen); const mv = b0 - p.body.length;
+  if(G.kakuNow){ log('AIは現：奥義「赫」の効果で0現です。', 'sys'); VIEW.aiBand('現：奥義「赫」の効果で0現'); }
+  else { const b0 = p.body.length; withSeat(me, aiGen); const mv = b0 - p.body.length;
     VIEW.aiBand(mv > 0 ? '現：体内の駒を' + mv + '個、手に移した' : '現：0現（手に移さない）'); }
   // 現で残った体内（裏向き）が詰まる動きを、プレイヤーが追える速さで見せる
   await VIEW.render();
@@ -3776,11 +3838,15 @@ function aiChooseAction(){
       else lowStacks.push({ kind:'stack', hand:s, gi:gi, gain:gain });
     }
     if(t.kind !== 'gen') return;
-    if(t.ougi){ if(!G._collectMode) aiOugiActs(p, s, t, dp, avail, acts); return; }
+    if(t.ougi){
+      if(G._collectMode) return;
+      aiOugiActs(p, s, t, dp, avail, acts);
+      if(t.name !== '鳴' || ougiUsable(AI_SEAT, s)) return;   // 鳴は霧と同じように雷・蛇・斬をまねる候補も作る
+    }
     // 効果の候補（霧は雷・蛇・斬をまねる）
     let effs = [];
     if(t.name==='雷' || t.name==='蛇' || t.name==='斬') effs = [t.name];
-    else if(t.name==='霧') effs = ['雷','蛇','斬'];
+    else if(t.name==='霧' || t.name==='鳴') effs = ['雷','蛇','斬'];
     effs.forEach(function(eff){
       const via = t.name;
       /* 掟1：効果単位で判定する。雷は雷放／雷停を別々に判定し、霧でまねた効果も同じ効果として数える */
@@ -4239,7 +4305,7 @@ function aiApplyLookahead(acts, p, o, avail, lambda, rel){
 }
 function aiActText(act){
   const who = function(pi){ return pi === AI_SEAT ? '自分' : 'あなた'; };
-  const kiri = function(){ return act.via === '霧' ? '（霧でまねる）' : ''; };
+  const kiri = function(){ return act.via === '霧' ? '（霧でまねる）' : (act.via === '鳴' ? '（奥義「鳴」で）' : ''); };
   switch(act.kind){
     case 'stack':  return '積：桜門' + (act.gi + 1) + 'に積む（' + (P(AI_SEAT).gates[act.gi].length + 1) + '段目）';
     case 'rai':    return (act.mode === 'hou' ? '雷放' : '雷停') + kiri() + '：' + who(act.target.pi) + 'の桜門' + (act.target.gi + 1) + 'の塔へ';
@@ -4254,6 +4320,7 @@ function aiActText(act){
 }
 async function aiExecute(act, me){
   if(me === undefined) me = 1;
+  if(act.via === '鳴'){ G.used.add('鳴'); await VIEW.playCutIn('鳴', me); log(P(me).name + 'の奥義「鳴」：' + (act.kind === 'rai' ? (act.mode === 'hou' ? '雷放' : '雷停') : act.kind === 'raigou' ? '雷' : act.kind === 'zan' ? '斬' : '蛇') + 'と同じ効果を適用します。'); }
   switch(act.kind){
     case 'stack': await primStack(me, act.hand, act.gi); break;
     case 'raigou': G.used.add('雷放'); await primRaigou(me, act.hand, act.gi, act.partner); break;
@@ -4274,7 +4341,7 @@ async function aiExecute(act, me){
 /* ================= AI：競技雷轟（開・奥義） ================= */
 /* 開するかどうか。雷神化は手が1つ増えて内駒の上限も増えるので、開できる時は基本的にすぐ開く。
    Lv.1・Lv.2 はときどき見送る */
-const AI_OUGI_LIKE = { '覇':1.0, '天':0.9, '啓':0.8, '和':0.6, '禅':0.7, '楼':0.9 };
+const AI_OUGI_LIKE = { '覇':1.0, '天':0.9, '啓':0.8, '和':0.6, '禅':0.7, '楼':0.9, '幻':0.6, '鳴':0.85, '赫':0.4 };
 function aiPickKai(){
   const p = P(AI_SEAT);
   if(!canKai(AI_SEAT)) return null;
@@ -4296,6 +4363,7 @@ function aiOwnVal(tiles, avail){ return !tiles.length ? 0 : (isFuon(tiles) ? -1 
 /* 手の奥義駒 t（手の場所 s）で打てる手を acts に足す */
 function aiOugiActs(p, s, t, dp, avail, acts){
   if(G.used.has(t.name)) return;
+  if(ougiUsable(AI_SEAT, s)) return;
   const me = AI_SEAT, opn = 1 - AI_SEAT;
   if(t.name === '覇'){
     ['top','bottom'].forEach(function(end){
@@ -4364,6 +4432,16 @@ function aiOugiActs(p, s, t, dp, avail, acts){
       if(!best || g > best.gain) best = { kind:'ougi', name:'楼', hand:s, gi:gi, order:r.order, gain:g };
     });
     if(best && best.gain > 0.4) acts.push(best);
+  } else if(t.name === '幻'){
+    /* 中身は発するまで分からない。奥義駒を、まだ見ていない駒1個に替える手 */
+    if(!G.finalRound && G.deck.length > 4) acts.push({ kind:'ougi', name:'幻', hand:s, gain:0.5 });
+  } else if(t.name === '赫'){
+    /* 相手の次の現を止める。自分の次の現も止まるので、その分を引く */
+    const q = P(1 - me);
+    const oppMv = Math.min(GEN_MAX, q.body.length, q.hand.filter(function(x){ return !x; }).length);
+    const myMv = Math.min(GEN_MAX, p.body.length, p.hand.filter(function(x, k){ return !x || k === s; }).length);
+    const g = 0.45 * oppMv - 0.3 * myMv;
+    if(g > 0.35) acts.push({ kind:'ougi', name:'赫', hand:s, gain:g });
   }
 }
 /* 禅で相手に渡す駒と、受け取る駒の見込み */
@@ -4415,6 +4493,8 @@ function aiOugiText(act){
   if(act.name === '啓') return '奥義「啓」：' + who(act.target.pi) + 'の桜門' + (act.target.gi + 1) + 'の塔を2つに分ける';
   if(act.name === '和') return '奥義「和」：自分の桜門' + (act.gi + 1) + 'の塔を公開する';
   if(act.name === '禅') return '奥義「禅」：体内の最も重い駒を移し合う';
+  if(act.name === '幻') return '奥義「幻」：除外された駒を自分の内駒にする';
+  if(act.name === '赫') return '奥義「赫」：次の手番は全員0現にする';
   if(act.name === '楼') return '奥義「楼」：自分の桜門' + (act.gi + 1) + 'の塔を積み直す';
   return '奥義';
 }
@@ -4425,6 +4505,15 @@ async function aiOugiExecute(act, me){
   else if(act.name === '和') await primWa(me, act.hand, act.gi);
   else if(act.name === '禅') await primZen(me, act.hand, function(){ return Promise.resolve(withSeat(me, function(){ return aiZenGain(me) > 0.5; })); });
   else if(act.name === '楼') await primRou(me, act.hand, act.gi, act.order);
+  else if(act.name === '幻') await primGen(me, act.hand, function(x, dests){
+    return Promise.resolve(withSeat(me, function(){
+      const hand = dests.filter(function(d){ return d.where === 'hand'; }), body = dests.filter(function(d){ return d.where === 'body'; });
+      if(!body.length) return hand[0];
+      if(!hand.length) return body[0];
+      return aiTileDesire(x, P(me)) > 0.5 ? hand[0] : body[0];
+    }));
+  });
+  else if(act.name === '赫') await primKaku(me, act.hand);
 }
 /* ================= 設定（端末に保存） ================= */
 /* ホーム画面に追加したときのオフライン用（https で公開した時だけ動く） */
@@ -4452,7 +4541,7 @@ function aiSpeedFactor(){ const o = AI_SPEEDS.find(function(x){ return x.v === S
 function aiWait(ms){ return wait(ms * aiSpeedFactor()); }
 
 /* ================= アプリのバージョン（build.py が source/VERSION の値を入れる） ================= */
-const APP_VERSION = 'v49';   // build.py が VERSION ファイルの値を入れる（sw.js も同じ値になる）
+const APP_VERSION = 'v50';   // build.py が VERSION ファイルの値を入れる（sw.js も同じ値になる）
 /* ================= 効果音（音声ファイルは使わず、その場で合成） ================= */
 const SFX = (function(){
   let ctx = null;
@@ -5338,8 +5427,8 @@ function buildHandActs(t, s){
     const partnerSlot = goPartnerSlot(p, s);
     if(partnerSlot >= 0 && raigouGates(p).length > 0 && canActPair(p, s, partnerSlot)){
       const pt = p.hand[partnerSlot];
-      acts.push({ kind:'raigou', label:'雷轟解放（手の' + (pt.name === '霧' ? '霧を轟として使って' : '轟と合わせて') + '自分の塔を解放 +2点）' + effNote(usedHou), disabled: usedHou });
-      acts.push({ kind:'raigouTei', label:'雷＋轟で雷停（手の' + (pt.name === '霧' ? '霧を轟として使って' : '轟と合わせて') + '、段数を問わず自分の塔を封印）' + effNote(usedTei), disabled: usedTei });
+      acts.push({ kind:'raigou', label:'雷轟解放（手の' + (pt.name !== '轟' ? pt.name + 'を轟として使って' : '轟と合わせて') + '自分の塔を解放 +2点）' + effNote(usedHou), disabled: usedHou });
+      acts.push({ kind:'raigouTei', label:'雷＋轟で雷停（手の' + (pt.name !== '轟' ? pt.name + 'を轟として使って' : '轟と合わせて') + '、段数を問わず自分の塔を封印）' + effNote(usedTei), disabled: usedTei });
     }
   } else if(t.name === '蛇'){
     acts.push({ kind:'hebi', label:'発する：内駒を1個奪う' + effNote(usedHebi), disabled: usedHebi });
@@ -5372,10 +5461,10 @@ function buildHandActs(t, s){
   } else if(t.name === '轟'){
     const otherSlot = raiPartnerSlot(p, s);
     const other = (otherSlot >= 0 && canActPair(p, s, otherSlot)) ? p.hand[otherSlot] : null;
-    if(other && other.kind === 'gen' && (other.name === '雷' || other.name === '霧') && !usedHou && raigouGates(p).length > 0){
+    if(other && other.kind === 'gen' && (other.name === '雷' || other.name === '霧' || other.name === '鳴') && !usedHou && raigouGates(p).length > 0){
       acts.push({ kind:'raigouFromGo', label:'雷轟解放：もう一方の手の「' + other.name + '」と合わせて自分の塔を解放（+2点）', disabled: false });
     }
-    if(other && other.kind === 'gen' && (other.name === '雷' || other.name === '霧') && !usedTei && raigouGates(p).length > 0){
+    if(other && other.kind === 'gen' && (other.name === '雷' || other.name === '霧' || other.name === '鳴') && !usedTei && raigouGates(p).length > 0){
       acts.push({ kind:'raigouTeiFromGo', label:'雷＋轟で雷停：もう一方の手の「' + other.name + '」と合わせて、段数を問わず自分の塔を封印', disabled: false });
     }
   } else if(t.name === '瞬'){
@@ -5443,7 +5532,7 @@ function humanGenPopup(){
   return new Promise(function(resolve){
     const p = P(0);
     const freeSlots = p.hand.filter(function(x){ return !x; }).length;
-    const maxMove = Math.min(GEN_MAX, freeSlots, p.body.length);
+    const maxMove = G.kakuNow ? 0 : Math.min(GEN_MAX, freeSlots, p.body.length);
     let sel = [];
     let zeroMode = false;
     function drawConfirm(){
@@ -5483,7 +5572,7 @@ function humanGenPopup(){
     function drawSelect(){
       let h = '<h3 class="serif">現：体内の駒を手に移す</h3>';
       if(maxMove <= 0){
-        h += '<p>手に空きがないか、体内に駒がないため、移せる駒がありません。0現にします。</p>';
+        h += G.kakuNow ? '<p>奥義「赫」の効果で、この手番の「現」は0個です。体内の駒は手に移せません。</p>' : '<p>手に空きがないか、体内に駒がないため、移せる駒がありません。0現にします。</p>';
         h += '<div class="btn-row"><button type="button" class="btn primary" id="genZeroOnly">0現にする</button></div>';
         showModal(h);
         document.getElementById('genZeroOnly').addEventListener('click', function(){ zeroMode = true; sel = []; drawConfirm(); });
@@ -5801,9 +5890,9 @@ function humanRaiDefenseChoice(mode, targetGi, slots, opt){
     }
     h += '<div class="btn-row">';
     if(slots.jinSlot >= 0) h += '<button type="button" class="btn primary" data-def="jin:' + slots.jinSlot + '">陣で防ぐ（効果を無効化）</button>';
-    if(slots.kiriAsJinSlot >= 0) h += '<button type="button" class="btn primary" data-def="jin:' + slots.kiriAsJinSlot + '">霧を陣として使って防ぐ（効果を無効化）</button>';
+    if(slots.kiriAsJinSlot >= 0) h += '<button type="button" class="btn primary" data-def="jin:' + slots.kiriAsJinSlot + '">' + esc(P(0).hand[slots.kiriAsJinSlot].name) + 'を陣として使って防ぐ（効果を無効化）</button>';
     if(slots.goSlot >= 0) h += '<button type="button" class="btn" data-def="go:' + slots.goSlot + '">轟で受ける（移し先を選ぶ。相手も轟で応じると雷轟合戦になります）</button>';
-    if(slots.kiriAsGoSlot >= 0) h += '<button type="button" class="btn" data-def="go:' + slots.kiriAsGoSlot + '">霧を轟として使って受ける（移し先を選ぶ。相手も轟で応じると雷轟合戦になります）</button>';
+    if(slots.kiriAsGoSlot >= 0) h += '<button type="button" class="btn" data-def="go:' + slots.kiriAsGoSlot + '">' + esc(P(0).hand[slots.kiriAsGoSlot].name) + 'を轟として使って受ける（移し先を選ぶ。相手も轟で応じると雷轟合戦になります）</button>';
     h += '<button type="button" class="btn" data-def="accept">' + (opt && opt.selfTargetBy !== undefined ? '割り込まない（そのまま通す）' : '防がない（そのまま受ける）') + '</button>';
     h += '</div>';
     showModal(h);
@@ -5864,7 +5953,7 @@ function humanJinDefenseChoice(attackName, targetDesc, jinSlot, kiriSlot){
     h += '<p class="sub">「防がない」を選ぶと、効果はそのまま解決します。</p>';
     h += '<div class="btn-row">';
     if(jinSlot >= 0) h += '<button type="button" class="btn primary" data-jdef="jin:' + jinSlot + '">陣で防ぐ（効果を無効化）</button>';
-    if(kiriSlot >= 0) h += '<button type="button" class="btn primary" data-jdef="jin:' + kiriSlot + '">霧を陣として使って防ぐ（効果を無効化）</button>';
+    if(kiriSlot >= 0) h += '<button type="button" class="btn primary" data-jdef="jin:' + kiriSlot + '">' + esc(P(0).hand[kiriSlot].name) + 'を陣として使って防ぐ（効果を無効化）</button>';
     h += '<button type="button" class="btn" data-jdef="accept">防がない（そのまま受ける）</button>';
     h += '</div>';
     showModal(h);
@@ -6317,7 +6406,10 @@ async function playCutIn(name, actorPi){
     '啓':['OUGI','塔を上下2つに分ける'],
     '和':['OUGI','塔を公開し、重さの合計で陽玉が増減する'],
     '禅':['OUGI','体内の最も重い駒を相手へ移す'],
-    '楼':['OUGI','塔を好きな順番に積み直す（一発奥義）']
+    '楼':['OUGI','塔を好きな順番に積み直す（一発奥義）'],
+    '幻':['OUGI','除外された駒を自分の内駒にする'],
+    '鳴':['OUGI','言霊1つと同じ効果を適用する'],
+    '赫':['OUGI','次の手番は全員の「現」が0個']
   };
   const info = INFO[name] || ['KOTODAMA',''];
   const whoText = actor ? esc(actor.name) + (name === '雷神化' ? '' : (ougiByName(name) ? ' の奥義' : ' の言霊')) : '';
@@ -7578,6 +7670,26 @@ async function runOugiFlow(slot){
     });
     return;
   }
+  if(t.name === '幻'){
+    const ok = await confirmYesNo('奥義「幻」の確認', '除外された駒を確認し、その駒をあなたの体内か手の空いている場所に置きます（奥義駒は選べません）。発すると、置き場所を選ぶ前に駒が見えるので、途中でやめることはできません。');
+    if(!ok) return;
+    await primGen(0, slot, chooseGenDest);
+    return;
+  }
+  if(t.name === '赫'){
+    const ok = await confirmYesNo('奥義「赫」の確認', 'あなたもAIも、<b>次の手番だけ「現」が0個</b>になります（体内の駒を手に移せません）。この手番のあなたの「現」は、もう終わっています。');
+    if(!ok) return;
+    await primKaku(0, slot);
+    return;
+  }
+  if(t.name === '鳴'){
+    const kind = await pickMeiEffect(slot);
+    if(!kind) return;
+    const before = P(0).hand[slot];
+    await runEffectFlow(kind, slot);
+    if(P(0).hand[slot] !== before){ G.used.add('鳴'); log('（この効果は、奥義「鳴」で適用しました。）', 'sys'); }
+    return;
+  }
   if(t.name === '楼'){
     while(true){
       const tgt = await pickTowerModal('奥義「楼」：積み直す塔を選ぶ', '2段以上の自分の塔を1つ選び、好きな順番に積み直します。<b>一発奥義</b>なので、この手番はほかの駒を積・発できなくなります。', rouTowers(0).map(function(gi){ return { pi:0, gi:gi }; }));
@@ -7739,6 +7851,62 @@ function pickKeiSplitModal(pi, gi){
       });
     }
     draw();
+  });
+}
+
+/* 幻：除外された駒を見せて、置き場所を選ぶ */
+function chooseGenDest(x, dests){
+  return new Promise(function(resolve){
+    let h = '<h3 class="serif">奥義「幻」：除外された駒</h3>';
+    h += '<div class="modal-center">' + tileHtml(x, 'big', { ntid:true }) + '</div>';
+    h += '<p>除外されていた駒は「' + esc(tileLabel(x)) + '」（重さ' + x.w + '）でした。置く場所を選んでください。</p><div class="btn-row">';
+    dests.forEach(function(d, i){ h += '<button type="button" class="btn' + (i === 0 ? ' primary' : '') + '" data-gen-d="' + i + '">' + (d.where === 'body' ? '体内に置く' : handLabel(d.idx) + 'に置く') + '</button>'; });
+    h += '</div>';
+    showModal(h);
+    const pk = document.querySelector('#modalRoot [data-peekbtn]'); if(pk) pk.remove();
+    document.querySelectorAll('[data-gen-d]').forEach(function(b){
+      b.addEventListener('click', function(){ closeModal(); resolve(dests[parseInt(b.getAttribute('data-gen-d'), 10)]); });
+    });
+  });
+}
+/* 鳴：どの言霊と同じ効果にするかを選ぶ。戻り値は runEffectFlow の種類（やめたら null） */
+function pickMeiEffect(slot){
+  return new Promise(function(resolve){
+    const p = P(0);
+    const usedHou = G.used.has('雷放'), usedTei = G.used.has('雷停');
+    const raiOk = raiTargets().length > 0;
+    const zanOk = [0,1].some(function(pi){ return P(pi).gates.some(function(gw, gi){ return gw.length > 0 && !P(pi).seals[gi]; }); });
+    const items = [];
+    const add = function(kind, label, why){ items.push({ kind:kind, label:label, why:why || '' }); };
+    add('raiHou', '雷：雷放（一番高い塔を解放）', usedHou ? 'この手番使用済み' : (raiOk ? '' : '3段以上の塔がありません'));
+    add('raiTei', '雷：雷停（一番高い塔を封印）', usedTei ? 'この手番使用済み' : (raiOk ? '' : '3段以上の塔がありません'));
+    const goSlot = goPartnerSlot(p, slot);
+    if(goSlot >= 0 && raigouGates(p).length && canActPair(p, slot, goSlot)){
+      const nm = p.hand[goSlot].name;
+      add('raigou', '雷：手の「' + nm + '」と合わせて雷轟解放（自分の塔を解放 +2点）', usedHou ? 'この手番使用済み' : '');
+      add('raigouTei', '雷：手の「' + nm + '」と合わせて雷停（自分の塔を封印）', usedTei ? 'この手番使用済み' : '');
+    }
+    const raiSlot = raiPartnerSlot(p, slot);
+    if(raiSlot >= 0 && goPartnerSlot(p, raiSlot) === slot && raigouGates(p).length && canActPair(p, slot, raiSlot)){
+      const nm = p.hand[raiSlot].name;
+      add('raigouFromKiriGo', '轟：手の「' + nm + '」と合わせて雷轟解放（自分の塔を解放 +2点）', usedHou ? 'この手番使用済み' : '');
+      add('raigouTeiFromKiriGo', '轟：手の「' + nm + '」と合わせて雷停（自分の塔を封印）', usedTei ? 'この手番使用済み' : '');
+    }
+    add('hebi', '蛇：内駒を1個奪う', G.used.has('蛇') ? 'この手番使用済み' : '');
+    add('zan', '斬：塔の一番上か一番下の駒を取る', G.used.has('斬') ? 'この手番使用済み' : (zanOk ? '' : '対象になる塔がありません'));
+    add('shun', '瞬：駒を2個入れ替える', G.used.has('瞬') ? 'この手番使用済み' : '');
+    add('jo', '浄：内駒を捨てて引き直す', G.used.has('浄') ? 'この手番使用済み' : '');
+    let h = '<h3 class="serif">奥義「鳴」：同じ効果にする言霊を選ぶ</h3>';
+    h += '<div class="act-list">';
+    items.forEach(function(it, i){ h += '<button type="button" class="btn act-btn" data-mei="' + i + '"' + (it.why ? ' disabled' : '') + '>' + esc(it.label) + (it.why ? '<small>（' + esc(it.why) + '）</small>' : '') + '</button>'; });
+    h += '</div>';
+    h += '<p class="sub">「霧」と同じ効果は、上のどれかを選ぶのと同じです。「陣」「轟」と同じ効果は、相手の雷・蛇・斬を受けた時に、手にある鳴を使って適用できます。</p>';
+    h += '<div class="btn-row"><button type="button" class="btn" id="meiCancel">やめる</button></div>';
+    showModal(h);
+    document.getElementById('meiCancel').addEventListener('click', function(){ closeModal(); resolve(null); });
+    document.querySelectorAll('[data-mei]').forEach(function(b){
+      b.addEventListener('click', function(){ closeModal(); resolve(items[parseInt(b.getAttribute('data-mei'), 10)].kind); });
+    });
   });
 }
 /* ================= 駒一覧・役一覧（ガイド） =================

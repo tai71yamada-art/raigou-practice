@@ -79,9 +79,9 @@ function humanRaiDefenseChoice(mode, targetGi, slots, opt){
     }
     h += '<div class="btn-row">';
     if(slots.jinSlot >= 0) h += '<button type="button" class="btn primary" data-def="jin:' + slots.jinSlot + '">陣で防ぐ（効果を無効化）</button>';
-    if(slots.kiriAsJinSlot >= 0) h += '<button type="button" class="btn primary" data-def="jin:' + slots.kiriAsJinSlot + '">霧を陣として使って防ぐ（効果を無効化）</button>';
+    if(slots.kiriAsJinSlot >= 0) h += '<button type="button" class="btn primary" data-def="jin:' + slots.kiriAsJinSlot + '">' + esc(P(0).hand[slots.kiriAsJinSlot].name) + 'を陣として使って防ぐ（効果を無効化）</button>';
     if(slots.goSlot >= 0) h += '<button type="button" class="btn" data-def="go:' + slots.goSlot + '">轟で受ける（移し先を選ぶ。相手も轟で応じると雷轟合戦になります）</button>';
-    if(slots.kiriAsGoSlot >= 0) h += '<button type="button" class="btn" data-def="go:' + slots.kiriAsGoSlot + '">霧を轟として使って受ける（移し先を選ぶ。相手も轟で応じると雷轟合戦になります）</button>';
+    if(slots.kiriAsGoSlot >= 0) h += '<button type="button" class="btn" data-def="go:' + slots.kiriAsGoSlot + '">' + esc(P(0).hand[slots.kiriAsGoSlot].name) + 'を轟として使って受ける（移し先を選ぶ。相手も轟で応じると雷轟合戦になります）</button>';
     h += '<button type="button" class="btn" data-def="accept">' + (opt && opt.selfTargetBy !== undefined ? '割り込まない（そのまま通す）' : '防がない（そのまま受ける）') + '</button>';
     h += '</div>';
     showModal(h);
@@ -142,7 +142,7 @@ function humanJinDefenseChoice(attackName, targetDesc, jinSlot, kiriSlot){
     h += '<p class="sub">「防がない」を選ぶと、効果はそのまま解決します。</p>';
     h += '<div class="btn-row">';
     if(jinSlot >= 0) h += '<button type="button" class="btn primary" data-jdef="jin:' + jinSlot + '">陣で防ぐ（効果を無効化）</button>';
-    if(kiriSlot >= 0) h += '<button type="button" class="btn primary" data-jdef="jin:' + kiriSlot + '">霧を陣として使って防ぐ（効果を無効化）</button>';
+    if(kiriSlot >= 0) h += '<button type="button" class="btn primary" data-jdef="jin:' + kiriSlot + '">' + esc(P(0).hand[kiriSlot].name) + 'を陣として使って防ぐ（効果を無効化）</button>';
     h += '<button type="button" class="btn" data-jdef="accept">防がない（そのまま受ける）</button>';
     h += '</div>';
     showModal(h);

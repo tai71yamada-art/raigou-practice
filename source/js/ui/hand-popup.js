@@ -32,8 +32,8 @@ function buildHandActs(t, s){
     const partnerSlot = goPartnerSlot(p, s);
     if(partnerSlot >= 0 && raigouGates(p).length > 0 && canActPair(p, s, partnerSlot)){
       const pt = p.hand[partnerSlot];
-      acts.push({ kind:'raigou', label:'雷轟解放（手の' + (pt.name === '霧' ? '霧を轟として使って' : '轟と合わせて') + '自分の塔を解放 +2点）' + effNote(usedHou), disabled: usedHou });
-      acts.push({ kind:'raigouTei', label:'雷＋轟で雷停（手の' + (pt.name === '霧' ? '霧を轟として使って' : '轟と合わせて') + '、段数を問わず自分の塔を封印）' + effNote(usedTei), disabled: usedTei });
+      acts.push({ kind:'raigou', label:'雷轟解放（手の' + (pt.name !== '轟' ? pt.name + 'を轟として使って' : '轟と合わせて') + '自分の塔を解放 +2点）' + effNote(usedHou), disabled: usedHou });
+      acts.push({ kind:'raigouTei', label:'雷＋轟で雷停（手の' + (pt.name !== '轟' ? pt.name + 'を轟として使って' : '轟と合わせて') + '、段数を問わず自分の塔を封印）' + effNote(usedTei), disabled: usedTei });
     }
   } else if(t.name === '蛇'){
     acts.push({ kind:'hebi', label:'発する：内駒を1個奪う' + effNote(usedHebi), disabled: usedHebi });
@@ -66,10 +66,10 @@ function buildHandActs(t, s){
   } else if(t.name === '轟'){
     const otherSlot = raiPartnerSlot(p, s);
     const other = (otherSlot >= 0 && canActPair(p, s, otherSlot)) ? p.hand[otherSlot] : null;
-    if(other && other.kind === 'gen' && (other.name === '雷' || other.name === '霧') && !usedHou && raigouGates(p).length > 0){
+    if(other && other.kind === 'gen' && (other.name === '雷' || other.name === '霧' || other.name === '鳴') && !usedHou && raigouGates(p).length > 0){
       acts.push({ kind:'raigouFromGo', label:'雷轟解放：もう一方の手の「' + other.name + '」と合わせて自分の塔を解放（+2点）', disabled: false });
     }
-    if(other && other.kind === 'gen' && (other.name === '雷' || other.name === '霧') && !usedTei && raigouGates(p).length > 0){
+    if(other && other.kind === 'gen' && (other.name === '雷' || other.name === '霧' || other.name === '鳴') && !usedTei && raigouGates(p).length > 0){
       acts.push({ kind:'raigouTeiFromGo', label:'雷＋轟で雷停：もう一方の手の「' + other.name + '」と合わせて、段数を問わず自分の塔を封印', disabled: false });
     }
   } else if(t.name === '瞬'){

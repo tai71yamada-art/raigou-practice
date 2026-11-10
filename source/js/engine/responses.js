@@ -10,8 +10,12 @@ function consumeHand(p, slot){
   if(t) G.canyon.push(t);
   return t;
 }
-function isRaiLike(t){ return t && t.kind==='gen' && (t.name==='雷' || t.name==='霧'); }
-function isGoLike(t){ return t && t.kind==='gen' && (t.name==='轟' || t.name==='霧'); }
+function isRaiLike(t){ return t && t.kind==='gen' && (t.name==='雷' || t.name==='霧' || t.name==='鳴'); }
+function isGoLike(t){ return t && t.kind==='gen' && (t.name==='轟' || t.name==='霧' || t.name==='鳴'); }
+/* 陣・轟をまねられる駒の手：霧を優先し、無ければ奥義「鳴」 */
+function mimicSlot(p){ const k = handHas(p, '霧'); return k >= 0 ? k : handHas(p, '鳴'); }
+/* 陣・轟として使った駒の記録用の言い方 */
+function asJinText(name){ return name === '陣' ? '「陣」で防ぎました。' : '「' + name + '」を陣として使って防ぎました。'; }
 /* 指定スロット以外の手にある、轟として使える駒のスロット（本物の轟を優先、次に霧） */
 function goPartnerSlot(p, slot){
   let kiri = -1;
@@ -20,7 +24,8 @@ function goPartnerSlot(p, slot){
     if(p.hand[i].name==='轟') return i;
     if(p.hand[i].name==='霧') kiri = i;
   }
-  return kiri;
+  if(kiri < 0) kiri = handHas(p, '鳴');
+  return kiri === slot ? -1 : kiri;
 }
 /* 轟で移し先／合戦で選べる自分の塔：公式では段数の制限はなく、当初の対象の塔も選べる。
    封印中の塔と、駒が1つもない塔は対象外（現行通り）。 */
@@ -49,7 +54,7 @@ async function resolveRaiDefense(attacker, defender, mode, targetGi, opt){
   const goOnly = !!(opt && opt.goOnly);
   if(!goOnly && G.tally) G.tally.attacked[defender]++;
   const goSlot = handHas(d, '轟');
-  const kiriSlot = handHas(d, '霧');
+  const kiriSlot = mimicSlot(d);
   const jinSlot = goOnly ? -1 : handHas(d, '陣');
   if(goSlot < 0 && kiriSlot < 0 && jinSlot < 0) return { type:'none' };
   // 移し先の候補（轟／霧を轟として使う時に選べる自分の塔。段数制限なし・対象の塔も含む）
@@ -73,8 +78,7 @@ async function resolveRaiDefense(attacker, defender, mode, targetGi, opt){
     if(pick.action === 'jin'){
       const usedName = d.hand[pick.slot] ? d.hand[pick.slot].name : '陣';
       consumeHand(d, pick.slot);
-      if(usedName === '霧') log(d.name + 'は「霧」を陣として使って防ぎました。', 'sys');
-      else log(d.name + 'は「陣」で防ぎました。', 'sys');
+      log(d.name + 'は' + asJinText(usedName), 'sys');
       VIEW.render();
       if(G.tally) G.tally.blocked[defender]++;
       return { type:'blocked' };
@@ -123,8 +127,9 @@ async function resolveRaiDefense(attacker, defender, mode, targetGi, opt){
     return { type:'blocked' };
   }
   if(kiriSlot >= 0){
+    const kn = d.hand[kiriSlot].name;
     consumeHand(d, kiriSlot);
-    log(d.name + 'は「霧」を陣として使って防ぎました。', 'sys');
+    log(d.name + 'は' + asJinText(kn), 'sys');
     VIEW.render();
     if(G.tally) G.tally.blocked[defender]++;
     return { type:'blocked' };
@@ -140,7 +145,7 @@ async function resolveJinDefense(defender, attackName, targetDesc){
   const d = P(defender);
   if(G.tally) G.tally.attacked[defender]++;
   const jinSlot = handHas(d, '陣');
-  const kiriSlot = handHas(d, '霧');
+  const kiriSlot = mimicSlot(d);
   if(jinSlot < 0 && kiriSlot < 0) return false;
   if(!d.isAI){
     const pick = await VIEW.humanJinDefenseChoice(attackName || '言霊', targetDesc || '', jinSlot, kiriSlot);
@@ -150,8 +155,7 @@ async function resolveJinDefense(defender, attackName, targetDesc){
     }
     const usedName = d.hand[pick.slot] ? d.hand[pick.slot].name : '陣';
     consumeHand(d, pick.slot);
-    if(usedName === '霧') log(d.name + 'は「霧」を陣として使って防ぎました。', 'sys');
-    else log(d.name + 'は「陣」で防ぎました。', 'sys');
+    log(d.name + 'は' + asJinText(usedName), 'sys');
     VIEW.render();
     await VIEW.playJinFx(defender);
     if(G.tally) G.tally.blocked[defender]++;
@@ -166,8 +170,9 @@ async function resolveJinDefense(defender, attackName, targetDesc){
     if(G.tally) G.tally.blocked[defender]++;
     return true;
   }
+  const kn2 = d.hand[kiriSlot].name;
   consumeHand(d, kiriSlot);
-  log(d.name + 'は「霧」を陣として使って防ぎました。', 'sys');
+  log(d.name + 'は' + asJinText(kn2), 'sys');
   VIEW.render();
   await VIEW.playJinFx(defender);
   if(G.tally) G.tally.blocked[defender]++;

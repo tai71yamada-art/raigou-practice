@@ -19,8 +19,8 @@ async function primRaigou(actor, handSlot, gi, partnerSlotOpt, modeOpt){
   await VIEW.playCutIn(mode === 'hou' ? '雷轟' : '雷轟・雷停', actor);
   const partnerTile = p.hand[goSlot];
   let pairLabel = '「' + tileLabel(t) + '」と「' + tileLabel(partnerTile) + '」';
-  if(partnerTile.name === '霧') pairLabel += '（霧を轟として使用）';
-  if(t.name === '霧') pairLabel += '（霧で雷をまねる）';
+  if(partnerTile.name === '霧' || partnerTile.name === '鳴') pairLabel += '（' + partnerTile.name + 'を轟として使用）';
+  if(t.name === '霧' || t.name === '鳴') pairLabel += '（' + t.name + 'で雷をまねる）';
   /* 受け手の応答：轟（霧）で受ければ雷轟合戦。陣は掟3で適用されないため応答の対象にしない */
   const defender = opp(actor);
   const resp = await resolveRaigouResponse(actor, defender, gi, mode);

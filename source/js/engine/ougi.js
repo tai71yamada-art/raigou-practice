@@ -6,7 +6,7 @@
    ・奥義駒はすべて重さ9の言霊。発したら峡谷へ行く。陣で防げるのは雷・蛇・斬だけなので、奥義は防げない。
    効果を作った奥義駒は ougi-data.js の implemented を true にする（選択画面に出るのは true の駒だけ）。 */
 const OUGI_BRING = 2;   // 持ち込む奥義駒の数
-['覇','天','啓','和','禅','楼'].forEach(function(n){ const o = ougiByName(n); if(o) o.implemented = true; });
+['覇','天','啓','和','禅','楼','幻','鳴','赫'].forEach(function(n){ const o = ougiByName(n); if(o) o.implemented = true; });
 
 function ougiReadyList(){ return OUGI_DATA.filter(function(o){ return o.implemented && !o.kyogiBanned; }); }
 /* 奥義駒は自分と相手で重ならないのが決まり。ただし作り終えた駒が4種類そろうまでは、重なりを認める */
@@ -106,6 +106,8 @@ function ougiUsable(pi, slot){
     if(G.actedSlots && G.actedSlots.size) return '一発奥義：この手番にほかの駒を積・発したあとは発せません';
     return rouTowers(pi).length ? '' : '2段以上の自分の塔がありません';
   }
+  if(t.name === '幻') return genAvailable().length ? '' : '除外された駒がありません（奥義駒は選べません）';
+  if(t.name === '鳴' || t.name === '赫') return '';
   return 'この奥義駒は準備中です';
 }
 
@@ -282,3 +284,54 @@ async function primRou(actor, slot, gi, order){
   await VIEW.render();
   return true;
 }
+
+/* ================= 幻・鳴・赫 ================= */
+/* ---- 幻：除外された駒（奥義駒を除く）を確認し、1つを自分の体内か手の空いている場所に置く。
+   2人戦で除外されている駒はセットアップの1個だけ（雷神化で除外した奥義駒は選べない） ---- */
+function genAvailable(){ return G.excluded && !isOugi(G.excluded) ? [G.excluded] : []; }
+/* 置ける場所。発した幻の手は空くので、そこにも置ける */
+function genDests(pi, slot){
+  const p = P(pi), out = [];
+  p.hand.forEach(function(x, s){ if(!x || s === slot) out.push({ where:'hand', idx:s }); });
+  if(p.body.length < BODY_MAX) out.push({ where:'body' });
+  return out;
+}
+async function primGen(actor, slot, chooseDest){
+  const p = P(actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '幻') return false;
+  const cands = genAvailable();
+  if(!cands.length) return false;
+  G.used.add('幻');
+  await VIEW.playCutIn('幻', actor);
+  const dests = genDests(actor, slot);
+  consumeHand(p, slot);
+  const x = cands[0];
+  if(G.kn) G.kn[actor].add(x.id);
+  let d = await chooseDest(x, dests);
+  if(!d || !dests.some(function(y){ return y.where === d.where && y.idx === d.idx; })) d = dests[0];
+  G.excluded = null;
+  if(d.where === 'body'){ p.body.push(x); sortBody(p); }
+  else p.hand[d.idx] = x;
+  const place = d.where === 'body' ? '体内' : handLabel(d.idx);
+  if(p.isAI) log(p.name + 'の奥義「幻」：除外された駒を確認し、その駒を自分の' + place + 'に置きました。');
+  else log(p.name + 'の奥義「幻」：除外された駒「' + tileLabel(x) + '」を、自分の' + place + 'に置きました。');
+  await VIEW.render();
+  return true;
+}
+/* ---- 赫：全プレイヤーは、次の手番だけ「現」が0個になる。G.kakuZero[pi] は手番の始めに G.kakuNow へ移す ---- */
+async function primKaku(actor, slot){
+  const p = P(actor), t = p.hand[slot];
+  if(!isOugi(t) || t.name !== '赫') return false;
+  G.used.add('赫');
+  await VIEW.playCutIn('赫', actor);
+  consumeHand(p, slot);
+  G.kakuZero = [true, true];
+  log(p.name + 'の奥義「赫」：あなたもAIも、次の手番だけ「現」が0個になります（体内の駒を手に移せません）。', 'score');
+  if(actor !== 0) VIEW.setMeFace('hit');
+  VIEW.render();
+  return true;
+}
+/* ---- 鳴：雷・蛇・斬・陣・轟・霧・瞬・浄のどれか1つと同じ効果。
+   自分の手番では、選んだ言霊の効果をそのまま（鳴の手で）実行する。陣・轟（と霧でまねる陣・轟）は、
+   相手の雷・蛇・斬を受けた時に、霧と同じように使える（responses.js の mimicSlot） ---- */
+function isMei(t){ return !!(t && t.kind === 'gen' && t.name === '鳴'); }

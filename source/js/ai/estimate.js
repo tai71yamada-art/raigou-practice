@@ -150,7 +150,8 @@ async function aiTurn(){
     const kai = withSeat(me, aiPickKai);
     if(kai){ VIEW.aiBand('開：月の奥義駒を開いて雷神化'); await VIEW.aiWait(350); await doKai(me, kai.idx, kai.dest); await VIEW.aiWait(350); if(G.over) return; }
   }
-  { const b0 = p.body.length; withSeat(me, aiGen); const mv = b0 - p.body.length;
+  if(G.kakuNow){ log('AIは現：奥義「赫」の効果で0現です。', 'sys'); VIEW.aiBand('現：奥義「赫」の効果で0現'); }
+  else { const b0 = p.body.length; withSeat(me, aiGen); const mv = b0 - p.body.length;
     VIEW.aiBand(mv > 0 ? '現：体内の駒を' + mv + '個、手に移した' : '現：0現（手に移さない）'); }
   // 現で残った体内（裏向き）が詰まる動きを、プレイヤーが追える速さで見せる
   await VIEW.render();
@@ -323,11 +324,15 @@ function aiChooseAction(){
       else lowStacks.push({ kind:'stack', hand:s, gi:gi, gain:gain });
     }
     if(t.kind !== 'gen') return;
-    if(t.ougi){ if(!G._collectMode) aiOugiActs(p, s, t, dp, avail, acts); return; }
+    if(t.ougi){
+      if(G._collectMode) return;
+      aiOugiActs(p, s, t, dp, avail, acts);
+      if(t.name !== '鳴' || ougiUsable(AI_SEAT, s)) return;   // 鳴は霧と同じように雷・蛇・斬をまねる候補も作る
+    }
     // 効果の候補（霧は雷・蛇・斬をまねる）
     let effs = [];
     if(t.name==='雷' || t.name==='蛇' || t.name==='斬') effs = [t.name];
-    else if(t.name==='霧') effs = ['雷','蛇','斬'];
+    else if(t.name==='霧' || t.name==='鳴') effs = ['雷','蛇','斬'];
     effs.forEach(function(eff){
       const via = t.name;
       /* 掟1：効果単位で判定する。雷は雷放／雷停を別々に判定し、霧でまねた効果も同じ効果として数える */

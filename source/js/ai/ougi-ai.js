@@ -1,7 +1,7 @@
 /* ================= AI：競技雷轟（開・奥義） ================= */
 /* 開するかどうか。雷神化は手が1つ増えて内駒の上限も増えるので、開できる時は基本的にすぐ開く。
    Lv.1・Lv.2 はときどき見送る */
-const AI_OUGI_LIKE = { '覇':1.0, '天':0.9, '啓':0.8, '和':0.6, '禅':0.7, '楼':0.9 };
+const AI_OUGI_LIKE = { '覇':1.0, '天':0.9, '啓':0.8, '和':0.6, '禅':0.7, '楼':0.9, '幻':0.6, '鳴':0.85, '赫':0.4 };
 function aiPickKai(){
   const p = P(AI_SEAT);
   if(!canKai(AI_SEAT)) return null;
@@ -23,6 +23,7 @@ function aiOwnVal(tiles, avail){ return !tiles.length ? 0 : (isFuon(tiles) ? -1 
 /* 手の奥義駒 t（手の場所 s）で打てる手を acts に足す */
 function aiOugiActs(p, s, t, dp, avail, acts){
   if(G.used.has(t.name)) return;
+  if(ougiUsable(AI_SEAT, s)) return;
   const me = AI_SEAT, opn = 1 - AI_SEAT;
   if(t.name === '覇'){
     ['top','bottom'].forEach(function(end){
@@ -91,6 +92,16 @@ function aiOugiActs(p, s, t, dp, avail, acts){
       if(!best || g > best.gain) best = { kind:'ougi', name:'楼', hand:s, gi:gi, order:r.order, gain:g };
     });
     if(best && best.gain > 0.4) acts.push(best);
+  } else if(t.name === '幻'){
+    /* 中身は発するまで分からない。奥義駒を、まだ見ていない駒1個に替える手 */
+    if(!G.finalRound && G.deck.length > 4) acts.push({ kind:'ougi', name:'幻', hand:s, gain:0.5 });
+  } else if(t.name === '赫'){
+    /* 相手の次の現を止める。自分の次の現も止まるので、その分を引く */
+    const q = P(1 - me);
+    const oppMv = Math.min(GEN_MAX, q.body.length, q.hand.filter(function(x){ return !x; }).length);
+    const myMv = Math.min(GEN_MAX, p.body.length, p.hand.filter(function(x, k){ return !x || k === s; }).length);
+    const g = 0.45 * oppMv - 0.3 * myMv;
+    if(g > 0.35) acts.push({ kind:'ougi', name:'赫', hand:s, gain:g });
   }
 }
 /* 禅で相手に渡す駒と、受け取る駒の見込み */
@@ -142,6 +153,8 @@ function aiOugiText(act){
   if(act.name === '啓') return '奥義「啓」：' + who(act.target.pi) + 'の桜門' + (act.target.gi + 1) + 'の塔を2つに分ける';
   if(act.name === '和') return '奥義「和」：自分の桜門' + (act.gi + 1) + 'の塔を公開する';
   if(act.name === '禅') return '奥義「禅」：体内の最も重い駒を移し合う';
+  if(act.name === '幻') return '奥義「幻」：除外された駒を自分の内駒にする';
+  if(act.name === '赫') return '奥義「赫」：次の手番は全員0現にする';
   if(act.name === '楼') return '奥義「楼」：自分の桜門' + (act.gi + 1) + 'の塔を積み直す';
   return '奥義';
 }
@@ -152,4 +165,13 @@ async function aiOugiExecute(act, me){
   else if(act.name === '和') await primWa(me, act.hand, act.gi);
   else if(act.name === '禅') await primZen(me, act.hand, function(){ return Promise.resolve(withSeat(me, function(){ return aiZenGain(me) > 0.5; })); });
   else if(act.name === '楼') await primRou(me, act.hand, act.gi, act.order);
+  else if(act.name === '幻') await primGen(me, act.hand, function(x, dests){
+    return Promise.resolve(withSeat(me, function(){
+      const hand = dests.filter(function(d){ return d.where === 'hand'; }), body = dests.filter(function(d){ return d.where === 'body'; });
+      if(!body.length) return hand[0];
+      if(!hand.length) return body[0];
+      return aiTileDesire(x, P(me)) > 0.5 ? hand[0] : body[0];
+    }));
+  });
+  else if(act.name === '赫') await primKaku(me, act.hand);
 }

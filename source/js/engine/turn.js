@@ -4,6 +4,8 @@ function startTurn(){
   G.used = new Set();
   G.actedSlots = new Set();
   G.ippatsu = false;
+  G.kakuNow = !!(G.kakuZero && G.kakuZero[G.turn]);   // 奥義「赫」：この手番は0現
+  if(G.kakuNow) G.kakuZero[G.turn] = false;
   G.genMoves = 0;
   G.phase = 'gen';
   G.isFinalTurn = !!(G.endIn !== null && G.finalTurnActive);

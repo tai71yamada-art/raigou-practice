@@ -20,6 +20,7 @@ function otherHandSlot(p, slot, pred){
 function raiPartnerSlot(p, slot){
   let k = otherHandSlot(p, slot, function(x){ return x.kind==='gen' && x.name==='雷'; });
   if(k < 0) k = otherHandSlot(p, slot, function(x){ return x.kind==='gen' && x.name==='霧'; });
+  if(k < 0) k = otherHandSlot(p, slot, function(x){ return x.kind==='gen' && x.name==='鳴'; });
   return k;
 }
 /* 積・発に使った手の管理（手番プレイヤーのみ）。手が2か所の基本ルールでは制限にかからない */
@@ -89,7 +90,7 @@ function newGame(humanSente, difficulty, opts){
   G.houses = [ opts.house || 'rakura', AI_HOUSE.id ];
   VIEW.applyHouseClasses();
   G.actedSlots = new Set(); G.inGassen = false; G.lastTowerEffect = null;
-  G.excludedOugi = [];
+  G.excludedOugi = []; G.kakuZero = [false, false]; G.kakuNow = false; G.ippatsu = false;
   if(G.rules.ougi) setupOugi(opts.ougi);
   // 初期の体内：先手1枚、後手2枚
   const gote = opp(G.sente);

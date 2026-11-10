@@ -86,7 +86,7 @@ async function primRai(actor, handSlot, mode, target){
         await VIEW.playCutIn('轟', defender);
         const usedName = d.hand[def.slot] ? d.hand[def.slot].name : '轟';
         consumeHand(d, def.slot);
-        if(usedName === '霧') log(d.name + 'は「霧」を轟として使って受けて、落とす先を自分の桜門' + (gi+1) + 'の塔に変えました。', 'score');
+        if(usedName !== '轟') log(d.name + 'は「' + usedName + '」を轟として使って受けて、落とす先を自分の桜門' + (gi+1) + 'の塔に変えました。', 'score');
         else log(d.name + 'は「轟」で受けて、落とす先を自分の桜門' + (gi+1) + 'の塔に変えました。', 'score');
         targetGi = gi;
         targetPi = defender;
@@ -141,7 +141,7 @@ async function resolveRaigouResponse(attacker, defender, gi, modeOpt){
   const mode = modeOpt === 'tei' ? 'tei' : 'hou';
   const d = P(defender);
   const goSlot = handHas(d, '轟');
-  const kiriSlot = handHas(d, '霧');
+  const kiriSlot = mimicSlot(d);
   const jinSlot = handHas(d, '陣');
   const goCandSlot = goSlot >= 0 ? goSlot : kiriSlot;
   const cands = goTowerCands(defender);

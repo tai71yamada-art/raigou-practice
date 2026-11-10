@@ -198,6 +198,26 @@ async function runOugiFlow(slot){
     });
     return;
   }
+  if(t.name === '幻'){
+    const ok = await confirmYesNo('奥義「幻」の確認', '除外された駒を確認し、その駒をあなたの体内か手の空いている場所に置きます（奥義駒は選べません）。発すると、置き場所を選ぶ前に駒が見えるので、途中でやめることはできません。');
+    if(!ok) return;
+    await primGen(0, slot, chooseGenDest);
+    return;
+  }
+  if(t.name === '赫'){
+    const ok = await confirmYesNo('奥義「赫」の確認', 'あなたもAIも、<b>次の手番だけ「現」が0個</b>になります（体内の駒を手に移せません）。この手番のあなたの「現」は、もう終わっています。');
+    if(!ok) return;
+    await primKaku(0, slot);
+    return;
+  }
+  if(t.name === '鳴'){
+    const kind = await pickMeiEffect(slot);
+    if(!kind) return;
+    const before = P(0).hand[slot];
+    await runEffectFlow(kind, slot);
+    if(P(0).hand[slot] !== before){ G.used.add('鳴'); log('（この効果は、奥義「鳴」で適用しました。）', 'sys'); }
+    return;
+  }
   if(t.name === '楼'){
     while(true){
       const tgt = await pickTowerModal('奥義「楼」：積み直す塔を選ぶ', '2段以上の自分の塔を1つ選び、好きな順番に積み直します。<b>一発奥義</b>なので、この手番はほかの駒を積・発できなくなります。', rouTowers(0).map(function(gi){ return { pi:0, gi:gi }; }));
@@ -359,5 +379,61 @@ function pickKeiSplitModal(pi, gi){
       });
     }
     draw();
+  });
+}
+
+/* 幻：除外された駒を見せて、置き場所を選ぶ */
+function chooseGenDest(x, dests){
+  return new Promise(function(resolve){
+    let h = '<h3 class="serif">奥義「幻」：除外された駒</h3>';
+    h += '<div class="modal-center">' + tileHtml(x, 'big', { ntid:true }) + '</div>';
+    h += '<p>除外されていた駒は「' + esc(tileLabel(x)) + '」（重さ' + x.w + '）でした。置く場所を選んでください。</p><div class="btn-row">';
+    dests.forEach(function(d, i){ h += '<button type="button" class="btn' + (i === 0 ? ' primary' : '') + '" data-gen-d="' + i + '">' + (d.where === 'body' ? '体内に置く' : handLabel(d.idx) + 'に置く') + '</button>'; });
+    h += '</div>';
+    showModal(h);
+    const pk = document.querySelector('#modalRoot [data-peekbtn]'); if(pk) pk.remove();
+    document.querySelectorAll('[data-gen-d]').forEach(function(b){
+      b.addEventListener('click', function(){ closeModal(); resolve(dests[parseInt(b.getAttribute('data-gen-d'), 10)]); });
+    });
+  });
+}
+/* 鳴：どの言霊と同じ効果にするかを選ぶ。戻り値は runEffectFlow の種類（やめたら null） */
+function pickMeiEffect(slot){
+  return new Promise(function(resolve){
+    const p = P(0);
+    const usedHou = G.used.has('雷放'), usedTei = G.used.has('雷停');
+    const raiOk = raiTargets().length > 0;
+    const zanOk = [0,1].some(function(pi){ return P(pi).gates.some(function(gw, gi){ return gw.length > 0 && !P(pi).seals[gi]; }); });
+    const items = [];
+    const add = function(kind, label, why){ items.push({ kind:kind, label:label, why:why || '' }); };
+    add('raiHou', '雷：雷放（一番高い塔を解放）', usedHou ? 'この手番使用済み' : (raiOk ? '' : '3段以上の塔がありません'));
+    add('raiTei', '雷：雷停（一番高い塔を封印）', usedTei ? 'この手番使用済み' : (raiOk ? '' : '3段以上の塔がありません'));
+    const goSlot = goPartnerSlot(p, slot);
+    if(goSlot >= 0 && raigouGates(p).length && canActPair(p, slot, goSlot)){
+      const nm = p.hand[goSlot].name;
+      add('raigou', '雷：手の「' + nm + '」と合わせて雷轟解放（自分の塔を解放 +2点）', usedHou ? 'この手番使用済み' : '');
+      add('raigouTei', '雷：手の「' + nm + '」と合わせて雷停（自分の塔を封印）', usedTei ? 'この手番使用済み' : '');
+    }
+    const raiSlot = raiPartnerSlot(p, slot);
+    if(raiSlot >= 0 && goPartnerSlot(p, raiSlot) === slot && raigouGates(p).length && canActPair(p, slot, raiSlot)){
+      const nm = p.hand[raiSlot].name;
+      add('raigouFromKiriGo', '轟：手の「' + nm + '」と合わせて雷轟解放（自分の塔を解放 +2点）', usedHou ? 'この手番使用済み' : '');
+      add('raigouTeiFromKiriGo', '轟：手の「' + nm + '」と合わせて雷停（自分の塔を封印）', usedTei ? 'この手番使用済み' : '');
+    }
+    add('hebi', '蛇：内駒を1個奪う', G.used.has('蛇') ? 'この手番使用済み' : '');
+    add('zan', '斬：塔の一番上か一番下の駒を取る', G.used.has('斬') ? 'この手番使用済み' : (zanOk ? '' : '対象になる塔がありません'));
+    add('shun', '瞬：駒を2個入れ替える', G.used.has('瞬') ? 'この手番使用済み' : '');
+    add('jo', '浄：内駒を捨てて引き直す', G.used.has('浄') ? 'この手番使用済み' : '');
+    let h = '<h3 class="serif">奥義「鳴」：同じ効果にする言霊を選ぶ</h3>';
+    h += '<div class="act-list">';
+    items.forEach(function(it, i){ h += '<button type="button" class="btn act-btn" data-mei="' + i + '"' + (it.why ? ' disabled' : '') + '>' + esc(it.label) + (it.why ? '<small>（' + esc(it.why) + '）</small>' : '') + '</button>'; });
+    h += '</div>';
+    h += '<p class="sub">「霧」と同じ効果は、上のどれかを選ぶのと同じです。「陣」「轟」と同じ効果は、相手の雷・蛇・斬を受けた時に、手にある鳴を使って適用できます。</p>';
+    h += '<div class="btn-row"><button type="button" class="btn" id="meiCancel">やめる</button></div>';
+    showModal(h);
+    document.getElementById('meiCancel').addEventListener('click', function(){ closeModal(); resolve(null); });
+    document.querySelectorAll('[data-mei]').forEach(function(b){
+      b.addEventListener('click', function(){ closeModal(); resolve(items[parseInt(b.getAttribute('data-mei'), 10)].kind); });
+    });
   });
 }

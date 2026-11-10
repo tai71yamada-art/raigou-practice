@@ -32,7 +32,10 @@ async function playCutIn(name, actorPi){
     '啓':['OUGI','塔を上下2つに分ける'],
     '和':['OUGI','塔を公開し、重さの合計で陽玉が増減する'],
     '禅':['OUGI','体内の最も重い駒を相手へ移す'],
-    '楼':['OUGI','塔を好きな順番に積み直す（一発奥義）']
+    '楼':['OUGI','塔を好きな順番に積み直す（一発奥義）'],
+    '幻':['OUGI','除外された駒を自分の内駒にする'],
+    '鳴':['OUGI','言霊1つと同じ効果を適用する'],
+    '赫':['OUGI','次の手番は全員の「現」が0個']
   };
   const info = INFO[name] || ['KOTODAMA',''];
   const whoText = actor ? esc(actor.name) + (name === '雷神化' ? '' : (ougiByName(name) ? ' の奥義' : ' の言霊')) : '';

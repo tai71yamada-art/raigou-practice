@@ -8,7 +8,7 @@
    3. AI同士の対局：いろいろなレベルで最後まで進むか。毎手番、駒が消えたり増えたりしていないか
    3b. 途中保存：手番の始めで保存して別の場所で戻し、続きが保存しなかった時と全く同じになるか
    4. いつもの対局：決まった乱数で対局した結果が、前回の記録と同じか（意図しない変更の検出）
-   5. 競技雷轟：開・雷神化・奥義（覇・天・啓・和・禅・楼）の動きと、AI同士の対局での決まりごと */
+   5. 競技雷轟：開・雷神化・奥義（覇・天・啓・和・禅・楼・幻・鳴・赫）の動きと、AI同士の対局での決まりごと */
 'use strict';
 const fs = require('fs'), path = require('path');
 const H = require('./headless');
@@ -299,9 +299,44 @@ function section(t){ console.log('\n■ ' + t); }
       await Y.primStack(0, 1, 1);
       ok(Y.ougiUsable(0, 0) !== '', '楼：ほかの駒を積・発したあとは発せない');
     }
+    {
+      const X = fresh();
+      X.G.excluded = mk(X, '五')[0];
+      X.P(0).hand[0] = X.mkOugiTile('幻');
+      await X.primGen(0, 0, function(x, dests){ return Promise.resolve(dests.find(function(d){ return d.where === 'body'; })); });
+      ok(names(X.P(0).body) === '五' && X.G.excluded === null && X.G.canyon.length === 1 && X.G.canyon[0].name === '幻', '幻：除外された駒を自分の体内に置く');
+      const Y = fresh();
+      Y.G.excluded = mk(Y, '七')[0]; Y.P(0).body = mk(Y, '六 四 一');
+      Y.P(0).hand[1] = Y.mkOugiTile('幻');
+      await Y.primGen(0, 1, function(x, dests){ return Promise.resolve(dests.find(function(d){ return d.where === 'hand' && d.idx === 1; })); });
+      ok(Y.P(0).hand[1] && Y.P(0).hand[1].name === '七' && Y.P(0).body.length === 3, '幻：体内がいっぱいでも、幻を発して空いた手に置ける');
+      const Z = fresh();
+      Z.G.excluded = Z.mkOugiTile('覇'); Z.P(0).hand[0] = Z.mkOugiTile('幻');
+      ok(Z.ougiUsable(0, 0) !== '', '幻：除外された駒が奥義駒だけなら発できない');
+    }
+    {
+      const X = fresh();
+      X.P(0).hand[0] = X.mkOugiTile('赫');
+      await X.primKaku(0, 0);
+      ok(X.G.kakuZero[0] && X.G.kakuZero[1] && X.G.canyon[0].name === '赫', '赫：全員の次の手番を0現にする印が付く');
+    }
+    {
+      const X = fresh();
+      X.P(1).gates = [mk(X, '六 五 四'), [], []];
+      X.P(1).hand[0] = X.mkOugiTile('鳴');
+      X.P(0).hand[0] = mk(X, '斬')[0];
+      await X.primZan(0, 0, { pi:1, gi:0, end:'top' });
+      ok(names(X.P(1).gates[0]) === '六 五 四' && !X.P(1).hand[0], '鳴：相手の斬を受けた時に、陣と同じ効果で防げる');
+      const Y = fresh();
+      Y.P(1).gates = [mk(Y, '六 五 四'), [], []];
+      Y.P(0).hand[0] = Y.mkOugiTile('鳴');
+      const s1 = Y.P(1).score;
+      await Y.primRai(0, 0, 'hou', { pi:1, gi:0 });
+      ok(Y.P(1).gates[0].length === 0 && Y.G.canyon.some(function(t){ return t.name === '鳴'; }), '鳴：雷と同じ効果（雷放）を適用できる');
+    }
     /* AI同士の競技雷轟：毎手番、駒の数・塔の高さ・内駒の上限を確かめる */
     const NK = QUICK ? 21 : 84;
-    let kGames = 0, kBad = 0, kFirst = '', kai = 0, hatsu = { '覇':0, '天':0, '啓':0, '和':0, '禅':0, '楼':0 }, kTurns = 0;
+    let kGames = 0, kBad = 0, kFirst = '', kai = 0, hatsu = { '覇':0, '天':0, '啓':0, '和':0, '禅':0, '楼':0, '幻':0, '鳴':0, '赫':0 }, kTurns = 0;
     for(let i = 0; i < NK; i++){
       const eng = H.createEngine(3000 + i);
       const G = eng.E.G, P = eng.E.P;
