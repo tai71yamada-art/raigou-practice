@@ -106,6 +106,8 @@ const BGM = (function(){
       const c = SFX.ctx(); if(!c) return;
       try{ if(hidden) c.suspend(); else c.resume(); }catch(_){}
     },
-    playing: function(){ return cur; }
+    playing: function(){ return cur; },
+    /* 起動時の読み込み画面で、スタート画面の曲を先に展開しておく（最初のタップですぐ鳴らせるように） */
+    preload: function(name){ return load(name); }
   };
 })();

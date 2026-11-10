@@ -19,6 +19,7 @@ const VIEW = {
   aiWait: function(ms){ return Promise.resolve(); },
   /* 演出（終わるまで待つものは Promise を返す） */
   playCutIn: function(name, actorPi){ return Promise.resolve(); },
+  playOugiRelease: function(pi){ return Promise.resolve(); },
   playClash: function(meIdx, oppIdx){ return Promise.resolve(); },
   playHideCutIn: function(actorPi){ return Promise.resolve(); },
   playJinFx: function(){ return Promise.resolve(); },

@@ -5,6 +5,7 @@ Object.assign(VIEW, {
   render: function(){ return render.apply(null, arguments); },
   setMeFace: function(){ return setMeFace.apply(null, arguments); },
   playCutIn: function(){ return playCutIn.apply(null, arguments); },
+  playOugiRelease: function(){ return playOugiRelease.apply(null, arguments); },
   playClash: function(){ return playClash.apply(null, arguments); },
   playHideCutIn: function(){ return playHideCutIn.apply(null, arguments); },
   playJinFx: function(){ return playJinFx.apply(null, arguments); },

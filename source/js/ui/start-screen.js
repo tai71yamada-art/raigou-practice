@@ -51,7 +51,10 @@ function openStartSetting(kind){
                return c ? { v:h.id, label:c, icon:h.id, img:HOUSE_CHARA_IMG[h.id] } : { v:h.id, label:'準備中', icon:h.id, disabled:true }; }),
              get:function(){ return startHouse; }, set:function(v){ startHouse = v; SETTINGS.house = v; saveSettings(); applyChara(v); } }
   }[kind];
-  const current = conf.get();
+  /* キャラ選択（grid）は、タイルを押しただけでは決まらない。「決定」で反映、「キャンセル」で前のまま閉じる */
+  let current = conf.get();
+  const root = document.getElementById('startSettingRoot');
+  function draw(){
   let h = '<div class="guide-back"><div class="guide-box small' + (conf.grid ? ' house-pick' : '') + '" role="dialog" aria-label="' + conf.title + '">';
   h += '<h3 class="serif">' + conf.title + '</h3>';
   if(conf.grid) h += '<p class="sub house-pick-note">キャラの家の家紋が、桜門に入ります。</p><div class="house-grid">';
@@ -72,20 +75,34 @@ function openStartSetting(kind){
          (o.d ? '<span class="so-desc">' + esc(o.d) + '</span>' : '') + '</button>';
   });
   if(conf.grid) h += '</div>';
-  h += '<div class="btn-row"><button type="button" class="btn" data-set-close>閉じる</button></div>';
+  if(conf.grid) h += '<div class="btn-row"><button type="button" class="btn primary" data-set-ok>決定</button><button type="button" class="btn" data-set-close>キャンセル</button></div>';
+  else h += '<div class="btn-row"><button type="button" class="btn" data-set-close>閉じる</button></div>';
   h += '</div></div>';
-  const root = document.getElementById('startSettingRoot');
   root.innerHTML = h;
   root.querySelectorAll('[data-setval]').forEach(function(b){
     b.addEventListener('click', function(){
       if(b.disabled) return;
+      if(conf.grid){
+        const sc = root.querySelector('.guide-back').scrollTop;
+        current = b.getAttribute('data-setval'); draw();
+        root.querySelector('.guide-back').scrollTop = sc;
+        return;
+      }
       conf.set(b.getAttribute('data-setval'));
       syncStartButtons();
       closeStartSetting();
     });
   });
+  const okBtn = root.querySelector('[data-set-ok]');
+  if(okBtn) okBtn.addEventListener('click', function(){
+    if(current !== conf.get()) conf.set(current);
+    syncStartButtons();
+    closeStartSetting();
+  });
   root.querySelector('[data-set-close]').addEventListener('click', closeStartSetting);
   root.querySelector('.guide-back').addEventListener('click', function(e){ if(e.target === e.currentTarget) closeStartSetting(); });
+  }
+  draw();
 }
 document.getElementById('ruleBtn').addEventListener('click', function(){ openStartSetting('rule'); });
 document.getElementById('houseBtn').addEventListener('click', function(){ openStartSetting('house'); });

@@ -31,7 +31,20 @@
     set(1, '準備完了');
     lockBtns.forEach(function(b){ b.disabled = false; });
     try{ VS_THUNDER.preload(); JINGLE.preload(); }catch(_){}
-    setTimeout(function(){ if(screen){ screen.classList.add('done'); setTimeout(function(){ screen.hidden = true; }, 450); } }, 250);
+    function close(){ if(screen){ screen.classList.add('done'); setTimeout(function(){ screen.hidden = true; }, 450); } }
+    /* スマホは、画面を一度タップするまで音を出せない決まりになっている。
+       そこで読み込みが終わったら「タップしてはじめる」を出し、そのタップでスタート画面の曲を流しながら画面を開く。
+       音を全部オフにしている時と、自動テスト（navigator.webdriver）の時は待たずに開く */
+    if(!(SETTINGS.bgm || SETTINGS.sound) || navigator.webdriver || !screen){ setTimeout(close, 250); return; }
+    const tap = document.getElementById('lsTap');
+    if(tap) tap.hidden = false;
+    if(screen) screen.classList.add('ready');
+    function go(){
+      screen.removeEventListener('click', go);
+      try{ SFX.unlock(); if(SETTINGS.bgm) BGM.title(); }catch(_){}
+      close();
+    }
+    screen.addEventListener('click', go);
   }
   // 全体の安全装置：何があっても20秒で先へ進める
   setTimeout(done, 20000);
@@ -49,6 +62,11 @@
       const fams = ['1em "Zen Antique"', '700 1em "Zen Kaku Gothic Antique"', '900 1em "Zen Kaku Gothic Antique"', '700 1em "Chakra Petch"'];
       let f = 0;
       await limit(Promise.all(fams.map(function(fm){ return document.fonts.load(fm, '雷轟').catch(function(){}).then(function(){ f++; set(0.7 + 0.28 * f / fams.length); }); })), 5000);
+    }
+    // 3. スタート画面の曲（展開に時間がかかるので、ここで済ませておく）
+    if(SETTINGS.bgm){
+      set(0.98, '音楽を読み込んでいます');
+      await limit(BGM.preload('title'), 8000);
     }
     done();
   })().catch(done);

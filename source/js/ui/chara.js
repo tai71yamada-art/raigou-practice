@@ -16,6 +16,7 @@ function applyChara(id){
   if(!a) return;
   document.documentElement.setAttribute('data-chara', id);
   ME_AVATAR = a.avatar; RESULT_IMG_WIN = a.win; RESULT_IMG_LOSE = a.lose; CUT_IMG_ME = a.cutin;
+  EYES_IMG_ME = a.eyes || a.cutin; EYES_VIDEO_ME = a.eyes_video || '';
   FACE_IMG.normal = a.avatar; FACE_IMG.act = a.avatar_act || a.avatar; FACE_IMG.hit = a.avatar_hit || a.avatar; FACE_IMG.joy = a.avatar_joy || a.avatar;
   const alt = 'あなたのキャラクター（' + charaName(id) + '）';
   document.querySelectorAll('#humanZone .pz-avatar').forEach(function(im){ im.setAttribute('src', a.avatar); im.setAttribute('alt', alt); });

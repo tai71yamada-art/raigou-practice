@@ -56,7 +56,7 @@ async function doKai(pi, moonIdx, dest){
   const whereText = dest.where === 'body' ? '体内' : (dest.where === 'moon' ? '月（3か所目の手）' : handLabel(dest.idx));
   if(p.isAI) log(p.name + 'は「開」：月の奥義駒を1つ内駒に移し、雷神化しました（月が3か所目の手になり、内駒は6個まで）。', 'sys');
   else log(p.name + 'は「開」：奥義駒「' + tileLabel(t) + '」を' + whereText + 'に移し、雷神化しました（月が3か所目の手になり、内駒は6個まで）。', 'sys');
-  await VIEW.playCutIn('雷神化', pi);
+  await VIEW.playOugiRelease(pi);
   await VIEW.render();
   return true;
 }

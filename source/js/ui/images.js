@@ -1,5 +1,6 @@
 /* ================= 画像・動画の共通データ ================= */
 const AI_IMG = '{{asset:img/ai.jpg}}';
+const AI_EYES_IMG = '{{asset:img/ai_eyes.webp}}';   // 奥義解放のカットイン（AI）
 let ME_AVATAR = '';
 let RESULT_IMG_WIN = '';
 const FACE_IMG = { normal:'', act:'', hit:'', joy:'' };

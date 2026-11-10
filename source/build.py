@@ -19,8 +19,9 @@ import os, re, base64, json, sys, shutil
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 DIST = os.path.join(ROOT, 'dist')
-MIME = {'png':'image/png', 'webp':'image/webp', 'jpg':'image/jpeg'}
+MIME = {'png':'image/png', 'webp':'image/webp', 'jpg':'image/jpeg', 'mp4':'video/mp4'}
 CHARA_KEYS = ['hero', 'win', 'lose', 'cutin', 'avatar', 'avatar_act', 'avatar_hit', 'avatar_joy']
+CHARA_OPT = ['eyes', 'eyes_video']   # 奥義解放のカットイン：目元の静止画（無ければカットインの絵）・目元の動画（あるキャラだけ）
 PWA_SKIP_AUDIO = ['bgmData', 'bgmTitleData']   # ホーム画面版では BGM を別ファイル（bgm.mp3 / bgm_title.mp3）で読む
 
 def rd(p, binary=False):
@@ -36,7 +37,7 @@ def chara_block(cid):
     files = {f.rsplit('.', 1)[0]: f for f in os.listdir(folder)}
     missing = [k for k in CHARA_KEYS if k not in files]
     if missing: raise SystemExit('キャラ ' + cid + ' の画像が足りません: ' + ', '.join(missing))
-    d = {k: data_uri('chara/%s/%s' % (cid, files[k])) for k in CHARA_KEYS}
+    d = {k: data_uri('chara/%s/%s' % (cid, files[k])) for k in CHARA_KEYS + [k for k in CHARA_OPT if k in files]}
     return '<script type="text/plain" id="charaData-' + cid + '">' + json.dumps(d, separators=(',', ':')) + '</script>'
 
 def charas():
@@ -64,7 +65,7 @@ def chara_fill(text):
     text = text.replace('{{chara_tiles}}', '{ ' + ', '.join(cid + ":'{{asset:chara/" + cid + "/tile.webp}}'" for cid, _ in cs) + ' }')
     text = text.replace('{{chara_colors}}', '\n'.join(
         '      html[data-chara="%s"], .chara-tile[data-chara="%s"]{ --main:%s; --main-rgb:%s; --main-soft:%s;%s }' % (cid, cid, m['color'], rgb(m['color']), m['colorSoft'],
-            (' --main-hi:%s;' % m['colorHi'] if m.get('colorHi') else '') + (' --on-main:%s;' % m['onMain'] if m.get('onMain') else ''))
+            ' --main-hi:%s; --on-main:%s;' % (m.get('colorHi') or m['color'], m.get('onMain') or '#101114'))
         for cid, m in cs))
     text = text.replace('{{chara_css}}', '\n'.join(
         ('      /* ' + m['cssNote'] + ' */\n' if m.get('cssNote') else '') + '      ' + m['css'] for cid, m in cs if m.get('css')))

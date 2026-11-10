@@ -30,3 +30,30 @@
       .fsc.noimg .fsc-text{ left:0; right:0; max-width:none; align-items:center; text-align:center; }
       .fsc.noimg .fsc-name{ font-size:clamp(2.6rem, 14vw, 4.6rem); letter-spacing:.08em; }
 
+      /* ===== 奥義解放（開）：細い斜めの帯に目元 ===== */
+      .our{ position:absolute; inset:0; overflow:hidden; background:rgba(0,0,0,0); animation:ourDim 3.3s ease both; }
+      @keyframes ourDim{ 0%{ background:rgba(0,0,0,0); } 8%{ background:rgba(0,0,0,.55); } 88%{ background:rgba(0,0,0,.55); } 100%{ background:rgba(0,0,0,0); } }
+      .our-band{ position:absolute; left:-12%; right:-12%; top:var(--our-top,36%); height:min(118px, 30vw); padding:5px 0; background:var(--main);
+        box-shadow:0 0 0 3px #101114, 0 0 24px rgba(127,212,255,.55); transform:rotate(-7deg) translateX(110%);
+        animation:ourIn .32s cubic-bezier(.2,.9,.3,1) forwards, ourOut .3s 3s ease-in forwards; }
+      @keyframes ourIn{ to{ transform:rotate(-7deg) translateX(0); } }
+      @keyframes ourOut{ from{ transform:rotate(-7deg) translateX(0); } to{ transform:rotate(-7deg) translateX(-115%); } }
+      .our-win{ position:relative; height:100%; overflow:hidden; background:#000; }
+      .our-media{ position:absolute; left:50%; top:50%; height:100%; width:auto; min-width:100%; max-width:none; transform:translate(-50%,-50%); object-fit:cover; }
+      .our-still{ animation:ourZoom 3.3s ease-out both; }
+      @keyframes ourZoom{ from{ transform:translate(-50%,-50%) scale(1); } to{ transform:translate(-50%,-50%) scale(1.12); } }
+      .our-scan{ position:absolute; inset:0; background:repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 1px, transparent 1px 3px); pointer-events:none; }
+      .our-title{ position:absolute; left:6%; top:calc(var(--our-top,36%) + min(118px, 30vw) + 4px); transform:rotate(-7deg); opacity:0; color:#fff;
+        font-family:"Zen Antique",serif; font-size:2.75rem; line-height:1.1; letter-spacing:.08em; -webkit-text-stroke:2px #101114; paint-order:stroke fill;
+        text-shadow:3px 3px 0 var(--main); animation:ourT .35s .55s ease-out forwards, ourFadeOut .25s 3s ease-in forwards; }
+      .our-title small{ display:block; font-family:var(--num); font-size:.8rem; letter-spacing:.42em; color:var(--main-hi,var(--main)); -webkit-text-stroke:0; text-shadow:none; margin-left:3px; }
+      @keyframes ourT{ from{ opacity:0; transform:rotate(-7deg) translateX(-30px); } to{ opacity:1; transform:rotate(-7deg) translateX(0); } }
+      @keyframes ourFadeOut{ to{ opacity:0; } }
+      .our-who{ position:absolute; right:7%; top:calc(var(--our-top,36%) + min(118px, 30vw) + 34px); transform:rotate(-7deg); opacity:0; color:#f2f0ea; font-weight:900; font-size:.82rem;
+        text-shadow:0 1px 3px #000; animation:ourT .3s .7s ease-out forwards, ourFadeOut .25s 3s ease-in forwards; }
+      .our-flash{ position:absolute; inset:0; background:#eef9ff; opacity:0; pointer-events:none; animation:ourFlash .5s 2.25s ease-out; }
+      @keyframes ourFlash{ 0%{ opacity:0; } 15%{ opacity:.75; } 100%{ opacity:0; } }
+      /* AI：紫の帯 */
+      .our.ai .our-band{ background:#7d6bff; }
+      .our.ai .our-title{ text-shadow:3px 3px 0 #7d6bff; }
+      .our.ai .our-title small{ color:#a99cff; }

@@ -16,3 +16,7 @@
       .ls-row{ width:100%; display:flex; justify-content:space-between; font-size:.72rem; color:#a9a7a0; }
       .ls-pct{ font-family:"Chakra Petch",sans-serif; font-weight:700; color:#f2f0ea; }
 
+      .load-screen.ready{ cursor:pointer; }
+      .ls-tap{ margin-top:18px; padding:10px 22px; background:none; border:1px solid var(--main-hi,var(--main)); color:#f2f0ea; font:inherit; font-weight:900; font-size:.95rem; letter-spacing:.12em; cursor:pointer; animation:lsTap 1.4s ease-in-out infinite; }
+      .ls-tap[hidden]{ display:none; }
+      @keyframes lsTap{ 0%,100%{ opacity:.55; } 50%{ opacity:1; } }

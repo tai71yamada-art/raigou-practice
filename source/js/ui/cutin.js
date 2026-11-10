@@ -49,6 +49,35 @@ async function playCutIn(name, actorPi){
   root.innerHTML = '';
   G.fxBusy = false;
 }
+/* 奥義解放のカットイン（開をした時）：細い斜めの帯に目元を映す。
+   目元の動画があるキャラは動画（音なし）、ないキャラとAIは目元の静止画。どの奥義駒を開いたかは出さない */
+let EYES_IMG_ME = '', EYES_VIDEO_ME = '';
+async function playOugiRelease(pi){
+  const root = document.getElementById('fxRoot');
+  if(!root) return;
+  const p = P(pi), isAI = !!(p && p.isAI);
+  if(!isAI) setMeFace('act');
+  SFX.play('cut');
+  const still = isAI ? AI_EYES_IMG : EYES_IMG_ME;
+  const media = (!isAI && EYES_VIDEO_ME)
+    ? '<video class="our-media" muted playsinline preload="auto" poster="' + still + '" src="' + EYES_VIDEO_ME + '"></video>'
+    : '<img class="our-media our-still" src="' + still + '" alt="">';
+  root.innerHTML = '<div class="our' + (isAI ? ' ai' : '') + '" role="status" aria-label="' + esc(p.name) + '：奥義解放">' +
+    '<div class="our-band"><div class="our-win">' + media + '<div class="our-scan"></div></div></div>' +
+    '<div class="our-title"><small>OUGI RELEASE</small>奥義解放</div>' +
+    '<div class="our-who">' + esc(p.name) + ' ― 雷神化</div>' +
+    '<div class="our-flash"></div></div>';
+  /* 言霊のカットインと同じく、自キャラのアイコンの下から帯を出す（画面が低い時は下端に合わせる） */
+  { const our = root.querySelector('.our'), av = document.querySelector('#humanZone .pz-avatar');
+    if(our && av){ const r = av.getBoundingClientRect(), bh = root.querySelector('.our-band').offsetHeight, vh = window.innerHeight;
+      if(r.height){ let top = r.bottom + 26; if(top + bh + 120 > vh) top = Math.max(r.bottom - bh * 0.3, vh - bh - 120); our.style.setProperty('--our-top', Math.round(top) + 'px'); } } }
+  const v = root.querySelector('video');
+  if(v){ setTimeout(function(){ try{ const pr = v.play(); if(pr && pr.catch) pr.catch(function(){}); }catch(_){} }, 160); }
+  G.fxBusy = true;
+  await fxWait(3300);
+  root.innerHTML = '';
+  G.fxBusy = false;
+}
 /* 帯が自キャラのアイコンに重ならないよう、アイコンの下から帯を出す
    （発動・受けた の表情が見えるように）。画面が低くて入らない時は画面の下端に合わせる */
 function placeCutInBand(band){
