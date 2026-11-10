@@ -183,7 +183,7 @@
       .hero-img, #startScreen .hero-img{ width:auto; max-width:100%; height:clamp(220px, 38vh, 320px); object-fit:contain; }
       #startScreen .hero-img.hero-wide{ width:100%; max-width:440px; height:auto; }
       /* 背景つきの一枚絵：縦が長すぎる画面では空の上側を切って収める */
-      #startScreen .hero-img.hero-art{ display:block; margin:0 auto; aspect-ratio:800/1000; max-height:min(58vh, 560px); object-fit:cover; object-position:50% 100%; border:2px solid #101114; box-shadow:4px 4px 0 rgba(16,17,20,.35); }
+      #startScreen .hero-img.hero-art{ display:block; margin:0 auto; width:auto; max-width:100%; max-height:min(60vh, 570px); border:2px solid #101114; box-shadow:4px 4px 0 rgba(16,17,20,.35); }
       /* 桜門の家紋：ラベルの下〜枠の内側に収まるように、中央に置く */
       .gate::before{
         left:6px; right:6px; top:18px; bottom:6px; width:auto; height:auto; aspect-ratio:auto; max-height:none;
@@ -335,3 +335,5 @@
       .kei-cut:hover span, .kei-cut.on span{ border-top-color:var(--main-hi,var(--main)); color:var(--main-hi,var(--main)); }
       .kei-cut.on span{ border-top-style:solid; border-top-width:3px; }
       .big-stack .tile.kei-move{ outline:3px solid var(--main-hi,var(--main)); outline-offset:-1px; }
+      /* スタート画面の題字（雷轟 -天弓-） */
+      #startScreen .hero-en.hero-title{ font-family:'Zen Antique', serif; font-weight:400; font-size:1.5rem; letter-spacing:.12em; text-indent:.12em; line-height:1.2; margin:0 0 8px; }
