@@ -30,16 +30,17 @@ function setupOugi(sets){
 }
 function gatesAllFilled(p){ return p.gates.every(function(g){ return g.length > 0; }); }
 function emptyGates(pi){ const out = []; P(pi).gates.forEach(function(g, gi){ if(!g.length) out.push(gi); }); return out; }
-/* 開した奥義駒の置き場所（体内か、手の空いている場所） */
+/* 開した奥義駒の置き場所：月（開と同時に3か所目の手になる）、手の空いている場所、体内の空き。
+   月は開いた時点で必ず空くので、内駒がいっぱいでも開できる */
 function kaiDests(p){
-  const out = [];
+  const out = [{ where:'moon', idx:2 }];
   p.hand.forEach(function(t, i){ if(!t) out.push({ where:'hand', idx:i }); });
   if(p.body.length < BODY_MAX) out.push({ where:'body' });
   return out;
 }
 function canKai(pi){
   const p = P(pi);
-  return !!(rulesNow().ougi && !p.raijinka && p.moon && p.moon.length && gatesAllFilled(p) && kaiDests(p).length);
+  return !!(rulesNow().ougi && !p.raijinka && p.moon && p.moon.length && gatesAllFilled(p));
 }
 async function doKai(pi, moonIdx, dest){
   const p = P(pi);
@@ -47,12 +48,12 @@ async function doKai(pi, moonIdx, dest){
   const t = p.moon[moonIdx];
   if(!t) return false;
   const rest = p.moon.filter(function(x){ return x !== t; });
-  if(dest && dest.where === 'hand' && !p.hand[dest.idx]) p.hand[dest.idx] = t;
-  else if(p.body.length < BODY_MAX){ p.body.push(t); sortBody(p); dest = { where:'body' }; }
-  else { const s = p.hand.indexOf(null); if(s < 0) return false; p.hand[s] = t; dest = { where:'hand', idx:s }; }
   rest.forEach(function(x){ G.excludedOugi.push(x); });
-  setRaijinka(pi);
-  const whereText = dest.where === 'body' ? '体内' : handLabel(dest.idx);
+  setRaijinka(pi);   // 月が空いて、3か所目の手になる
+  if(dest && dest.where === 'hand' && dest.idx < 2 && !p.hand[dest.idx]) p.hand[dest.idx] = t;
+  else if(dest && dest.where === 'body' && p.body.length < BODY_MAX){ p.body.push(t); sortBody(p); }
+  else { p.hand[2] = t; dest = { where:'moon', idx:2 }; }
+  const whereText = dest.where === 'body' ? '体内' : (dest.where === 'moon' ? '月（3か所目の手）' : handLabel(dest.idx));
   if(p.isAI) log(p.name + 'は「開」：月の奥義駒を1つ内駒に移し、雷神化しました（月が3か所目の手になり、内駒は6個まで）。', 'sys');
   else log(p.name + 'は「開」：奥義駒「' + tileLabel(t) + '」を' + whereText + 'に移し、雷神化しました（月が3か所目の手になり、内駒は6個まで）。', 'sys');
   await VIEW.playCutIn('雷神化', pi);

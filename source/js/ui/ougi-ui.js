@@ -18,7 +18,7 @@ function openMoonInfo(){
   h += '<h3 class="serif">月の奥義駒</h3>';
   if(p.moon && p.moon.length){
     p.moon.forEach(function(t){ const o = ougiByName(t.name); if(o) h += ougiCardHtml(o); });
-    h += '<div class="guide-note"><b>開：</b>自分の桜門が3つとも塔で埋まっていると、手番の最初に、どちらか1つを体内か手の空いている場所へ移せます（1対戦に1回）。開くと雷神化して、月が3か所目の手になります。選ばなかった駒は除外されます。</div>';
+    h += '<div class="guide-note"><b>開：</b>自分の桜門が3つとも塔で埋まっていると、手番の最初に、どちらか1つを開けます（1対戦に1回）。開くと雷神化して、月が3か所目の手になります。開いた奥義駒は、そのまま月に置くことも、手の空いている場所や体内に移すこともできます。選ばなかった駒は除外されます。</div>';
   } else {
     h += '<p>月に奥義駒はありません。</p>';
   }
@@ -88,6 +88,7 @@ function openOugiPicker(who, thenStart){
   draw();
 }
 
+function kaiDestText(d){ return d.where === 'body' ? '体内' : (d.where === 'moon' ? '月（3か所目の手）' : handLabel(d.idx)); }
 /* ---- 開：手番の最初に、月の奥義駒を開くかどうかを選ぶ ---- */
 function humanKaiPopup(){
   return new Promise(function(resolve){
@@ -115,17 +116,17 @@ function humanKaiPopup(){
       const dests = kaiDests(p);
       let h = '<h3 class="serif">開：「' + esc(t.name) + '」をどこに置きますか？</h3>';
       h += '<div class="modal-center">' + tileHtml(t, 'big', { ntid:true }) + '</div>';
-      h += '<p>手に置くと、この手番から発したり積んだりできます。体内に置いた駒は、あとで「現」で手に移します。</p>';
+      h += '<p>開くと月が3か所目の手になるので、そのまま月に置くこともできます。手（月を含む）に置くと、この手番から発したり積んだりできます。体内に置いた駒は、あとで「現」で手に移します。</p>';
       h += '<div class="act-list">';
       dests.forEach(function(d, i){
-        h += '<button type="button" class="btn' + (i === 0 ? ' primary' : '') + '" data-kai-dest="' + i + '">' + (d.where === 'body' ? '体内に置く' : handLabel(d.idx) + 'に置く') + '</button>';
+        h += '<button type="button" class="btn' + (i === 0 ? ' primary' : '') + '" data-kai-dest="' + i + '">' + kaiDestText(d) + 'に置く</button>';
       });
       h += '</div><div class="btn-row"><button type="button" class="btn" id="kaiBack">選び直す</button></div>';
       showModal(h);
       document.querySelectorAll('[data-kai-dest]').forEach(function(b){
         b.addEventListener('click', async function(){
           const d = dests[parseInt(b.getAttribute('data-kai-dest'), 10)];
-          const ok = await confirmYesNo('開の確認', '奥義駒「' + esc(t.name) + '」を' + (d.where === 'body' ? '体内' : handLabel(d.idx)) + 'に置いて、雷神化します。もう一方の奥義駒は除外されます。');
+          const ok = await confirmYesNo('開の確認', '奥義駒「' + esc(t.name) + '」を' + kaiDestText(d) + 'に置いて、雷神化します。もう一方の奥義駒は除外されます。');
           if(!ok){ askWhich(); return; }
           await doKai(0, idx, d);
           resolve(true);
@@ -183,7 +184,7 @@ function pickHaEnd(){
     const tgs = haTargets();
     const mine = tgs.filter(function(x){ return x.pi === 0; }).length, theirs = tgs.length - mine;
     let h = '<h3 class="serif">奥義「覇」：どちらの端を捨てますか</h3>';
-    h += '<p>全ての塔の一番上か、一番下の駒を捨て駒にします。どちらか一方を選ぶと、<b>全部の塔</b>に同じように効きます（あなたの塔 ' + mine + '本・AIの塔 ' + theirs + '本。封印中の塔は除く）。</p>';
+    h += '<p>全ての塔の一番上か、一番下の駒を捨て駒にします。どちらか一方を選ぶと、<b>全部の塔</b>に同じように効果があります（あなたの塔 ' + mine + '本・AIの塔 ' + theirs + '本。封印中の塔は除く）。</p>';
     h += '<div class="btn-row"><button type="button" class="btn primary" id="haTop">一番上を捨てる</button><button type="button" class="btn primary" id="haBot">一番下を捨てる</button>' +
          '<button type="button" class="btn" id="haCancel">やめる</button></div>';
     showModal(h);

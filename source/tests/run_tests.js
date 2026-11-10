@@ -189,6 +189,15 @@ function section(t){ console.log('\n■ ' + t); }
       ok(p.raijinka && p.hand.length === 3 && p.hand[0] && p.hand[0].name === '覇' && p.moon.length === 0, '開：選んだ奥義駒が手に入り、雷神化して手が3か所になる');
       ok(X.G.excludedOugi.length === 1 && X.G.excludedOugi[0].name === '天', '開：選ばなかった奥義駒は除外');
       ok(X.innerCap(p) === 6, '雷神化すると内駒は6個まで');
+      {
+        const Y = fresh();
+        const q = Y.P(0);
+        q.gates = [mk(Y, '五'), mk(Y, '三'), mk(Y, '二')];
+        q.body = mk(Y, '六 四 一'); q.hand = mk(Y, '七 五');
+        ok(Y.canKai(0), '内駒がいっぱいでも開できる（月に置ける）');
+        await Y.doKai(0, 1, { where:'moon', idx:2 });
+        ok(q.hand.length === 3 && q.hand[2] && q.hand[2].name === '天' && q.moon.length === 0, '開：奥義駒をそのまま月（3か所目の手）に置ける');
+      }
       ok(!X.canKai(0), '開は1対戦に1回だけ');
       p.hand[1] = mk(X, '一')[0]; p.hand[2] = mk(X, '一')[0];
       await X.primStack(0, 1, 0); await X.primStack(0, 2, 1);
