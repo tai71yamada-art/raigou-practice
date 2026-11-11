@@ -15,7 +15,7 @@ const ADV = (function(){
   const SLOT_ALL = ['q', 'auto'].concat(Array.from({ length:SLOT_PAGES * SLOT_PER_PAGE }, function(_, k){ return k + 1; }));
 
   /* 進行の状態：ch＝章の番号、i＝台本の何行目か */
-  const S = { ch:0, i:0, bg:'black', chars:{}, speaker:null, flags:{}, log:[] };
+  const S = { ch:0, i:0, bg:'black', chars:{}, faces:{}, speaker:null, flags:{}, log:[] };
   let typing = null, waiting = false, autoOn = false, skipOn = false, autoTimer = null, playing = false, lastSay = 0, gate = null;
   let root = null;
   const $ = function(id){ return document.getElementById('adv' + id); };
@@ -105,9 +105,11 @@ const ADV = (function(){
       if(!el){
         if(!pos) return;   // 絵は、初めて出る時に読み込む
         el = document.createElement('div'); el.className = 'av-ch'; el.setAttribute('data-ch', id);
-        el.innerHTML = '<img alt="" src="' + storyCharaImg(id) + '">'; box.appendChild(el);
+        el.innerHTML = '<img alt="">'; box.appendChild(el);
         void el.offsetWidth;
       }
+      const src = storyCharaImg(id, S.faces[id]), img = el.firstChild;
+      if(img.getAttribute('src') !== src) img.setAttribute('src', src);
       el.classList.toggle('on', !!pos);
       if(pos){ el.classList.remove('pos-left', 'pos-center', 'pos-right'); el.classList.add('pos-' + pos); }
       el.classList.toggle('speak', !!pos && (S.speaker === id || !S.speaker || Object.keys(S.chars).length === 1));
@@ -152,7 +154,8 @@ const ADV = (function(){
       if(c.jump){ S.i = labelIndex(c.jump); continue; }
       if(c.set){ S.flags[c.set] = true; S.i++; continue; }
       if(c.bg){ S.bg = c.bg; drawBg(); S.i++; continue; }
-      if(c.show){ S.chars[c.show] = c.pos || 'center'; S.i++; drawChars(); continue; }
+      if(c.show){ S.chars[c.show] = c.pos || 'center'; if(c.face) S.faces[c.show] = c.face; S.i++; drawChars(); continue; }
+      if(c.face && c.who && c.text === undefined){ S.faces[c.who] = c.face; S.i++; drawChars(); continue; }
       if(c.hide){ delete S.chars[c.hide]; S.i++; drawChars(); continue; }
       if(c.fx){ S.i++; doFx(c.fx); continue; }
       if(c.end) break;
@@ -168,7 +171,7 @@ const ADV = (function(){
     const cleared = store.get('cleared', []);
     if(cleared.indexOf(chapter().id) < 0){ cleared.push(chapter().id); store.set('cleared', cleared); }
     if(S.ch + 1 < STORY_CHAPTERS.length){
-      S.ch++; S.i = 0; S.chars = {}; S.speaker = null; S.bg = 'black';
+      S.ch++; S.i = 0; S.chars = {}; S.faces = {}; S.speaker = null; S.bg = 'black';
       setName(null); $('Text').textContent = ''; drawBg(); drawChars();
       S.log.push({ n:'', c:'', t:'― ' + chapter().title + ' ―', mark:true });
       step();
@@ -181,6 +184,7 @@ const ADV = (function(){
     const idx = S.i;
     lastSay = idx;   // 表示中の行（セーブすると、この行から再開する）
     S.speaker = c.say || null;
+    if(c.say && c.face) S.faces[c.say] = c.face;
     drawChars(); setName(c.say);
     const ch = c.say ? STORY_CHARA[c.say] : null;
     S.log.push({ n: ch ? ch.name : '', c: ch ? ch.color : '', t:c.text });
@@ -287,7 +291,7 @@ const ADV = (function(){
     const i = overlayOpen() ? S.i : ((waiting || typing) ? lastSay : S.i);
     const c = script()[i] || {};
     return { v:1, ch: chapter().id, i:i, key: c.text !== undefined ? c.text : (c.choice ? '?choice' : (c.battle ? '?battle' : '')),
-             bg:S.bg, chars:Object.assign({}, S.chars), speaker:S.speaker, flags:Object.assign({}, S.flags),
+             bg:S.bg, chars:Object.assign({}, S.chars), faces:Object.assign({}, S.faces), speaker:S.speaker, flags:Object.assign({}, S.flags),
              title: chapter().title + (c.battle ? '（対戦の前）' : ''), log:S.log.slice(-60), at:Date.now(),
              text: c.battle ? '対戦：' + (c.battle.title || '') : (last ? (last.n ? last.n + '「' + last.t.replace(/\n/g, '') + '」' : last.t.replace(/\n/g, '')) : '') };
   }
@@ -306,7 +310,7 @@ const ADV = (function(){
     $('Choices').classList.remove('show');
     const chIdx = STORY_CHAPTERS.findIndex(function(c){ return c.id === d.ch; });
     S.ch = chIdx >= 0 ? chIdx : 0;
-    S.i = locate(d); S.bg = d.bg; S.chars = Object.assign({}, d.chars); S.speaker = d.speaker; S.flags = Object.assign({}, d.flags);
+    S.i = locate(d); S.bg = d.bg; S.chars = Object.assign({}, d.chars); S.faces = Object.assign({}, d.faces || {}); S.speaker = d.speaker; S.flags = Object.assign({}, d.flags);
     const c = script()[S.i] || {};
     S.log = (d.log || []).slice(0, c.text !== undefined ? -1 : undefined);   // 再開する文章は、このあともう一度ログに入る
     $('Chars').innerHTML = '';
@@ -332,7 +336,7 @@ const ADV = (function(){
     Object.keys(d.chars || {}).forEach(function(id){
       if(!STORY_CHARA[id]) return;
       const x = { left:'30%', center:'50%', right:'70%' }[d.chars[id]] || '50%';
-      h += '<img class="av-mini" alt="" style="left:' + x + '" src="' + storyCharaImg(id) + '">';
+      h += '<img class="av-mini" alt="" style="left:' + x + '" src="' + storyCharaImg(id, (d.faces || {})[id]) + '">';
     });
     return h + '<div class="av-mtext">' + esc(d.text || '') + '</div>';
   }
@@ -464,7 +468,7 @@ const ADV = (function(){
   function newGame(){
     build();
     stopModes(); clearTyping(); gate = null;
-    Object.assign(S, { ch:0, i:0, bg:'black', chars:{}, speaker:null, flags:{}, log:[] });
+    Object.assign(S, { ch:0, i:0, bg:'black', chars:{}, faces:{}, speaker:null, flags:{}, log:[] });
     $('Chars').innerHTML = ''; $('Choices').classList.remove('show');
     $('Text').textContent = ''; setName(null); drawBg(); drawChars();
     S.log.push({ n:'', c:'', t:'― ' + chapter().title + ' ―', mark:true });

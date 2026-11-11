@@ -362,3 +362,5 @@
       .os-tag{ display:inline-block; min-width:1.6em; text-align:center; font-weight:bold; border-radius:4px; padding:0 4px; margin-right:6px; background:#555; color:#fff; }
       .os-tag.os-metsu{ background:#6b2fb3; }
       .os-tag.os-fire{ background:#e5501e; }
+      /* キャラが奇数の時、最後の1人は真ん中に */
+      .house-pick .house-grid > :last-child:nth-child(odd){ grid-column:1 / -1; justify-self:center; width:calc(50% - 4px); }

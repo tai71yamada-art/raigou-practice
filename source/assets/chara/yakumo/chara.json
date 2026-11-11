@@ -1,8 +1,9 @@
 {
  "name": "八雲 ひなた",
  "yomi": "やくも ひなた",
- "color": "#ff7a3d",
- "colorSoft": "#ffe0cf",
+ "color": "#e8453c",
+ "colorSoft": "#ffd9d5",
  "css": "html[data-chara=\"yakumo\"] #resultScreen[data-res=\"win\"] .result-hero img{ right:-12%; top:28px; height:104%; } html[data-chara=\"yakumo\"] #resultScreen[data-res=\"draw\"] .result-hero img{ right:-12%; }",
- "cssNote": "勝利の絵は刀を肩にかついで横に広いので、文字に少しかかる程度の大きさで右へ（たいせいさん：多少被ってもいいので大きめに）。引き分け（立ち絵）は刀の手が点数の行にかかるので少し右へ"
+ "cssNote": "勝利の絵は刀を肩にかついで横に広いので、文字に少しかかる程度の大きさで右へ（たいせいさん：多少被ってもいいので大きめに）。引き分け（立ち絵）は刀の手が点数の行にかかるので少し右へ",
+ "colorNote": "いろは（オレンジ）と見分けやすいよう、v55で赤に寄せた（もとは #ff7a3d）"
 }

@@ -1,6 +1,6 @@
 /* ================= 勝利・敗北のジングル（音声ファイル） ================= */
 const JINGLE = (function(){
-  const CLIPS = { win:{ el:'jingleWinData', vol:0.55 }, lose:{ el:'jingleLoseData', vol:0.9 } };
+  const CLIPS = { win:{ el:'jingleWinData', vol:0.42 }, lose:{ el:'jingleLoseData', vol:0.9 } };
   const bufs = {}, loads = {};
   let src = null, gain = null;
   function load(k){

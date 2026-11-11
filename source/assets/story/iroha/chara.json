@@ -6,5 +6,5 @@
  "houseName": "暁",
  "color": "#f07a2a",
  "colorSoft": "#ffd9bf",
- "note": "ストーリーの立ち絵（tachie.webp）。服の「AKATSUKI」の表記から「赤月」と名乗る。真の名の「暁」は終盤まで明かさない。家紋は assets/img/house/akatsuki.png、対戦で使う絵は assets/chara/akatsuki/"
+ "note": "ストーリーの立ち絵は表情ごとに face_*.webp（標準・笑顔・決意・不安・驚き・慌てる・真剣・キラキラ・にこにこ・心配・泣く・悲しい。どれも同じ位置にそろえてある）。服の「AKATSUKI」の表記から「赤月」と名乗る。真の名の「暁」は終盤まで明かさない。家紋は assets/img/house/akatsuki.png、対戦で使う絵は assets/chara/akatsuki/"
 }

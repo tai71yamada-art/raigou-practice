@@ -5,6 +5,8 @@
      { say:'iroha', text:'…' }   台詞（say は STORY_CHARA の名前）
      { bg:'night' }              背景を変える（STORY_BG の名前）
      { show:'iroha', pos:'left' }  立ち絵を出す・動かす（pos：left / center / right）
+     face:'驚き'                 表情を変える。show・say の行に付ける（{ say:'iroha', face:'驚き', text:'…' }）。
+                                 表情だけ変える時は { face:'驚き', who:'iroha' }。一度変えた表情は、次に変えるまで続く
      { hide:'iroha' }            立ち絵を消す
      { fx:'flash' }              演出（flash＝光る、shake＝揺れる）
      { choice:[{ text:'…', jump:'ラベル' }, …] }   選択肢
@@ -15,7 +17,20 @@
                                  opp＝相手のキャラ（assets/chara の家ID。省くといつものAI）、me＝自分のキャラ（省くと いろは）
      { end:true }                章の終わり（次の章があれば続けて始まる） */
 const STORY_CHARA = {
-  iroha:  { name:'赤月 いろは', color:'#f07a2a', house:'akatsuki', img:'{{asset:story/iroha/tachie.webp}}' },
+  iroha:  { name:'赤月 いろは', color:'#f07a2a', house:'akatsuki', face:'標準', faces:{
+    '標準':'{{asset:story/iroha/face_normal.webp}}',      // 真顔
+    '笑顔':'{{asset:story/iroha/face_smile.webp}}',
+    '決意':'{{asset:story/iroha/face_resolve.webp}}',
+    '不安':'{{asset:story/iroha/face_anxious.webp}}',
+    '驚き':'{{asset:story/iroha/face_surprised.webp}}',
+    '慌てる':'{{asset:story/iroha/face_flustered.webp}}',
+    '真剣':'{{asset:story/iroha/face_serious.webp}}',     // 真剣に喋る
+    'キラキラ':'{{asset:story/iroha/face_sparkle.webp}}', // 嬉しい（キラキラ）
+    'にこにこ':'{{asset:story/iroha/face_happy.webp}}',   // 嬉しい（にこにこ）
+    '心配':'{{asset:story/iroha/face_worried.webp}}',
+    '泣く':'{{asset:story/iroha/face_cry.webp}}',
+    '悲しい':'{{asset:story/iroha/face_sad.webp}}'
+  } },
   kurara: { name:'雷藏 くらら', color:'#ffd23f', house:'rakura', chara:'rakura' }   // 立ち絵は練習モードのキャラの絵（hero）を使う
 };
 /* 背景：絵ができるまでは、色を組み合わせた仮のもの（css/95-story.css の .av-bg-名前）。
@@ -28,8 +43,10 @@ const STORY_BG = {
 };
 const STORY_ME = 'akatsuki';   // ストーリーの対戦で使う自分のキャラ（いろは）
 const STORY_CHAPTERS = [];
-function storyCharaImg(id){
+/* 立ち絵の画像。face を省くと、そのキャラの標準の表情 */
+function storyCharaImg(id, face){
   const c = STORY_CHARA[id]; if(!c) return '';
+  if(c.faces) return c.faces[face] || c.faces[c.face] || '';
   if(c.img) return c.img;
   const a = c.chara ? charaAssets(c.chara) : null;
   return a ? a.hero : '';
