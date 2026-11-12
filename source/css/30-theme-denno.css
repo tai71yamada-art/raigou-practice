@@ -43,10 +43,10 @@
       .tile.clickable:hover{ filter:brightness(1.08); }
       .tile.selected{ outline:3px solid #ffffff; outline-offset:2px; box-shadow:0 0 14px rgba(var(--main-rgb),.7); }
       .tile.targetable{ outline:2px dashed var(--main-hi,var(--main)); outline-offset:2px; }
-      .tile.revealed-top{ outline:2px solid #7d6bff; outline-offset:1px; }
+      .tile.revealed-top{ outline:2px solid var(--opp-hi, #7d6bff); outline-offset:1px; }
       .tile.provisional{ outline:3px dashed var(--main-hi,var(--main)); }
       .tile.provisional::after{ background:var(--main); color:var(--on-main,#101114); border:2px solid #101114; }
-      .tile.is-new{ box-shadow:inset 0 0 0 1.5px #ffd23f, 0 0 0 2px #101114, 0 0 0 3.5px #7d6bff; }
+      .tile.is-new{ box-shadow:inset 0 0 0 1.5px #ffd23f, 0 0 0 2px #101114, 0 0 0 3.5px var(--opp-hi, #7d6bff); }
       .tile.is-new::after{
         content:'NEW'; position:absolute; left:calc(100% + 6px); top:50%; transform:translateY(-50%);
         font-family:var(--num); font-weight:700; font-size:.55rem; color:#c9c1ff; letter-spacing:.04em;
@@ -92,11 +92,12 @@
       .player-zone{ background:var(--panel); border:none; border-radius:0; box-shadow:none; clip-path:var(--cut); }
       .player-zone.active{ outline:none; box-shadow:inset 0 0 0 1.5px var(--main-hi,var(--main)); }
       .pz-avatar{ border:2px solid var(--main-hi,var(--pop)); border-radius:0; }
-      #aiZone .pz-avatar{ border-color:#7d6bff; }
+      #aiZone .pz-avatar{ border-color:var(--opp, #7d6bff); }
+      #aiZone{ border:1.5px solid rgba(var(--opp-rgb, 125,107,255), .55); }
       .pz-name{ font-family:var(--popfont); font-weight:900; }
-      #aiZone .pz-name{ background:transparent; color:var(--ink); border:none; border-left:4px solid #7d6bff; border-radius:0; padding:0 8px; }
+      #aiZone .pz-name{ background:transparent; color:var(--ink); border:none; border-left:4px solid var(--opp, #7d6bff); border-radius:0; padding:0 8px; }
       #humanZone .pz-name{ background:transparent; color:var(--ink); border:none; border-left:4px solid var(--main-hi,var(--main)); border-radius:0; padding:0 8px; }
-      .pz-lv{ background:transparent; color:#c9c1ff; border:1px solid #7d6bff; border-radius:0; font-family:var(--num); }
+      .pz-lv{ background:transparent; color:var(--opp-hi, #c9c1ff); border:1px solid var(--opp, #7d6bff); border-radius:0; font-family:var(--num); }
       .yogyoku{ font-family:var(--num); font-weight:700; color:var(--main-hi,var(--pop)); font-size:1rem; }
       .yogyoku .dots{ color:var(--main-hi,var(--pop)); opacity:.75; }
 

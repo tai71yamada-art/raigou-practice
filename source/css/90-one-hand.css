@@ -68,10 +68,10 @@
       /* AIの行動帯 */
       #aiBand{ position:fixed; left:50%; top:calc(env(safe-area-inset-top) + 50px); z-index:60; transform:translate(-50%, -12px); opacity:0; pointer-events:none;
         display:flex; align-items:center; gap:8px; max-width:calc(100vw - 24px); padding:7px 14px 7px 8px;
-        background:#17152a; color:#f2f0ea; border:1px solid #7d6bff; box-shadow:0 8px 24px rgba(0,0,0,.55);
+        background:#17152a; color:#f2f0ea; border:1px solid var(--opp, #7d6bff); box-shadow:0 8px 24px rgba(0,0,0,.55);
         clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px); transition:opacity .2s, transform .2s; }
       #aiBand.show{ opacity:1; transform:translate(-50%, 0); }
-      #aiBand .ab-who{ background:#7d6bff; color:#101114; font-family:var(--num); font-weight:700; font-size:.72rem; padding:2px 6px; }
+      #aiBand .ab-who{ background:var(--opp, #7d6bff); color:var(--opp-ink, #101114); font-family:var(--num); font-weight:700; font-size:.72rem; padding:2px 6px; }
       #aiBand .ab-txt{ font-weight:700; font-size:.88rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
       /* 確認の省略：自動で押すポップアップは描かない */
       #modalRoot.auto-skip{ visibility:hidden; }

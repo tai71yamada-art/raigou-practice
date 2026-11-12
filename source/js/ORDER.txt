@@ -47,6 +47,7 @@ ui/peek.js
 ui/fx.js
 ui/cutin.js
 ui/fx-moves.js
+ui/units.js
 ui/images.js
 ui/chara.js
 ui/clash.js

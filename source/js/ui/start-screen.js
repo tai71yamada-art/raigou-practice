@@ -122,6 +122,8 @@ function startBattle(){
    ストーリーの対戦は opts（ルール・自分のキャラ・相手の家・奥義駒）を渡す */
 function launchBattle(sente, diff, opts){
   if(vsPlaying) return;
+  if(!(typeof STORY_BATTLE !== 'undefined' && STORY_BATTLE.active)){ OPP_CHARA = null; OPP_UNIT = 'drone'; OPP_UNIT_NAMED = false; }   // 練習モードの相手はドローン
+  applyOppTheme();
   JINGLE.stop();
   vsPlaying = true;
   closeStartSetting();

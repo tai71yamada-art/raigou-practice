@@ -18,3 +18,4 @@ document.getElementById('modeBackBtn').addEventListener('click', function(){ set
 document.getElementById('storyNewBtn').addEventListener('click', function(){ ADV.newGame(); });
 document.getElementById('storyContBtn').addEventListener('click', function(){ if(ADV.hasSave()) ADV.openLoad(); });
 syncStoryButtons();
+applyOppTheme();

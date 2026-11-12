@@ -8,6 +8,8 @@ const STORY_BATTLE = {
     document.body.removeAttribute('data-story-res');
     document.body.classList.add('story-battle');
     OPP_CHARA = (conf.opp && charaAssets(conf.opp)) ? conf.opp : null;
+    OPP_UNIT = (!OPP_CHARA && conf.opp && UNITS[conf.opp]) ? conf.opp : 'drone';   // キャラでなければ衛星軍の機体（省くとドローン）
+    OPP_UNIT_NAMED = !OPP_CHARA && !!(conf.opp && UNITS[conf.opp]);
     const me = conf.me || STORY_ME;
     applyChara(me);
     const kyogi = conf.rule === 'kyogi';
@@ -20,7 +22,8 @@ const STORY_BATTLE = {
   /* 対戦の見た目を、練習モードの設定に戻す */
   finish: function(){
     this.active = null;
-    OPP_CHARA = null;
+    OPP_CHARA = null; OPP_UNIT = 'drone'; OPP_UNIT_NAMED = false;
+    applyOppTheme();
     document.body.classList.remove('story-battle');
     document.body.removeAttribute('data-story-res');
     applyChara(startHouse);

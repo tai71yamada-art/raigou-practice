@@ -1,15 +1,33 @@
 /* ================= 画像・動画の共通データ ================= */
 const AI_IMG = '{{asset:img/ai.jpg}}';
 const AI_EYES_IMG = '{{asset:img/ai_eyes.webp}}';   // 奥義解放のカットイン（AI）
-/* 対戦相手の見た目。OPP_CHARA が null ならいつものAI、家ID（'rakura' など）ならそのキャラ（ストーリーの対戦） */
-let OPP_CHARA = null;
+/* 対戦相手の見た目。
+   OPP_CHARA：家ID（'rakura' など）ならそのキャラ（ストーリーの対戦）。
+   OPP_UNIT：キャラでない時の衛星軍の機体（UNITS の名前）。アイコンはAIの基盤の絵のまま、カットイン・VS・雷轟合戦の絵が機体になる。
+   練習モードの相手はドローン。OPP_UNIT_NAMED が true の時（ストーリーの対戦）は、名前も機体の名前にする */
+let OPP_CHARA = null, OPP_UNIT = 'drone', OPP_UNIT_NAMED = false;
+const CHARA_MAIN = {{chara_main}};
 function oppAssets(){ return OPP_CHARA ? charaAssets(OPP_CHARA) : null; }
+function oppUnit(){ return (!OPP_CHARA && OPP_UNIT && UNITS[OPP_UNIT]) ? UNITS[OPP_UNIT] : null; }
 function oppAvatar(){ const a = oppAssets(); return a ? a.avatar : AI_IMG; }
-function oppCutImg(){ const a = oppAssets(); return a ? a.cutin : AI_IMG; }
+function oppCutImg(){ const a = oppAssets(); if(a) return a.cutin; const u = oppUnit(); return u ? u.img : AI_IMG; }
 function oppEyesImg(){ const a = oppAssets(); return a ? (a.eyes || a.cutin) : AI_EYES_IMG; }
-function oppLabel(){ return OPP_CHARA ? charaName(OPP_CHARA) : 'AI'; }
+function oppImgClass(){ return OPP_CHARA ? ' opp-chara' : (oppUnit() ? ' opp-unit opp-unit-' + OPP_UNIT : ''); }
+function oppLabel(){ if(OPP_CHARA) return charaName(OPP_CHARA); const u = oppUnit(); return (u && OPP_UNIT_NAMED) ? u.name : 'AI'; }
+function oppNamed(){ return !!(OPP_CHARA || (oppUnit() && OPP_UNIT_NAMED)); }
+/* 相手側の色（枠・帯・札など）。キャラはそのキャラのメインカラー、衛星軍はグレー（機体ごとに変えることもできる） */
+function oppColors(){
+  if(OPP_CHARA && CHARA_MAIN[OPP_CHARA]) return CHARA_MAIN[OPP_CHARA];
+  const u = oppUnit();
+  return u ? { color:u.color || ARMY_COLOR.color, hi:u.hi || ARMY_COLOR.hi, ink:u.ink || ARMY_COLOR.ink } : { color:'#7d6bff', hi:'#a99cff', ink:'#ffffff' };
+}
+function applyOppTheme(){
+  const c = oppColors(), h = c.color.replace('#', ''), st = document.documentElement.style;
+  st.setProperty('--opp', c.color); st.setProperty('--opp-hi', c.hi); st.setProperty('--opp-ink', c.ink);
+  st.setProperty('--opp-rgb', [0, 2, 4].map(function(i){ return parseInt(h.substr(i, 2), 16); }).join(','));
+}
 /* 盤面の見出しなど、狭い所に出す短い名前（「雷藏 くらら」→「くらら」） */
-function oppShort(){ return OPP_CHARA ? oppLabel().split(' ').pop() : 'AI'; }
+function oppShort(){ return oppNamed() ? oppLabel().split(' ').pop() : 'AI'; }
 function oppHouseId(){ return OPP_CHARA || AI_HOUSE.id; }
 /* 今の自分のキャラ（練習モードは選んだキャラ、ストーリーの対戦はその対戦のキャラ） */
 function meChara(){ return document.documentElement.getAttribute('data-chara') || startHouse; }

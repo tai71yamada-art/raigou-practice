@@ -66,7 +66,7 @@
       .fr-card{ background:#17191e; border:1px solid var(--line); padding:10px 12px; margin:10px 0 4px; display:flex; flex-direction:column; gap:8px; }
       .fr-card.me{ background:#1d1a0c; border-color:var(--main-hi,var(--main)); }
       .fr-head{ display:flex; align-items:center; gap:8px; }
-      .fr-bar{ width:4px; height:16px; background:#7d6bff; }
+      .fr-bar{ width:4px; height:16px; background:var(--opp, #7d6bff); }
       .fr-card.me .fr-bar{ background:var(--main); }
       .fr-name{ font-weight:900; }
       .fr-step{ font-size:.7rem; color:#a9a7a0; }

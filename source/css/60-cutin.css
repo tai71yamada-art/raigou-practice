@@ -24,7 +24,7 @@
       .fsc-sub{ font-weight:900; font-size:.82rem; margin-top:4px; }
       .fsc-who{ font-size:.7rem; font-weight:700; opacity:.75; margin-top:2px; }
       /* AI の言霊：紫の帯に基板の画像 */
-      .fsc.ai .fsc-band{ background:#7d6bff; }
+      .fsc.ai .fsc-band{ background:var(--opp, #7d6bff); }
       .fsc.ai .fsc-img{ right:0; left:auto; top:0; height:100%; max-width:42%; width:42%; object-fit:cover; opacity:.85; filter:none; }
       /* 画像なし（雷轟合戦など）：文字を中央に */
       .fsc.noimg .fsc-text{ left:0; right:0; max-width:none; align-items:center; text-align:center; }
@@ -54,6 +54,6 @@
       .our-flash{ position:absolute; inset:0; background:#eef9ff; opacity:0; pointer-events:none; animation:ourFlash .5s 2.25s ease-out; }
       @keyframes ourFlash{ 0%{ opacity:0; } 15%{ opacity:.75; } 100%{ opacity:0; } }
       /* AI：紫の帯 */
-      .our.ai .our-band{ background:#7d6bff; }
-      .our.ai .our-title{ text-shadow:3px 3px 0 #7d6bff; }
+      .our.ai .our-band{ background:var(--opp, #7d6bff); }
+      .our.ai .our-title{ text-shadow:3px 3px 0 var(--opp, #7d6bff); }
       .our.ai .our-title small{ color:#a99cff; }

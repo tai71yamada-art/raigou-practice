@@ -123,3 +123,7 @@
       #advDlg p{ margin:0 0 14px; line-height:1.7; font-size:.92rem; white-space:pre-wrap; color:#f4f1ea; }
       #advToast{ position:absolute; left:50%; top:calc(env(safe-area-inset-top) + 40px); transform:translateX(-50%); background:rgba(240,122,42,.95); color:#111; font-weight:bold; font-size:.82rem; padding:6px 14px; border-radius:20px; opacity:0; transition:opacity .25s; z-index:50; pointer-events:none; white-space:nowrap; }
       #advToast.show{ opacity:1; }
+      /* 衛星軍の機体の絵（横長）：反転せず、枠に収める */
+      .vs .vs-chara.opp-unit{ left:-8%; top:9%; width:min(112vw, 70vh); transform:none; filter:drop-shadow(4px 0 0 #101114); }
+      .clash .cl-chara.opp-unit{ left:-10%; height:auto; width:72%; -webkit-mask-image:none; mask-image:none; filter:drop-shadow(3px 0 0 #101114); }
+      .fsc.ai .fsc-img.opp-unit{ width:58%; max-width:58%; object-fit:contain; object-position:50% 50%; opacity:1; }

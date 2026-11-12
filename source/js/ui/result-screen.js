@@ -17,7 +17,7 @@ function showResult(winner, detail){
   if(rEn) rEn.textContent = winner === 0 ? 'VICTORY' : (winner === 1 ? 'DEFEAT' : 'DRAW');
   if(rBig) rBig.textContent = winner === 0 ? '勝利' : (winner === 1 ? '敗北' : '引分');
   const rhs = document.getElementById('resultHeroScore');
-  if(rhs) rhs.innerHTML = '<b>' + P(0).score + '</b><i>vs</i><em>' + P(1).score + '</em><small>陽玉 · あなた 対 ' + (OPP_CHARA ? esc(oppLabel()) : 'AI ' + esc(diffName())) + '</small>';
+  if(rhs) rhs.innerHTML = '<b>' + P(0).score + '</b><i>vs</i><em>' + P(1).score + '</em><small>陽玉 · あなた 対 ' + (oppNamed() ? esc(oppLabel()) : 'AI ' + esc(diffName())) + '</small>';
   document.getElementById('resultScore').textContent = '陽玉：あなた ' + P(0).score + '点 ／ ' + oppShort() + ' ' + P(1).score + '点';
   document.getElementById('resultDetail').textContent = detail;
   const statsEl = document.getElementById('resultStats');

@@ -47,9 +47,9 @@ async function playCutIn(name, actorPi){
     '神':['OUGI','役名を当てて塔を奪う（一発奥義）']
   };
   const info = INFO[name] || ['KOTODAMA',''];
-  const whoText = actor ? esc(actor.name) + (name === '雷神化' ? '' : (ougiByName(name) ? ' の奥義' : ' の言霊')) : '';
+  const whoText = actor ? esc(isAI ? oppLabel() : actor.name) + (name === '雷神化' ? '' : (ougiByName(name) ? ' の奥義' : ' の言霊')) : '';
   let img = '';
-  if(actor && isAI) img = '<img class="fsc-img' + (OPP_CHARA ? ' opp-chara' : '') + '" src="' + oppCutImg() + '" alt="">';
+  if(actor && isAI) img = '<img class="fsc-img' + oppImgClass() + '" src="' + oppCutImg() + '" alt="">';
   else if(actor) img = '<img class="fsc-img" src="' + CUT_IMG_ME + '" alt="">';
   const cls = 'fsc' + (isAI ? ' ai' : '') + (actor ? '' : ' noimg');
   root.innerHTML = '<div class="' + cls + '" role="status" aria-label="' + esc((whoText ? whoText + '：' : '') + name) + '">' +
