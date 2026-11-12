@@ -21,7 +21,11 @@
       body.story-battle[data-story-res="win"] .story-res.win,
       body.story-battle[data-story-res="lose"] .story-res.lose{ display:inline-block; }
       /* 相手がキャラの時の絵（カットインの縦長の絵を使う） */
-      .vs .vs-chara.opp-chara, .clash .cl-chara.opp-chara{ transform:scaleX(-1); }
+      /* 相手がキャラの時：自分側と同じ置き方・同じ見た目（ぼかしなし）を左右反転して使う */
+      .vs .vs-chara.opp-chara{ left:-30%; right:auto; top:auto; bottom:-2%; height:78%; width:auto; transform:scaleX(-1);
+        -webkit-mask-image:none; mask-image:none; filter:drop-shadow(-4px 0 0 #101114); }
+      .clash .cl-chara.opp-chara{ left:-24%; right:auto; top:2%; height:112%; width:auto; transform:scaleX(-1);
+        -webkit-mask-image:none; mask-image:none; filter:drop-shadow(-4px 0 0 #101114); }
       .fsc.ai .fsc-img.opp-chara{ object-position:50% 12%; opacity:1; }
 
       /* ================= ADV（物語を読む画面） ================= */
@@ -124,6 +128,12 @@
       #advToast{ position:absolute; left:50%; top:calc(env(safe-area-inset-top) + 40px); transform:translateX(-50%); background:rgba(240,122,42,.95); color:#111; font-weight:bold; font-size:.82rem; padding:6px 14px; border-radius:20px; opacity:0; transition:opacity .25s; z-index:50; pointer-events:none; white-space:nowrap; }
       #advToast.show{ opacity:1; }
       /* 衛星軍の機体の絵（横長）：反転せず、枠に収める */
-      .vs .vs-chara.opp-unit{ left:-8%; top:9%; width:min(112vw, 70vh); transform:none; filter:drop-shadow(4px 0 0 #101114); }
-      .clash .cl-chara.opp-unit{ left:-10%; height:auto; width:72%; -webkit-mask-image:none; mask-image:none; filter:drop-shadow(3px 0 0 #101114); }
-      .fsc.ai .fsc-img.opp-unit{ width:58%; max-width:58%; object-fit:contain; object-position:50% 50%; opacity:1; }
+      /* 赤いレンズ（--lx・--ly：絵の中の位置、--la：高さ÷幅）が決まった点に来るように置く。
+         transform は登場の動きに使うので、位置合わせは margin で行う（% はどちらも親の幅が基準） */
+      .vs .vs-chara.opp-unit{ --w:calc(min(104vw, 70vh) * var(--us, 1)); left:30%; top:41%; width:var(--w); transform:none;
+        margin-left:calc(var(--w) * var(--lx) * -1); margin-top:calc(var(--w) * var(--la) * var(--ly) * -1); filter:drop-shadow(4px 0 0 #101114); }
+      .clash .cl-chara.opp-unit{ left:28%; top:46%; height:auto; width:calc(96% * var(--us, 1)); transform:none;
+        margin-left:calc(96% * var(--us, 1) * var(--lx) * -1); margin-top:calc(96% * var(--us, 1) * var(--la) * var(--ly) * -1);
+        -webkit-mask-image:none; mask-image:none; filter:drop-shadow(3px 0 0 #101114); }
+      .fsc.ai .fsc-img.opp-unit{ left:72%; right:auto; top:50%; height:auto; width:calc(64% * var(--cs, 1)); max-width:none; opacity:1;
+        margin-left:calc(64% * var(--cs, 1) * var(--lx) * -1); margin-top:calc(64% * var(--cs, 1) * var(--la) * var(--ly) * -1); }

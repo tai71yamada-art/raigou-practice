@@ -49,7 +49,7 @@ async function playCutIn(name, actorPi){
   const info = INFO[name] || ['KOTODAMA',''];
   const whoText = actor ? esc(isAI ? oppLabel() : actor.name) + (name === '雷神化' ? '' : (ougiByName(name) ? ' の奥義' : ' の言霊')) : '';
   let img = '';
-  if(actor && isAI) img = '<img class="fsc-img' + oppImgClass() + '" src="' + oppCutImg() + '" alt="">';
+  if(actor && isAI) img = '<img class="fsc-img' + oppImgClass() + '"' + oppImgStyle('cut') + ' src="' + oppCutImg() + '" alt="">';
   else if(actor) img = '<img class="fsc-img" src="' + CUT_IMG_ME + '" alt="">';
   const cls = 'fsc' + (isAI ? ' ai' : '') + (actor ? '' : ' noimg');
   root.innerHTML = '<div class="' + cls + '" role="status" aria-label="' + esc((whoText ? whoText + '：' : '') + name) + '">' +

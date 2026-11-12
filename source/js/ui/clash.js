@@ -30,7 +30,7 @@ async function playClash(mePi, aiPi){
   root.innerHTML = '<div class="clash" role="status" aria-label="雷轟合戦：' + esc(ai.name) + ' 対 ' + esc(me.name) + '"><div class="cl-dim"></div>' +
     '<div class="cl-stage">' +
       '<div class="cl-title"><div class="cl-en">RAIGOU CLASH</div><div class="cl-jp"><span>雷</span><span>轟</span><span>合</span><span>戦</span></div></div>' +
-      '<div class="cl-side ai"><div class="cl-speed"></div><img class="cl-chara' + oppImgClass() + '" src="' + oppCutImg() + '" alt=""><div class="cl-tag ai"><small>' + (OPP_CHARA ? 'RIVAL' : (oppUnit() ? 'ARGUS' : 'CPU')) + '</small>' + esc(oppNamed() ? oppLabel() : ai.name) + '</div></div>' +
+      '<div class="cl-side ai"><div class="cl-speed"></div><img class="cl-chara' + oppImgClass() + '"' + oppImgStyle() + ' src="' + oppCutImg() + '" alt=""><div class="cl-tag ai"><small>' + (OPP_CHARA ? 'RIVAL' : (oppUnit() ? 'ARGUS' : 'CPU')) + '</small>' + esc(oppNamed() ? oppLabel() : ai.name) + '</div></div>' +
       '<div class="cl-side me"><div class="cl-speed"></div><img class="cl-chara" src="' + CUT_IMG_ME + '" alt=""><div class="cl-tag me"><small>YOU</small>' + esc(me.name) + '</div></div>' +
       '<div class="cl-edge">' + bolt + sp + '</div>' +
     '</div><div class="cl-flash"></div></div>';

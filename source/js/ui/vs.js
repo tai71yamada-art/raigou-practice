@@ -16,7 +16,7 @@ function playVsIntro(){
       sp += '<i class="cl-spark" style="left:calc(50% + ' + ((r()*2-1)*70).toFixed(0) + 'px);top:calc(50% + ' + ((r()*2-1)*42).toFixed(0) + '%);--dx:' + (Math.cos(a)*d).toFixed(0) + 'px;--dy:' + (Math.sin(a)*d).toFixed(0) + 'px;animation-delay:' + (0.5 + r()*0.7).toFixed(2) + 's"></i>';
     }
     root.innerHTML = '<div class="vs" role="status" aria-label="対戦開始：AI 対 あなた">' +
-      '<div class="vs-side ai"><div class="vs-speed"></div><img class="vs-chara' + oppImgClass() + '" src="' + oppCutImg() + '" alt=""><div class="vs-tag ai"><small>' + (OPP_CHARA ? 'RIVAL' : (oppUnit() ? 'ARGUS' : 'CPU')) + '</small>' + houseIconHtml(oppHouseId()) + esc(oppLabel()) + '</div></div>' +
+      '<div class="vs-side ai"><div class="vs-speed"></div><img class="vs-chara' + oppImgClass() + '"' + oppImgStyle() + ' src="' + oppCutImg() + '" alt=""><div class="vs-tag ai"><small>' + (OPP_CHARA ? 'RIVAL' : (oppUnit() ? 'ARGUS' : 'CPU')) + '</small>' + houseIconHtml(oppHouseId()) + esc(oppLabel()) + '</div></div>' +
       '<div class="vs-side me"><div class="vs-speed"></div><img class="vs-chara" src="' + CUT_IMG_ME + '" alt=""><div class="vs-tag me"><small>YOU</small>' + houseIconHtml(meChara()) + 'あなた</div></div>' +
       '<div class="vs-edge">' + bolt + sp + '</div>' +
       '<div class="vs-mark"><b>VS</b><span>BATTLE START</span></div>' +

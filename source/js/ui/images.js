@@ -12,6 +12,11 @@ function oppUnit(){ return (!OPP_CHARA && OPP_UNIT && UNITS[OPP_UNIT]) ? UNITS[O
 function oppAvatar(){ const a = oppAssets(); return a ? a.avatar : AI_IMG; }
 function oppCutImg(){ const a = oppAssets(); if(a) return a.cutin; const u = oppUnit(); return u ? u.img : AI_IMG; }
 function oppEyesImg(){ const a = oppAssets(); return a ? (a.eyes || a.cutin) : AI_EYES_IMG; }
+function oppImgStyle(scene){
+  const u = OPP_CHARA ? null : oppUnit(); if(!u) return '';
+  const l = (scene === 'cut' && u.cutCenter) ? [0.5, 0.5] : (u.lens || [0.5, 0.5]);
+  return ' style="--lx:' + l[0] + ';--ly:' + l[1] + ';--la:' + (u.aspect || 0.66).toFixed(3) + ';--us:' + (u.scale || 1) + '"';
+}
 function oppImgClass(){ return OPP_CHARA ? ' opp-chara' : (oppUnit() ? ' opp-unit opp-unit-' + OPP_UNIT : ''); }
 function oppLabel(){ if(OPP_CHARA) return charaName(OPP_CHARA); const u = oppUnit(); return (u && OPP_UNIT_NAMED) ? u.name : 'AI'; }
 function oppNamed(){ return !!(OPP_CHARA || (oppUnit() && OPP_UNIT_NAMED)); }
